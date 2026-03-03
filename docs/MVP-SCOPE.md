@@ -2,22 +2,30 @@
 
 ## Goal
 
-Playable 1v1 prototype on a single device (pass-and-play).
-Two players, one screen. Validate that the core loop is fun.
+Playable 1v1 prototype with core loop validation.
+**Phase A** — offline (pass-and-play), **Phase B** — online via NestJS backend.
 
-**Time estimate:** 2 weeks  
-**Definition of done:** Two humans can play 3 rounds and want to play again.
+> **Multi-platform note:** Architecture is multi-platform from day one (WebGL, Android, iOS, Web)
+> via `IPlatformService` abstraction layer. However, **MVP builds and tests on WebGL (TMA) only**.
+> Platform-specific code is isolated so native mobile builds can be added without touching game logic.
+> See docs/ARCHITECTURE.md → Platform Abstraction Layer for details.
+
+**Definition of done:**
+- Phase A: Two humans play 3+ rounds on one device, find it fun.
+- Phase B: Two players match online via Telegram Mini App WebGL build.
 
 ---
 
-## IN SCOPE (Must have)
+## Phase A: Offline Prototype (Core Loop Validation)
 
 ### Core Systems
 - [ ] GridSystem: 10×10 grid, walls, position tracking
 - [ ] HeroState: position, facing, armor, cooldown
-- [ ] ActionResolver: full step-by-step resolution (Move, Turn, Shoot, Wait)
+- [ ] ActionResolver: deterministic step-by-step resolution (Move, Turn, Shoot, Wait)
 - [ ] DamageResolver: hit detection, armor break, mutual cancel, elimination
 - [ ] MatchManager: round lifecycle, match lifecycle
+- [ ] ActionValidator: validate action lists (step count, cooldown gaps)
+- [ ] GridHelper: grid ↔ world coordinate conversion for 3D
 
 ### Heroes (4 for MVP)
 - [ ] Archer (Steps:4, Range:8, CD:2, Armor:0, Speed:1) — NO Ricochet yet
@@ -31,26 +39,29 @@ Two players, one screen. Validate that the core loop is fun.
 - [ ] One hardcoded 10×10 map with 6-8 walls
 - [ ] Fixed spawn positions (opposite corners)
 - [ ] NO pickups in MVP
-- [ ] NO shrinking in MVP (3 rounds with same map)
+- [ ] NO shrinking in MVP (3 rounds same map)
+
+### 3D View (URP)
+- [ ] Grid rendered as 3D planes with URP Lit materials
+- [ ] Walls as 3D cube meshes
+- [ ] Hero = capsule + colored material + direction arrow (placeholder)
+- [ ] Perspective camera, isometric angle (~45° X, ~45° Y), narrow FOV
+- [ ] Camera follows action (smooth track between heroes)
+- [ ] Move animation: smooth position lerp (~0.3s)
+- [ ] Shoot animation: VFX trail from hero in facing direction
+- [ ] Hit feedback: VFX flash + camera shake
+- [ ] Armor break: particle VFX
+- [ ] Elimination: hero dissolve/explode VFX
+- [ ] Playback speed: 1x, 2x, pause
 
 ### Planning UI
-- [ ] Action queue: drag-and-drop or tap-to-add actions
+- [ ] Action queue: tap-to-add actions into slots
 - [ ] Shows hero's available actions based on stats
-- [ ] Visual: shows action slots = hero.Steps
+- [ ] Slots = hero.Steps count
 - [ ] Cooldown indicator: grayed-out Shoot when on cooldown
+- [ ] Undo last action button
 - [ ] Confirm button to lock in actions
 - [ ] Timer: 30 seconds for round 1, 20 seconds later rounds
-
-### Execution View
-- [ ] Grid renders with tiles and walls
-- [ ] Heroes rendered as colored squares with direction arrow
-- [ ] Step-by-step playback: each step animates sequentially
-- [ ] Move animation: smooth slide between tiles (~0.3s)
-- [ ] Shoot animation: line/ray from hero to target (~0.2s)
-- [ ] Hit feedback: flash, screen shake
-- [ ] Armor break: visual indicator
-- [ ] Elimination: hero disappears/explodes
-- [ ] Playback speed control: 1x, 2x, or step-by-step
 
 ### Pass-and-Play Flow
 ```
@@ -62,99 +73,132 @@ Two players, one screen. Validate that the core loop is fun.
 6. Result screen: winner, replay option, rematch
 ```
 
-### Basic UI Screens
-- [ ] Hero Select screen (4 heroes with stat cards)
-- [ ] Planning screen (grid preview + action queue)
-- [ ] Execution screen (animated grid)
-- [ ] Result screen (winner announcement)
+### UI Screens
+- [ ] Hero Select screen (4 heroes with portrait + stat cards)
+- [ ] Planning screen (3D grid preview + action queue)
+- [ ] Execution screen (3D animated replay)
+- [ ] Result screen (winner announcement + rematch)
+- [ ] HUD: round counter, step counter, health/armor status
+
+---
+
+## Phase B: Online Multiplayer
+
+### Networking (Client-Side)
+- [ ] SocketIO client (WebGL-compatible WebSocket)
+- [ ] MatchNetworkController: events for match lifecycle
+- [ ] Commit-reveal scheme: SHA256 hash commitment
+- [ ] Reconnect handling with exponential backoff
+
+### NestJS Backend
+- [ ] Project scaffold: NestJS + Socket.IO + Prisma
+- [ ] PostgreSQL schema: Player, Match, Round, Replay
+- [ ] Redis: session cache, matchmaking queue
+- [ ] MatchGateway: WebSocket event handlers
+- [ ] MatchmakingService: ELO-based matching (±200 range)
+- [ ] MatchService: match state, commit/reveal validation
+- [ ] ActionResolverService: TypeScript port of C# logic (identical output)
+- [ ] WsAuthGuard: JWT validation on WebSocket connections
+
+### Online Flow Changes
+- [ ] Matchmaking screen (searching for opponent)
+- [ ] Hero select: server-coordinated
+- [ ] Planning: submit commit hash, then reveal
+- [ ] Results received from server (authoritative)
+- [ ] Rank change display, XP display
+- [ ] Replay ID returned for future replay viewing
 
 ---
 
 ## OUT OF SCOPE (v0.2+)
 
-- Special abilities (Ricochet, Blink, Push, Scan, etc.)
-- Remaining 8 heroes
+- Special abilities (Ricochet, Blink, Push, Scan, Phase Shot, Bomb, etc.)
+- Remaining 8 heroes (Mage, Demo, Guardian, Ghost, Engineer, Berserker, Hawk, Mirage)
 - Pickups (Armor Shard, Intel Orb, etc.)
 - Map shrinking
 - Multiple maps
-- Online multiplayer / networking
-- Hash commitment protocol
+- Final 3D character models (MVP uses placeholder capsules)
 - Sound effects / music
-- Particle effects / polish
-- Blockchain / $DUEL token
+- Blockchain / $DUEL token / TON Connect
 - Progression system (XP, ranks, seasons)
 - Bot AI
 - Replay save/share
 - Spectator mode
-- Telegram Mini App integration
+- Telegram Mini App deep integration (payments, ads, social)
 - Localization
+- Anti-cheat beyond commit-reveal
 
 ---
 
 ## Implementation Order
 
-Build in this exact order. Each step should be testable before moving to next.
-
-### Week 1: Core Logic + Grid
+### Phase A — Week 1-2: Core Logic + 3D View
 
 ```
-Day 1-2: Foundation
-  ├── Enums (Direction, ActionType, TileType, GamePhase)
-  ├── HeroConfig ScriptableObject
-  ├── MapConfig ScriptableObject
-  ├── HeroState class
-  └── Create 4 hero SO assets + 1 map SO asset
+Days 1-2: Data Foundation (TASKS.md Phase 1)
+  ├── Enums, HeroConfig, MapConfig, HeroState, StepResult
+  ├── GridHelper (grid ↔ world conversion)
+  ├── GameEvents static hub
+  ├── NetworkTypes (data classes, used later)
+  └── Create 4 hero + 1 map ScriptableObject assets
 
-Day 3-4: Grid & Movement
-  ├── GridSystem (create from MapConfig, tile queries, walkability)
-  ├── GridSystem.CastRay (shoot raycast on grid)
-  ├── GridSystem direction helpers (TurnLeft, TurnRight, etc.)
-  ├── Movement resolution (Move action, collision detection)
-  └── Unit tests: GridSystem (ray hits wall, movement blocked, etc.)
+Days 3-4: Grid & Resolution (TASKS.md Phase 2-3)
+  ├── GridSystem (from MapConfig, tile queries, CastRay)
+  ├── ActionResolver (Movement → Combat → Damage)
+  ├── ActionValidator
+  └── Unit tests for GridSystem + ActionResolver
 
-Day 5: Action Resolution
-  ├── ActionResolver.ResolveStep (full Phase1→Phase2→Phase3)
-  ├── DamageResolver (hit, armor break, mutual cancel, elimination)
-  ├── StepResult data class
-  └── Unit tests: resolver edge cases (mutual cancel, armor, etc.)
+Days 5-6: 3D View Layer (TASKS.md Phase 5)
+  ├── GridView (3D tiles + walls)
+  ├── HeroView3D (placeholder capsule + animations)
+  ├── CameraController (perspective isometric)
+  ├── VFXManager (shoot trails, hit effects)
+  └── ExecutionController (playback with animations)
+
+Days 7-8: UI + Planning (TASKS.md Phase 6)
+  ├── HeroSelectScreen
+  ├── PlanningScreen (action queue + timer)
+  ├── ResultScreen
+  └── HUD
+
+Days 9-10: Integration + Testing (TASKS.md Phase 8-9)
+  ├── GameManager (full offline flow wiring)
+  ├── MatchScene setup
+  ├── Bug fixing from self-testing
+  └── First playtest session
 ```
 
-### Week 2: View + UI
+### Phase B — Week 3-4: Online Multiplayer
 
 ```
-Day 6-7: Grid View
-  ├── GridView MonoBehaviour (renders tiles + walls from GridSystem)
-  ├── HeroView MonoBehaviour (sprite/square + direction arrow)
-  ├── Camera setup (orthographic, centered on grid)
-  └── Basic tile sprites (empty=light, wall=dark)
+Days 11-12: NestJS Backend Foundation
+  ├── Project scaffold, Prisma schema, Redis config
+  ├── MatchGateway (WebSocket)
+  └── MatchmakingService
 
-Day 8-9: Planning UI
-  ├── ActionQueueUI (shows slots, tap to add action)
-  ├── Cooldown display
-  ├── Confirm button
-  ├── Pass-and-play screen handoff ("Pass to Player 2")
-  └── Timer (30s/20s)
+Days 13-14: Server Game Logic
+  ├── MatchService (state management, commit/reveal)
+  ├── ActionResolverService (TS port of C# logic)
+  └── Cross-language test vectors
 
-Day 10: Execution Playback
-  ├── ExecutionController (plays StepResults sequentially)
-  ├── Move animation (DOTween or coroutine lerp)
-  ├── Shoot animation (line renderer flash)
-  ├── Hit/kill feedback
-  └── Speed control (1x/2x/step)
+Days 15-16: Client Networking
+  ├── SocketIOClient (WebGL WebSocket)
+  ├── MatchNetworkController
+  ├── HashUtil (commit-reveal)
+  └── Wire online match flow
 
-Day 11-12: Integration + Polish
-  ├── MatchManager wiring (hero select → plan → execute → result)
-  ├── Hero select screen
-  ├── Result screen
-  ├── Bug fixing from playtesting
-  └── First playtest session with 2 humans
+Days 17-18: Integration + WebGL Build
+  ├── WebGL build settings (IL2CPP, Brotli, ASTC, etc.)
+  ├── Telegram Mini App wrapper
+  ├── End-to-end online match test
+  └── Performance profiling (60 FPS target)
 ```
 
 ---
 
-## Testing Checklist
+## Testing Checklist (Phase A)
 
-After MVP is built, validate these scenarios:
+After offline MVP is built, validate these scenarios:
 
 ```
 [ ] Both players can select different heroes
@@ -179,6 +223,25 @@ After MVP is built, validate these scenarios:
 [ ] Round ends when someone is eliminated
 [ ] Match ends after elimination or 3 rounds
 [ ] Draw if no elimination after 3 rounds
+[ ] 3D camera shows grid at proper isometric angle
+[ ] Animations play in correct order during execution
+[ ] VFX for shoot/hit/armor break visible and timed
+[ ] Playback speed toggle works (1x / 2x / pause)
 [ ] Rematch option works
-[ ] Full match plays smoothly without errors
+[ ] Full match plays smoothly without errors at 60 FPS
+```
+
+## Testing Checklist (Phase B)
+
+```
+[ ] Two clients connect to NestJS server via WebSocket
+[ ] Matchmaking pairs two players within rating range
+[ ] Commit hash sent, reveal validated against hash
+[ ] Server resolves round and sends identical results to both clients
+[ ] Client replay matches server-computed results
+[ ] Disconnect + reconnect resumes match
+[ ] Match results persisted to PostgreSQL
+[ ] WebGL build loads in Telegram Mini App
+[ ] Frame rate stays above 60 FPS on mobile browser
+[ ] Bundle size under 20 MB (compressed)
 ```
