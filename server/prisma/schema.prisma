@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Player ──
+
+model Player {
+  id            String   @id @default(uuid())
+  telegramId    String   @unique
+  username      String?
+  displayName   String   @default("Duelist")
+  rating        Int      @default(1000)
+  rankTier      Int      @default(0)
+  wins          Int      @default(0)
+  losses        Int      @default(0)
+  draws         Int      @default(0)
+  battlePassXp  Int      @default(0)
+  tonWallet     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  matchesAsP1   Match[]  @relation("MatchPlayer1")
+  matchesAsP2   Match[]  @relation("MatchPlayer2")
+  masteries     HeroMastery[]
+
+  @@index([rating])
+  @@index([telegramId])
+}
+
+model HeroMastery {
+  id        String  @id @default(uuid())
+  playerId  String
+  heroId    String
+  xp        Int     @default(0)
+  level     Int     @default(1)
+
+  player    Player  @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, heroId])
+  @@index([playerId])
+}
+
+// ── Match ──
+
+enum MatchStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum MatchOutcome {
+  PLAYER1_WIN
+  PLAYER2_WIN
+  DRAW
+}
+
+model Match {
+  id          String       @id @default(uuid())
+  status      MatchStatus  @default(IN_PROGRESS)
+  outcome     MatchOutcome?
+  mapId       String
+  stakeLevel  Int          @default(0)
+
+  player1Id   String
+  player1     Player       @relation("MatchPlayer1", fields: [player1Id], references: [id])
+  player1Hero String
+
+  player2Id   String
+  player2     Player       @relation("MatchPlayer2", fields: [player2Id], references: [id])
+  player2Hero String
+
+  rounds      Round[]
+  replay      Replay?
+
+  startedAt   DateTime     @default(now())
+  endedAt     DateTime?
+
+  @@index([status])
+  @@index([player1Id])
+  @@index([player2Id])
+}
+
+// ── Round ──
+
+enum RoundOutcome {
+  PLAYER1_KILL
+  PLAYER2_KILL
+  MUTUAL_CANCEL
+  NO_KILL
+}
+
+model Round {
+  id            String       @id @default(uuid())
+  matchId       String
+  roundNumber   Int
+  outcome       RoundOutcome @default(NO_KILL)
+
+  p1CommitHash  String?
+  p2CommitHash  String?
+  p1Actions     Int[]
+  p2Actions     Int[]
+  p1Nonce       String?
+  p2Nonce       String?
+
+  stepsJson     String?
+
+  match         Match        @relation(fields: [matchId], references: [id])
+
+  createdAt     DateTime     @default(now())
+
+  @@unique([matchId, roundNumber])
+  @@index([matchId])
+}
+
+// ── Replay ──
+
+model Replay {
+  id          String   @id @default(uuid())
+  matchId     String   @unique
+  dataJson    String
+
+  match       Match    @relation(fields: [matchId], references: [id])
+
+  createdAt   DateTime @default(now())
+}

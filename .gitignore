@@ -79,6 +79,14 @@ sysinfo.txt
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # ===========================
+# Server (NestJS) — covered by server/.gitignore for deeper paths
+# ===========================
+server/node_modules/
+server/dist/
+server/coverage/
+server/.env
+
+# ===========================
 # Cursor / Agent
 # ===========================
 .cursor/
