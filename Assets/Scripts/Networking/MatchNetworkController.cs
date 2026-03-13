@@ -38,36 +38,11 @@ namespace TacticalDuelist.Networking
 
         #region Events
 
-        /// <summary>
-        /// Fired when the server confirms a match was found.
-        /// Subscribers receive the deserialized MatchFoundMessage.
-        /// </summary>
         public event Action<MatchFoundMessage> OnMatchFound;
-
-        /// <summary>
-        /// Fired when both players have committed their actions.
-        /// Client should now reveal.
-        /// </summary>
         public event Action OnBothCommitted;
-
-        /// <summary>
-        /// Fired when the server sends round resolution results.
-        /// </summary>
         public event Action<RoundResultsMessage> OnRoundResults;
-
-        /// <summary>
-        /// Fired when the full match ends.
-        /// </summary>
         public event Action<MatchEndMessage> OnMatchEnded;
-
-        /// <summary>
-        /// Fired when the server starts a new round's planning phase.
-        /// </summary>
         public event Action<RoundStartMessage> OnRoundStart;
-
-        /// <summary>
-        /// Fired on server-side match/matchmaking errors.
-        /// </summary>
         public event Action<string> OnMatchError;
 
         #endregion
@@ -81,44 +56,33 @@ namespace TacticalDuelist.Networking
 
         #region Client → Server
 
-        /// <summary>
-        /// Requests matchmaking with the selected hero.
-        /// </summary>
-        public void FindMatch(string heroId)
+        public void FindMatch(string heroId, int rankTier = 0)
         {
-            var msg = new FindMatchMessage { HeroId = heroId };
+            var msg = new FindMatchMessage { heroId = heroId, rankTier = rankTier };
             _socket.Emit(EventMatchFind, JsonUtility.ToJson(msg));
         }
 
-        /// <summary>
-        /// Cancels ongoing matchmaking.
-        /// </summary>
         public void CancelMatchmaking()
         {
             _socket.Emit(EventMatchCancel);
         }
 
-        /// <summary>
-        /// Sends the SHA-256 commitment hash.
-        /// </summary>
         public void CommitActions(string hash)
         {
-            var msg = new CommitMessage { Hash = hash };
+            var msg = new CommitMessage { hash = hash };
             _socket.Emit(EventRoundCommit, JsonUtility.ToJson(msg));
         }
 
-        /// <summary>
-        /// Reveals the actual actions + nonce for server verification.
-        /// </summary>
         public void RevealActions(ActionType[] actions, string nonce)
         {
-            var msg = new RevealMessage { Actions = actions, Nonce = nonce };
+            int[] intActions = new int[actions.Length];
+            for (int i = 0; i < actions.Length; i++)
+                intActions[i] = (int)actions[i];
+
+            var msg = new RevealMessage { actions = intActions, nonce = nonce };
             _socket.Emit(EventRoundReveal, JsonUtility.ToJson(msg));
         }
 
-        /// <summary>
-        /// Forfeits the current match.
-        /// </summary>
         public void Surrender()
         {
             _socket.Emit(EventMatchSurrender);
@@ -131,7 +95,7 @@ namespace TacticalDuelist.Networking
         private void HandleMatchFound(string json)
         {
             var msg = JsonUtility.FromJson<MatchFoundMessage>(json);
-            Debug.Log($"[MatchNet] Match found: {msg.MatchId}");
+            Debug.Log($"[MatchNet] Match found: {msg.matchId}");
             OnMatchFound?.Invoke(msg);
         }
 
@@ -142,12 +106,18 @@ namespace TacticalDuelist.Networking
             GameEvents.NetworkError(json);
         }
 
+        private void HandleException(string json)
+        {
+            Debug.LogError($"[MatchNet] WS Exception: {json}");
+            OnMatchError?.Invoke($"Server exception: {json}");
+        }
+
         private void HandleRoundStart(string json)
         {
             var msg = JsonUtility.FromJson<RoundStartMessage>(json);
-            Debug.Log($"[MatchNet] Round {msg.RoundNumber} starting (time: {msg.PlanningTime}s)");
+            Debug.Log($"[MatchNet] Round {msg.roundNumber} starting (time: {msg.timeLimit}s)");
             OnRoundStart?.Invoke(msg);
-            GameEvents.RoundStarted(msg.RoundNumber);
+            GameEvents.RoundStarted(msg.roundNumber);
             GameEvents.PhaseChanged(GamePhase.Planning);
         }
 
@@ -160,7 +130,7 @@ namespace TacticalDuelist.Networking
         private void HandleRoundResults(string json)
         {
             var msg = JsonUtility.FromJson<RoundResultsMessage>(json);
-            Debug.Log($"[MatchNet] Round results received ({msg.Steps?.Length ?? 0} steps)");
+            Debug.Log($"[MatchNet] Round results received ({msg.steps?.Length ?? 0} steps)");
             OnRoundResults?.Invoke(msg);
             GameEvents.PhaseChanged(GamePhase.Execution);
         }
@@ -168,9 +138,9 @@ namespace TacticalDuelist.Networking
         private void HandleMatchEnd(string json)
         {
             var msg = JsonUtility.FromJson<MatchEndMessage>(json);
-            Debug.Log($"[MatchNet] Match ended: {msg.Result}");
+            Debug.Log($"[MatchNet] Match ended: {(MatchResult)msg.winner}");
             OnMatchEnded?.Invoke(msg);
-            GameEvents.MatchEnded(msg.Result);
+            GameEvents.MatchEnded((MatchResult)msg.winner);
         }
 
         #endregion
@@ -204,6 +174,7 @@ namespace TacticalDuelist.Networking
             _socket.On(EventBothCommitted, HandleBothCommitted);
             _socket.On(EventRoundResults, HandleRoundResults);
             _socket.On(EventMatchEnd, HandleMatchEnd);
+            _socket.On("exception", HandleException);
         }
 
         private void SubscribeConnectionEvents()
@@ -221,6 +192,7 @@ namespace TacticalDuelist.Networking
             _socket.OffAll(EventBothCommitted);
             _socket.OffAll(EventRoundResults);
             _socket.OffAll(EventMatchEnd);
+            _socket.OffAll("exception");
 
             _socket.OnConnected -= HandleConnected;
             _socket.OnDisconnected -= HandleDisconnected;

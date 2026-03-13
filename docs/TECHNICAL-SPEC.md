@@ -175,7 +175,7 @@ public class HeroState
 }
 ```
 
-### StepResult (emitted per step for View/Replay)
+### StepResult (emitted per step for View)
 ```csharp
 public class StepResult
 {
@@ -643,7 +643,7 @@ public class MatchEndMessage
     public MatchResult Result;
     public int RankDelta;
     public int XpGained;
-    public string ReplayId;
+    public string SolanaSettlementTx; // on-chain tx signature (null if free match)
 }
 ```
 
@@ -740,7 +740,6 @@ public interface IPlatformDeepLinks
 
 public interface IPlatformShare
 {
-    void ShareReplay(string replayId, string message);
     void InviteFriend(string matchId);
 }
 ```

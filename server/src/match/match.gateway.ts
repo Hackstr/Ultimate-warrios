@@ -13,6 +13,7 @@ import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../auth/ws-auth.guard';
 import { MatchService } from './match.service';
 import { MatchmakingService } from './matchmaking.service';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   FindMatchDto,
   RoundCommitDto,
@@ -37,6 +38,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly _matchmaking: MatchmakingService,
     private readonly _matchService: MatchService,
+    private readonly _prisma: PrismaService,
   ) {}
 
   // ── Connection Lifecycle ──
@@ -50,10 +52,18 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this._logger.log(`Client disconnected: ${client.id} (player: ${playerId ?? 'unknown'})`);
 
     if (playerId) {
-      this._matchmaking.removeFromQueue(playerId);
-      this._matchService.handleDisconnect(playerId);
       this._socketToPlayer.delete(client.id);
-      this._playerToSocket.delete(playerId);
+
+      // Only remove from queue/match if THIS socket is the player's active socket.
+      // Prevents a stale 2nd connection from nuking the 1st connection's state.
+      const activeSocketId = this._playerToSocket.get(playerId);
+      if (activeSocketId === client.id) {
+        this._matchmaking.removeFromQueue(playerId);
+        this._matchService.handleDisconnect(playerId);
+        this._playerToSocket.delete(playerId);
+      } else {
+        this._logger.log(`Stale socket ${client.id} for player ${playerId}, active socket preserved`);
+      }
     }
   }
 
@@ -69,7 +79,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const playerId = client.data.playerId as string;
     this._registerSocket(client, playerId);
 
-    const paired = await this._matchmaking.addToQueue(playerId, data.heroId, data.rankTier);
+    const rating = await this._getPlayerRating(playerId);
+    const paired = await this._matchmaking.addToQueue(playerId, data.heroId, rating);
     if (!paired) return;
 
     const match = await this._matchService.createMatch(
@@ -162,7 +173,6 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (result.matchEnded) {
         this.server.to(roomId).emit('match:end', {
           winner: result.matchOutcome,
-          replayId: result.replayId,
         });
       } else {
         this.server.to(roomId).emit('round:start', {
@@ -203,5 +213,13 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = this._playerToSocket.get(playerId);
     if (!socketId) return undefined;
     return this.server.sockets.sockets.get(socketId);
+  }
+
+  private async _getPlayerRating(playerId: string): Promise<number> {
+    const player = await this._prisma.player.findUnique({
+      where: { id: playerId },
+      select: { rating: true },
+    });
+    return player?.rating ?? 1000;
   }
 }

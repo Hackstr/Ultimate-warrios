@@ -109,7 +109,7 @@ namespace TacticalDuelist.Gameplay
         }
 
         /// <summary>
-        /// Force-sets the animator speed multiplier (e.g., 2x for fast-forward replay).
+        /// Force-sets the animator speed multiplier (e.g., 2x for fast-forward).
         /// </summary>
         public void SetPlaybackSpeed(float speed)
         {

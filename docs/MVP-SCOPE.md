@@ -67,16 +67,16 @@ Playable 1v1 prototype with core loop validation.
 ```
 1. Hero Select: P1 picks hero → screen handoff → P2 picks hero
 2. Planning: P1 programs actions → hides screen → P2 programs actions
-3. Execution: both watch replay together
+3. Execution: both watch execution together
 4. If no kill → next round (repeat from step 2)
 5. After 3 rounds no kill → draw
-6. Result screen: winner, replay option, rematch
+6. Result screen: winner, rematch
 ```
 
 ### UI Screens
 - [ ] Hero Select screen (4 heroes with portrait + stat cards)
 - [ ] Planning screen (3D grid preview + action queue)
-- [ ] Execution screen (3D animated replay)
+- [ ] Execution screen (3D animated execution)
 - [ ] Result screen (winner announcement + rematch)
 - [ ] HUD: round counter, step counter, health/armor status
 
@@ -92,7 +92,7 @@ Playable 1v1 prototype with core loop validation.
 
 ### NestJS Backend
 - [ ] Project scaffold: NestJS + Socket.IO + Prisma
-- [ ] PostgreSQL schema: Player, Match, Round, Replay
+- [ ] PostgreSQL schema: Player, Match, Round
 - [ ] Redis: session cache, matchmaking queue
 - [ ] MatchGateway: WebSocket event handlers
 - [ ] MatchmakingService: ELO-based matching (±200 range)
@@ -106,8 +106,6 @@ Playable 1v1 prototype with core loop validation.
 - [ ] Planning: submit commit hash, then reveal
 - [ ] Results received from server (authoritative)
 - [ ] Rank change display, XP display
-- [ ] Replay ID returned for future replay viewing
-
 ---
 
 ## OUT OF SCOPE (v0.2+)
@@ -119,11 +117,10 @@ Playable 1v1 prototype with core loop validation.
 - Multiple maps
 - Final 3D character models (MVP uses placeholder capsules)
 - Sound effects / music
-- Blockchain / $DUEL token / TON Connect
 - Progression system (XP, ranks, seasons)
 - Bot AI
-- Replay save/share
 - Spectator mode
+- Solana staked matches (see docs/COLOSSEUM-SPRINT.md Week 4)
 - Telegram Mini App deep integration (payments, ads, social)
 - Localization
 - Anti-cheat beyond commit-reveal
@@ -238,7 +235,7 @@ After offline MVP is built, validate these scenarios:
 [ ] Matchmaking pairs two players within rating range
 [ ] Commit hash sent, reveal validated against hash
 [ ] Server resolves round and sends identical results to both clients
-[ ] Client replay matches server-computed results
+[ ] Client execution matches server-computed results
 [ ] Disconnect + reconnect resumes match
 [ ] Match results persisted to PostgreSQL
 [ ] WebGL build loads in Telegram Mini App

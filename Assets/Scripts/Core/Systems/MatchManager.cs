@@ -43,6 +43,11 @@ namespace TacticalDuelist.Core.Systems
         private bool _p2Submitted;
         private List<StepResult> _lastRoundResults;
 
+        /// <summary>
+        /// When false, the map will not shrink between rounds (test mode).
+        /// </summary>
+        public bool EnableShrink { get; set; } = true;
+
         #endregion
 
         #region Match Lifecycle
@@ -200,10 +205,8 @@ namespace TacticalDuelist.Core.Systems
                 return;
             }
 
-            if (CurrentRound >= MaxRounds)
-                EndMatch(MatchResult.Draw);
-            else
-                EndRound(RoundResult.NoKill);
+            // No draws — keep playing. After MaxRounds, force shrink on.
+            EndRound(RoundResult.NoKill);
         }
 
         #endregion
@@ -219,17 +222,25 @@ namespace TacticalDuelist.Core.Systems
             switch (roundResult)
             {
                 case RoundResult.Player1Kill:
-                    EndMatch(MatchResult.Player2Win);
-                    break;
-                case RoundResult.Player2Kill:
                     EndMatch(MatchResult.Player1Win);
                     break;
+                case RoundResult.Player2Kill:
+                    EndMatch(MatchResult.Player2Win);
+                    break;
                 case RoundResult.MutualCancel:
-                    EndMatch(MatchResult.Draw);
+                    // Both eliminated simultaneously — sudden death rematch
+                    CurrentRound++;
+                    Player1.ResetForNewRound();
+                    Player2.ResetForNewRound();
+                    if (EnableShrink || CurrentRound > MaxRounds)
+                        _shrink.ApplyShrink(CurrentRound);
+                    StartPlanningPhase();
                     break;
                 case RoundResult.NoKill:
                     CurrentRound++;
-                    _shrink.ApplyShrink(CurrentRound);
+                    // Force shrink after MaxRounds even if EnableShrink is off
+                    if (EnableShrink || CurrentRound > MaxRounds)
+                        _shrink.ApplyShrink(CurrentRound);
                     Player1.ResetForNewRound();
                     Player2.ResetForNewRound();
                     StartPlanningPhase();
@@ -249,7 +260,7 @@ namespace TacticalDuelist.Core.Systems
         #region Queries
 
         /// <summary>
-        /// Returns the results of the last executed round for replay/display.
+        /// Returns the results of the last executed round for display.
         /// </summary>
         public IReadOnlyList<StepResult> GetLastRoundResults() => _lastRoundResults;
 

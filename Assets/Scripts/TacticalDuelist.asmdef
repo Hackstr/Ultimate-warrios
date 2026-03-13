@@ -2,7 +2,9 @@
     "name": "TacticalDuelist",
     "rootNamespace": "TacticalDuelist",
     "references": [
-        "UniTask"
+        "UniTask",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

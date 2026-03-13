@@ -93,11 +93,9 @@ export interface StepResultPayload {
 
 export interface RoundEndPayload {
   result: number;
-  replay?: unknown;
 }
 
 export interface MatchEndPayload {
   winner: number;
   rewards?: unknown;
-  replayId?: string;
 }

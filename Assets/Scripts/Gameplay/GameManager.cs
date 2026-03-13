@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
 using TacticalDuelist.Core.Utils;
 using TacticalDuelist.Networking;
+using TacticalDuelist.Platform;
 using TacticalDuelist.UI;
 
 namespace TacticalDuelist.Gameplay
@@ -36,7 +38,9 @@ namespace TacticalDuelist.Gameplay
         #region Serialized Fields
 
         [Header("UI Screens")]
+        [SerializeField] private MainMenuScreen _mainMenuScreen;
         [SerializeField] private HeroSelectScreen _heroSelectScreen;
+        [SerializeField] private MatchmakingScreen _matchmakingScreen;
         [SerializeField] private PlanningScreen _planningScreen;
         [SerializeField] private ResultScreen _resultScreen;
         [SerializeField] private HUD _hud;
@@ -49,6 +53,11 @@ namespace TacticalDuelist.Gameplay
         [Header("Default Map (offline)")]
         [SerializeField] private MapConfig _defaultMap;
 
+        [Header("Network")]
+        #pragma warning disable CS0414
+        [SerializeField] private string _serverUrl = "http://localhost:3000";
+        #pragma warning restore CS0414
+
         [Header("Mode")]
         [SerializeField] private bool _offlineMode = true;
 
@@ -59,6 +68,7 @@ namespace TacticalDuelist.Gameplay
         private FlowState _currentState;
         private MatchManager _matchManager;
         private MatchNetworkController _networkController;
+        private SocketIOClient _socket;
 
         private HeroConfig _p1Hero;
         private HeroConfig _p2Hero;
@@ -69,6 +79,11 @@ namespace TacticalDuelist.Gameplay
         private string _commitNonce;
 
         private readonly List<RoundResult> _roundResults = new();
+        private int _onlineWinner = -1; // 0=P1, 1=P2, 2=Draw, -1=not set
+        private int _onlineRoundNumber = 1;
+
+        private RoundStartMessage _pendingRoundStart;
+        private MatchEndMessage _pendingMatchEnd;
 
         #endregion
 
@@ -109,6 +124,7 @@ namespace TacticalDuelist.Gameplay
         private void OnDestroy()
         {
             _networkController?.Dispose();
+            _socket?.Dispose();
             GameEvents.ClearAll();
         }
 
@@ -148,6 +164,40 @@ namespace TacticalDuelist.Gameplay
         {
             CleanupMatch();
             TransitionTo(FlowState.MainMenu);
+        }
+
+        /// <summary>
+        /// Called by GameBootstrap to wire runtime-created references.
+        /// </summary>
+        public void SetupRuntime(
+            MainMenuScreen mainMenu,
+            HeroSelectScreen heroSelect,
+            MatchmakingScreen matchmaking,
+            PlanningScreen planning,
+            ResultScreen result,
+            HUD hud,
+            ExecutionController execution,
+            GridView gridView,
+            CameraController cameraController,
+            MapConfig defaultMap)
+        {
+            _mainMenuScreen = mainMenu;
+            _heroSelectScreen = heroSelect;
+            _matchmakingScreen = matchmaking;
+            _planningScreen = planning;
+            _resultScreen = result;
+            _hud = hud;
+            _executionController = execution;
+            _gridView = gridView;
+            _cameraController = cameraController;
+            _defaultMap = defaultMap;
+            _offlineMode = true;
+
+            if (_executionController != null)
+            {
+                _executionController.OnPlaybackComplete -= HandlePlaybackComplete;
+                _executionController.OnPlaybackComplete += HandlePlaybackComplete;
+            }
         }
 
         #endregion
@@ -199,13 +249,64 @@ namespace TacticalDuelist.Gameplay
         {
             HideAllScreens();
             _hud?.Hide();
+
+            if (_mainMenuScreen != null)
+            {
+                _mainMenuScreen.Show();
+                _mainMenuScreen.OnPlayOffline -= StartOfflineGame;
+                _mainMenuScreen.OnPlayOffline += StartOfflineGame;
+                _mainMenuScreen.OnPlayOnline -= HandlePlayOnline;
+                _mainMenuScreen.OnPlayOnline += HandlePlayOnline;
+            }
+        }
+
+        private async void HandlePlayOnline()
+        {
+            HideAllScreens();
+            _matchmakingScreen?.Show();
+            _matchmakingScreen?.SetStatus("CONNECTING TO SERVER...");
+
+            try
+            {
+                var auth = ServiceLocator.Get<IPlatformAuth>();
+                var token = await auth.Authenticate();
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    Debug.LogError("[GameManager] Authentication failed — empty token");
+                    _matchmakingScreen?.SetStatus("AUTH FAILED. Open via Telegram.");
+                    await UniTask.Delay(2000);
+                    TransitionTo(FlowState.MainMenu);
+                    return;
+                }
+
+                _socket?.Dispose();
+                var url = GetServerUrl();
+                _socket = new SocketIOClient(url);
+                _socket.SetAuthToken(token);
+                await _socket.ConnectAsync();
+
+                StartOnlineGame(_socket);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameManager] Online connection failed: {ex.Message}");
+                _matchmakingScreen?.SetStatus("CONNECTION FAILED");
+                await UniTask.Delay(2000);
+                TransitionTo(FlowState.MainMenu);
+            }
         }
 
         private void EnterMatchmaking()
         {
             HideAllScreens();
-            // Matchmaking UI would show a spinner/cancel button
-            // For now, the network controller handles match:find
+
+            if (_matchmakingScreen != null)
+            {
+                _matchmakingScreen.Show();
+                _matchmakingScreen.OnCancelMatchmaking -= HandleCancelMatchmaking;
+                _matchmakingScreen.OnCancelMatchmaking += HandleCancelMatchmaking;
+            }
         }
 
         private void EnterHeroSelect()
@@ -223,7 +324,8 @@ namespace TacticalDuelist.Gameplay
             _hud?.Show();
 
             if (_planningScreen != null)
-                _planningScreen.Show(_p1Hero, _matchManager.CurrentRound);
+                _planningScreen.Show(_p1Hero, _matchManager.CurrentRound,
+                    $"Player 1 — {_p1Hero.displayName}");
 
             SubscribePlanning();
         }
@@ -234,7 +336,8 @@ namespace TacticalDuelist.Gameplay
             _hud?.Show();
 
             if (_planningScreen != null)
-                _planningScreen.Show(_p2Hero, _matchManager.CurrentRound);
+                _planningScreen.Show(_p2Hero, _matchManager.CurrentRound,
+                    $"Player 2 — {_p2Hero.displayName}");
 
             SubscribePlanning();
         }
@@ -245,7 +348,7 @@ namespace TacticalDuelist.Gameplay
             _hud?.Show();
 
             if (_planningScreen != null)
-                _planningScreen.Show(_p1Hero, _matchManager?.CurrentRound ?? 1);
+                _planningScreen.Show(_p1Hero, _onlineRoundNumber);
 
             SubscribePlanning();
         }
@@ -254,7 +357,7 @@ namespace TacticalDuelist.Gameplay
         {
             HideAllScreens();
             _hud?.Show();
-            // Could show "waiting for opponent..." overlay
+            _planningScreen?.ShowWaitingOverlay("WAITING FOR OPPONENT...");
         }
 
         private void EnterExecution()
@@ -288,6 +391,7 @@ namespace TacticalDuelist.Gameplay
         private void InitOfflineMatch()
         {
             _matchManager = new MatchManager();
+            _matchManager.EnableShrink = false; // disabled for testing
             _activeMap = _defaultMap;
             _roundResults.Clear();
 
@@ -303,20 +407,20 @@ namespace TacticalDuelist.Gameplay
             }
 
             if (_cameraController != null && _gridView != null)
-            {
-                var center = _gridView.GetGridCenter();
-                _cameraController.FrameAction(
-                    GridHelper.GridToWorld(_activeMap.player1Spawn),
-                    GridHelper.GridToWorld(_activeMap.player2Spawn));
-            }
+                _cameraController.FrameGrid(_gridView.GetGridCenter(), _gridView.GetGridExtent());
+
+            if (_executionController != null)
+                _executionController.SetInitialPositions(
+                    _activeMap.player1Spawn, _activeMap.player1Facing,
+                    _activeMap.player2Spawn, _activeMap.player2Facing);
         }
 
         private void SubmitOfflineP1(List<ActionType> actions)
         {
-            UnsubscribePlanning();
             _p1Actions = new List<ActionType>(actions);
 
-            TransitionTo(FlowState.PlanningP2);
+            _planningScreen?.ShowPassDeviceOverlay(
+                "Pass the device\nto Player 2");
         }
 
         private void SubmitOfflineP2(List<ActionType> actions)
@@ -363,7 +467,18 @@ namespace TacticalDuelist.Gameplay
 
         private void HandlePlaybackComplete()
         {
-            // Determine what MatchManager decided during synchronous resolution
+            if (_offlineMode)
+            {
+                HandleOfflinePlaybackComplete();
+            }
+            else
+            {
+                HandleOnlinePlaybackComplete();
+            }
+        }
+
+        private void HandleOfflinePlaybackComplete()
+        {
             var phase = _matchManager.CurrentPhase;
 
             if (phase == GamePhase.PostMatch)
@@ -372,16 +487,36 @@ namespace TacticalDuelist.Gameplay
             }
             else if (phase == GamePhase.Planning)
             {
-                // MatchManager already started next round's planning
-                if (_offlineMode)
-                    TransitionTo(FlowState.PlanningP1);
-                else
-                    TransitionTo(FlowState.PlanningOnline);
+                TransitionTo(FlowState.PlanningP1);
             }
             else
             {
                 Debug.LogWarning($"[GameManager] Unexpected phase after playback: {phase}");
                 TransitionTo(FlowState.MatchResult);
+            }
+        }
+
+        private void HandleOnlinePlaybackComplete()
+        {
+            if (_pendingMatchEnd != null)
+            {
+                var msg = _pendingMatchEnd;
+                _pendingMatchEnd = null;
+                _pendingRoundStart = null;
+                _onlineWinner = msg.winner;
+                TransitionTo(FlowState.MatchResult);
+            }
+            else if (_pendingRoundStart != null)
+            {
+                var msg = _pendingRoundStart;
+                _pendingRoundStart = null;
+                _onlineRoundNumber = msg.roundNumber;
+                TransitionTo(FlowState.PlanningOnline);
+            }
+            else
+            {
+                Debug.Log("[GameManager] Playback done, waiting for server round:start or match:end...");
+                TransitionTo(FlowState.WaitingForOpponent);
             }
         }
 
@@ -401,22 +536,11 @@ namespace TacticalDuelist.Gameplay
 
         private void HandleMatchFound(MatchFoundMessage msg)
         {
-            // Server assigned our slot; opponent hero comes from the message
-            var opponentHeroId = msg.OpponentHeroId;
-            var opponentHero = FindHeroById(opponentHeroId);
+            var opponentHero = FindHeroById(msg.opponentHeroId);
+            _p2Hero = opponentHero;
 
-            if (msg.PlayerSlot == 0)
-            {
-                _p2Hero = opponentHero;
-            }
-            else
-            {
-                _p2Hero = _p1Hero;
-                _p1Hero = opponentHero;
-            }
+            _activeMap = _defaultMap;
 
-            // For online, we don't use MatchManager locally (server is authoritative).
-            // But we still need hero configs for HUD/result display.
             if (_hud != null)
             {
                 _hud.Initialize(_p1Hero, _p2Hero);
@@ -426,14 +550,24 @@ namespace TacticalDuelist.Gameplay
             if (_gridView != null && _activeMap != null)
                 _gridView.RenderGrid(
                     new GridSystem(_activeMap),
-                    msg.P1Spawn.ToVector2Int(),
-                    msg.P2Spawn.ToVector2Int());
+                    msg.yourSpawn.ToVector2Int(),
+                    msg.opponentSpawn.ToVector2Int());
 
-            // Server will send round:start to begin planning
+            if (_executionController != null)
+                _executionController.SetInitialPositions(
+                    msg.yourSpawn.ToVector2Int(), (Direction)msg.yourFacing,
+                    msg.opponentSpawn.ToVector2Int(), (Direction)msg.opponentFacing);
         }
 
         private void HandleOnlineRoundStart(RoundStartMessage msg)
         {
+            if (_currentState == FlowState.Execution)
+            {
+                _pendingRoundStart = msg;
+                return;
+            }
+
+            _onlineRoundNumber = msg.roundNumber;
             TransitionTo(FlowState.PlanningOnline);
         }
 
@@ -442,7 +576,7 @@ namespace TacticalDuelist.Gameplay
             UnsubscribePlanning();
 
             _commitNonce = HashUtil.GenerateNonce();
-            _commitHash = HashUtil.ComputeCommitHash(actions.ToArray(), _commitNonce);
+            _commitHash = HashUtil.ComputeActionHash(actions.ToArray(), _commitNonce);
 
             _networkController?.CommitActions(_commitHash);
             TransitionTo(FlowState.WaitingForOpponent);
@@ -457,8 +591,7 @@ namespace TacticalDuelist.Gameplay
 
         private void HandleRoundResults(RoundResultsMessage msg)
         {
-            // Convert StepResultData[] to List<StepResult> for ExecutionController
-            var results = ConvertStepResults(msg.Steps);
+            var results = ConvertStepResults(msg.steps);
 
             TransitionTo(FlowState.Execution);
 
@@ -470,13 +603,21 @@ namespace TacticalDuelist.Gameplay
 
         private void HandleOnlineMatchEnd(MatchEndMessage msg)
         {
+            if (_currentState == FlowState.Execution)
+            {
+                _pendingMatchEnd = msg;
+                return;
+            }
+
+            _onlineWinner = msg.winner;
             TransitionTo(FlowState.MatchResult);
         }
 
         private void HandleMatchError(string error)
         {
             Debug.LogError($"[GameManager] Match error: {error}");
-            // Could show error popup and return to menu
+            CleanupMatch();
+            TransitionTo(FlowState.MainMenu);
         }
 
         #endregion
@@ -503,12 +644,14 @@ namespace TacticalDuelist.Gameplay
         {
             if (_planningScreen == null) return;
             _planningScreen.OnActionsConfirmed += HandleActionsConfirmed;
+            _planningScreen.OnPassDeviceContinue += HandlePassDeviceContinue;
         }
 
         private void UnsubscribePlanning()
         {
             if (_planningScreen == null) return;
             _planningScreen.OnActionsConfirmed -= HandleActionsConfirmed;
+            _planningScreen.OnPassDeviceContinue -= HandlePassDeviceContinue;
         }
 
         private void SubscribeResult()
@@ -607,6 +750,12 @@ namespace TacticalDuelist.Gameplay
             }
         }
 
+        private void HandlePassDeviceContinue()
+        {
+            UnsubscribePlanning();
+            TransitionTo(FlowState.PlanningP2);
+        }
+
         private void HandleRematch()
         {
             UnsubscribeResult();
@@ -629,6 +778,15 @@ namespace TacticalDuelist.Gameplay
             ReturnToMainMenu();
         }
 
+        private void HandleCancelMatchmaking()
+        {
+            if (_matchmakingScreen != null)
+                _matchmakingScreen.OnCancelMatchmaking -= HandleCancelMatchmaking;
+
+            CleanupMatch();
+            TransitionTo(FlowState.MainMenu);
+        }
+
         #endregion
 
         #region GameEvents Tracking
@@ -644,9 +802,20 @@ namespace TacticalDuelist.Gameplay
 
         private void HideAllScreens()
         {
+            _mainMenuScreen?.Hide();
             _heroSelectScreen?.Hide();
+            _matchmakingScreen?.Hide();
             _planningScreen?.Hide();
             _resultScreen?.Hide();
+        }
+
+        private string GetServerUrl()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            return Platform.WebGL.WebGLConfig.GetServerUrl();
+#else
+            return _serverUrl;
+#endif
         }
 
         private void CleanupMatch()
@@ -658,16 +827,36 @@ namespace TacticalDuelist.Gameplay
             _activeMap = null;
             _commitHash = null;
             _commitNonce = null;
+            _onlineWinner = -1;
+            _onlineRoundNumber = 1;
+            _pendingRoundStart = null;
+            _pendingMatchEnd = null;
             _roundResults.Clear();
             UnsubscribeUI();
             UnsubscribeNetwork();
             _networkController?.Dispose();
             _networkController = null;
+            _socket?.Dispose();
+            _socket = null;
+
+            if (_matchmakingScreen != null)
+                _matchmakingScreen.OnCancelMatchmaking -= HandleCancelMatchmaking;
+
             GameEvents.ClearAll();
         }
 
         private MatchResult GetMatchResult()
         {
+            if (!_offlineMode && _onlineWinner >= 0)
+            {
+                return _onlineWinner switch
+                {
+                    0 => MatchResult.Player1Win,
+                    1 => MatchResult.Player2Win,
+                    _ => MatchResult.Draw
+                };
+            }
+
             if (_matchManager != null)
                 return InferResultFromRounds();
 
@@ -718,26 +907,26 @@ namespace TacticalDuelist.Gameplay
             {
                 results.Add(new StepResult
                 {
-                    StepIndex = d.StepIndex,
-                    P1Action = d.P1Action,
-                    P1StartPos = d.P1StartPos,
-                    P1EndPos = d.P1EndPos,
-                    P1StartFacing = d.P1StartFacing,
-                    P1EndFacing = d.P1EndFacing,
-                    P2Action = d.P2Action,
-                    P2StartPos = d.P2StartPos,
-                    P2EndPos = d.P2EndPos,
-                    P2StartFacing = d.P2StartFacing,
-                    P2EndFacing = d.P2EndFacing,
-                    P1Fired = d.P1Fired,
-                    P2Fired = d.P2Fired,
-                    P1Hit = d.P1Hit,
-                    P2Hit = d.P2Hit,
-                    MutualCancel = d.MutualCancel,
-                    P1ArmorBroken = d.P1ArmorBroken,
-                    P2ArmorBroken = d.P2ArmorBroken,
-                    P1Eliminated = d.P1Eliminated,
-                    P2Eliminated = d.P2Eliminated
+                    StepIndex = d.stepIndex,
+                    P1Action = (ActionType)d.p1Action,
+                    P1StartPos = d.p1StartPos,
+                    P1EndPos = d.p1EndPos,
+                    P1StartFacing = (Direction)d.p1StartFacing,
+                    P1EndFacing = (Direction)d.p1EndFacing,
+                    P2Action = (ActionType)d.p2Action,
+                    P2StartPos = d.p2StartPos,
+                    P2EndPos = d.p2EndPos,
+                    P2StartFacing = (Direction)d.p2StartFacing,
+                    P2EndFacing = (Direction)d.p2EndFacing,
+                    P1Fired = d.p1Fired,
+                    P2Fired = d.p2Fired,
+                    P1Hit = d.p1Hit,
+                    P2Hit = d.p2Hit,
+                    MutualCancel = d.mutualCancel,
+                    P1ArmorBroken = d.p1ArmorBroken,
+                    P2ArmorBroken = d.p2ArmorBroken,
+                    P1Eliminated = d.p1Eliminated,
+                    P2Eliminated = d.p2Eliminated
                 });
             }
             return results;

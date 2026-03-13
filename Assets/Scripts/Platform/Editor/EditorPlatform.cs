@@ -2,12 +2,14 @@
 using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace TacticalDuelist.Platform.Editor
 {
     /// <summary>
-    /// Editor / standalone mock platform for development and testing.
-    /// All calls produce Debug.Log output. No external dependencies.
+    /// Editor / standalone platform for development and testing.
+    /// Auth hits the server's POST /auth/dev endpoint.
+    /// WebSocket uses real Engine.IO/Socket.IO transport.
     /// </summary>
     public sealed class EditorPlatform : IPlatformService
     {
@@ -35,14 +37,55 @@ namespace TacticalDuelist.Platform.Editor
     #region Auth
     internal sealed class EditorAuth : IPlatformAuth
     {
-        public UniTask<string> Authenticate()
+        private const string DevAuthUrl = "http://localhost:3000/auth/dev";
+        private string _cachedToken;
+
+        public async UniTask<string> Authenticate()
         {
-            Debug.Log("[EditorPlatform] Auth: returning mock token");
-            return UniTask.FromResult("editor_mock_token_12345");
+            if (!string.IsNullOrEmpty(_cachedToken))
+                return _cachedToken;
+
+            var username = $"editor_{SystemInfo.deviceUniqueIdentifier[..8]}";
+            var body = $"{{\"username\":\"{username}\"}}";
+            var bodyBytes = System.Text.Encoding.UTF8.GetBytes(body);
+
+            using var req = new UnityWebRequest(DevAuthUrl, "POST");
+            req.uploadHandler = new UploadHandlerRaw(bodyBytes);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = 5;
+
+            try
+            {
+                await req.SendWebRequest().ToUniTask();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[EditorAuth] Server unreachable ({ex.Message}), using mock token");
+                return "editor_mock_token_12345";
+            }
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[EditorAuth] Auth failed ({req.responseCode}): {req.downloadHandler.text}, using mock token");
+                return "editor_mock_token_12345";
+            }
+
+            var response = JsonUtility.FromJson<DevAuthResponse>(req.downloadHandler.text);
+            _cachedToken = response.token;
+            Debug.Log($"[EditorAuth] Authenticated as {username} (playerId={response.playerId})");
+            return _cachedToken;
         }
 
         public string GetDisplayName() => "EditorPlayer";
         public string GetAvatarUrl() => string.Empty;
+
+        [Serializable]
+        private class DevAuthResponse
+        {
+            public string token;
+            public string playerId;
+        }
     }
     #endregion
 
@@ -59,35 +102,7 @@ namespace TacticalDuelist.Platform.Editor
     internal sealed class EditorNetwork : IPlatformNetwork
     {
         public IWebSocketTransport CreateWebSocket(string url) =>
-            new EditorWebSocketTransport(url);
-    }
-
-    internal sealed class EditorWebSocketTransport : IWebSocketTransport
-    {
-        private readonly string _url;
-
-        public event Action<string, string> OnMessage;
-        public event Action<string> OnError;
-        public event Action OnDisconnected;
-
-        public EditorWebSocketTransport(string url) => _url = url;
-
-        public UniTask Connect()
-        {
-            Debug.Log($"[EditorPlatform] WS Connect → {_url}");
-            return UniTask.CompletedTask;
-        }
-
-        public void Send(string eventName, string jsonPayload)
-        {
-            Debug.Log($"[EditorPlatform] WS Send: {eventName} → {jsonPayload}");
-        }
-
-        public void Disconnect()
-        {
-            Debug.Log("[EditorPlatform] WS Disconnect");
-            OnDisconnected?.Invoke();
-        }
+            new EditorSocketIOTransport(url);
     }
     #endregion
 
@@ -131,11 +146,6 @@ namespace TacticalDuelist.Platform.Editor
     #region Share
     internal sealed class EditorShare : IPlatformShare
     {
-        public void ShareReplay(string replayId, string message)
-        {
-            Debug.Log($"[EditorPlatform] ShareReplay: {replayId} — {message}");
-        }
-
         public void InviteFriend(string matchId)
         {
             Debug.Log($"[EditorPlatform] InviteFriend: {matchId}");

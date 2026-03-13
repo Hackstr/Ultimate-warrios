@@ -199,7 +199,6 @@
   [ ] Icon_Settings          — шестерёнка
   [ ] Icon_Friends           — друзья
   [ ] Icon_Club              — клуб
-  [ ] Icon_Replay            — воспроизведение
   [ ] Icon_Share             — поделиться
 ```
 
@@ -354,3 +353,81 @@
 - **13** UI иконок + 4 портрета + карточка героя
 - **5** музыкальных треков + **14** SFX
 - **3** шрифта
+
+---
+
+## 8. UI СПРАЙТЫ / ФОНЫ (для экранов)
+
+```
+🔴 MVP:
+  [ ] UI_BG_MainMenu        — фон главного меню (тёмный, с лёгким рисунком)
+  [ ] UI_BG_HeroSelect      — фон выбора героя
+  [ ] UI_BG_Planning         — фон нижней панели планирования
+  [ ] UI_BG_Result           — фон экрана результата
+  [ ] UI_Panel_Dark          — панель (тёмная, для карточек и секций)
+  [ ] UI_Panel_Highlighted   — панель (подсвеченная, для активных элементов)
+  [ ] UI_Button_Primary      — основная кнопка (оранжевая, 9-slice)
+  [ ] UI_Button_Secondary    — вторичная кнопка (серая, 9-slice)
+  [ ] UI_Button_Danger       — опасная кнопка (красная, shoot)
+  [ ] UI_Button_Special      — фиолетовая кнопка (special)
+  [ ] UI_Button_Movement     — синяя кнопка (move)
+  [ ] UI_Button_Turn         — жёлтая кнопка (turn)
+  [ ] UI_Slot_Empty          — пустой слот очереди действий
+  [ ] UI_Slot_Filled         — заполненный слот (9-slice, цвет через tint)
+  [ ] UI_Slot_Highlighted    — активный слот (следующий для заполнения)
+  [ ] UI_Slot_Locked         — заблокированный слот (cooldown)
+  [ ] UI_Frame_Player        — рамка портрета игрока в HUD
+  [ ] UI_Frame_HeroCard      — рамка карточки героя (обычная + selected)
+  [ ] UI_Bar_HP              — полоска здоровья
+  [ ] UI_Bar_Stat            — полоска характеристики (для экрана выбора)
+  [ ] UI_Difficulty_Star     — звезда сложности (заполненная + пустая)
+  [ ] UI_Logo                — логотип игры "Tactical Duelist"
+  [ ] UI_Divider             — горизонтальный разделитель
+
+🟡 v0.2:
+  [ ] UI_PassDevice_BG       — фон оверлея "передайте устройство"
+  [ ] UI_Matchmaking_BG      — фон экрана поиска матча
+  [ ] UI_PostRound_BG        — фон экрана между раундами
+  [ ] UI_Reconnect_Overlay   — оверлей переподключения
+
+🟢 v1.0:
+  [ ] UI_BG_Profile          — фон профиля
+  [ ] UI_BG_Settings         — фон настроек
+  [ ] UI_BG_Shop             — фон магазина
+  [ ] UI_BattlePass_BG       — фон боевого пропуска
+```
+
+---
+
+## 9. СВОДНЫЙ ЧЕКЛИСТ ДЛЯ ИМПОРТА
+
+> Когда ассет готов — закидывай в соответствующую папку и отмечай здесь.
+
+### Папки в проекте:
+```
+Assets/
+├── Models/Heroes/          ← 3D модели (.fbx)
+├── Animations/Heroes/      ← анимации (.fbx / .anim)
+├── Materials/Grid/         ← материалы сетки (уже есть)
+├── Materials/Heroes/       ← материалы героев
+├── Prefabs/Heroes/         ← префабы героев (уже 4 placeholder)
+├── Sprites/UI/Icons/       ← иконки действий, статов, рангов
+├── Sprites/UI/Portraits/   ← портреты героев (256x256)
+├── Sprites/UI/Backgrounds/ ← фоны экранов
+├── Sprites/UI/Elements/    ← кнопки, слоты, рамки, полоски
+├── Audio/Music/            ← музыка (.ogg)
+├── Audio/SFX/              ← звуковые эффекты (.ogg/.wav)
+├── Fonts/                  ← шрифты (.ttf/.otf)
+├── VFX/Prefabs/            ← VFX префабы
+└── VFX/Textures/           ← текстуры частиц
+```
+
+### Требования к форматам:
+- 3D модели: `.fbx`, до 5000 tri, Unity Humanoid rig
+- Текстуры: `.png`, Power of 2 (512x512, 1024x1024)
+- Спрайты UI: `.png`, прозрачный фон, 9-slice где нужно
+- Портреты: `.png`, 256x256, прозрачный фон
+- Иконки: `.png`, 128x128, прозрачный фон
+- Музыка: `.ogg`, 128-192 kbps, loop-friendly
+- SFX: `.ogg` или `.wav`, короткие (0.1-2s)
+- Шрифты: `.ttf` или `.otf`, лицензия для коммерческого использования

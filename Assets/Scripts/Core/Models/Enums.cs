@@ -55,6 +55,7 @@ namespace TacticalDuelist.Core.Models
 
     public enum PickupType
     {
+        None = -1,
         ArmorShard,
         IntelOrb,
         SpeedBoost,

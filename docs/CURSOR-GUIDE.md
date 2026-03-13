@@ -71,12 +71,14 @@ Create the full ActionResolver system:
 
 ```
 .cursorrules              → AI system prompt (auto-loaded)
-docs/ARCHITECTURE.md      → System design, data flow, event system
+docs/ARCHITECTURE.md      → System design, data flow, event system, Solana integration
 docs/TECHNICAL-SPEC.md    → Enums, data models, algorithms, full code specs
 docs/HEROES.md            → All 12 heroes: stats, abilities, matchups
 docs/MVP-SCOPE.md         → What to build, what to skip, implementation order
 docs/CODING-CONVENTIONS.md → Naming, structure, patterns, WebGL rules
-docs/TASKS.md             → Task list with dependencies
+docs/TASKS.md             → Task list with dependencies (incl. Solana Phase 19)
+docs/COLOSSEUM-SPRINT.md  → 4-week Colosseum Eternal sprint plan
+docs/GAME-DESIGN.md       → Core design pillars and game rules
 ```
 
 ## Common mistakes to watch for

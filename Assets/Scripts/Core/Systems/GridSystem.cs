@@ -111,9 +111,9 @@ namespace TacticalDuelist.Core.Systems
 
         public bool HasPickup(Vector2Int pos) => _pickups.ContainsKey(pos);
 
-        public PickupType? GetPickup(Vector2Int pos)
+        public PickupType GetPickup(Vector2Int pos)
         {
-            return _pickups.TryGetValue(pos, out var type) ? type : null;
+            return _pickups.TryGetValue(pos, out var type) ? type : PickupType.None;
         }
 
         #endregion

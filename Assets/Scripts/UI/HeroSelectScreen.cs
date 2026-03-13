@@ -31,6 +31,7 @@ namespace TacticalDuelist.UI
         [Header("UI References — Selected Hero Info")]
         [SerializeField] private TextMeshProUGUI _heroNameText;
         [SerializeField] private TextMeshProUGUI _difficultyText;
+        [SerializeField] private RectTransform _difficultyDotsContainer;
         [SerializeField] private TextMeshProUGUI _specialNameText;
         [SerializeField] private TextMeshProUGUI _specialDescText;
 
@@ -83,6 +84,7 @@ namespace TacticalDuelist.UI
 
         #region Fields
 
+        private bool _isPassAndPlay = true;
         private int _currentPlayerSelecting = 1;
         private HeroConfig _selectedHero;
         private HeroConfig _player1Hero;
@@ -118,6 +120,7 @@ namespace TacticalDuelist.UI
         public void Show(bool isPassAndPlay = true)
         {
             gameObject.SetActive(true);
+            _isPassAndPlay = isPassAndPlay;
             _currentPlayerSelecting = 1;
             _player1Hero = null;
             _player2Hero = null;
@@ -155,7 +158,16 @@ namespace TacticalDuelist.UI
 
             foreach (var hero in _availableHeroes)
             {
+                // Skip heroes without heroId (broken data)
+                if (string.IsNullOrEmpty(hero.heroId)) continue;
+
                 var cardObj = Instantiate(_heroCardPrefab, _heroCardContainer);
+                cardObj.SetActive(true);
+
+                // Template has ignoreLayout=true; clones must participate in layout
+                var le = cardObj.GetComponent<LayoutElement>();
+                if (le != null) le.ignoreLayout = false;
+
                 var cardUI = cardObj.GetComponent<HeroCardUI>();
 
                 if (cardUI != null)
@@ -192,15 +204,31 @@ namespace TacticalDuelist.UI
 
             if (_difficultyText != null)
             {
-                string stars = new string('★', hero.difficulty) + new string('☆', 5 - hero.difficulty);
-                _difficultyText.text = stars;
+                _difficultyText.text = $"Difficulty: {hero.difficulty}/5";
             }
 
+            RebuildDifficultyDots(hero.difficulty);
+
             if (_specialNameText != null)
-                _specialNameText.text = hero.specialName;
+                _specialNameText.text = $"Special: {hero.specialName}";
 
             if (_specialDescText != null)
                 _specialDescText.text = hero.specialDescription;
+        }
+
+        private void RebuildDifficultyDots(int filled)
+        {
+            if (_difficultyDotsContainer == null) return;
+
+            for (int i = _difficultyDotsContainer.childCount - 1; i >= 0; i--)
+                Destroy(_difficultyDotsContainer.GetChild(i).gameObject);
+
+            for (int i = 0; i < 5; i++)
+            {
+                var dot = UIFactory.CreateImage(_difficultyDotsContainer, $"Dot{i}",
+                    i < filled ? UIFactory.DotFilled : UIFactory.DotEmpty, 20f, 20f);
+                dot.raycastTarget = false;
+            }
         }
 
         private void UpdateStatBars(HeroConfig hero)
@@ -254,6 +282,14 @@ namespace TacticalDuelist.UI
         private void OnSelectPressed()
         {
             if (_selectedHero == null) return;
+
+            if (!_isPassAndPlay)
+            {
+                _player1Hero = _selectedHero;
+                _selectButton.interactable = false;
+                OnHeroesSelected?.Invoke(_player1Hero, null);
+                return;
+            }
 
             if (_currentPlayerSelecting == 1)
             {
@@ -311,14 +347,24 @@ namespace TacticalDuelist.UI
         private void UpdateTitle()
         {
             if (_titleText != null)
-                _titleText.text = _currentPlayerSelecting == 1
-                    ? "PLAYER 1 — CHOOSE HERO"
-                    : "PLAYER 2 — CHOOSE HERO";
+            {
+                if (!_isPassAndPlay)
+                    _titleText.text = "CHOOSE YOUR HERO";
+                else
+                    _titleText.text = _currentPlayerSelecting == 1
+                        ? "PLAYER 1 — CHOOSE HERO"
+                        : "PLAYER 2 — CHOOSE HERO";
+            }
 
             if (_selectButtonText != null)
-                _selectButtonText.text = _currentPlayerSelecting == 1
-                    ? "SELECT"
-                    : "START MATCH";
+            {
+                if (!_isPassAndPlay)
+                    _selectButtonText.text = "SELECT";
+                else
+                    _selectButtonText.text = _currentPlayerSelecting == 1
+                        ? "SELECT"
+                        : "START MATCH";
+            }
         }
 
         #endregion

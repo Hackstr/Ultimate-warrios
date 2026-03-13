@@ -19,8 +19,11 @@ namespace TacticalDuelist.Gameplay
         [SerializeField] private Renderer _mainRenderer;
 
         [Header("Movement")]
+        #pragma warning disable CS0414
         [SerializeField] private float _moveSpeed = 5f;
         [SerializeField] private float _turnSpeed = 720f;
+        #pragma warning restore CS0414
+        [SerializeField] private float _heightOffset = 0.5f;
 
         [Header("Visual")]
         [SerializeField] private GameObject _directionArrow;
@@ -68,7 +71,7 @@ namespace TacticalDuelist.Gameplay
         /// </summary>
         public void SetGridPosition(Vector2Int gridPos, Direction facing)
         {
-            transform.position = GridHelper.GridToWorld(gridPos, _tileSize);
+            transform.position = GridHelper.GridToWorld(gridPos, _tileSize) + Vector3.up * _heightOffset;
             transform.rotation = GridHelper.DirectionToRotation(facing);
         }
 
@@ -82,8 +85,9 @@ namespace TacticalDuelist.Gameplay
         public IEnumerator AnimateMove(Vector2Int from, Vector2Int to, float duration)
         {
             _isAnimating = true;
-            var startPos = GridHelper.GridToWorld(from, _tileSize);
-            var endPos = GridHelper.GridToWorld(to, _tileSize);
+            var offset = Vector3.up * _heightOffset;
+            var startPos = GridHelper.GridToWorld(from, _tileSize) + offset;
+            var endPos = GridHelper.GridToWorld(to, _tileSize) + offset;
 
             SetAnimBool(AnimMove, true);
 

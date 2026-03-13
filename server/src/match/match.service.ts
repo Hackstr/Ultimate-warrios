@@ -56,7 +56,6 @@ interface RevealResult {
   roundOutcome?: number;
   matchEnded?: boolean;
   matchOutcome?: number;
-  replayId?: string;
   nextRound?: number;
   shrinkZone?: { x: number; y: number }[];
 }
@@ -240,7 +239,6 @@ export class MatchService {
 
     if (matchEnded) {
       const matchOutcome = this._determineMatchOutcome(match);
-      const replayId = await this._saveReplay(match);
       await this._endMatch(match, matchOutcome);
 
       return {
@@ -250,7 +248,6 @@ export class MatchService {
         roundOutcome,
         matchEnded: true,
         matchOutcome,
-        replayId,
       };
     }
 
@@ -291,20 +288,14 @@ export class MatchService {
   }
 
   private _isMatchOver(match: ActiveMatch): boolean {
-    const p1Kills = match.roundResults.filter((r) => r === RoundResult.Player1Kill).length;
-    const p2Kills = match.roundResults.filter((r) => r === RoundResult.Player2Kill).length;
-
-    if (p1Kills >= 2 || p2Kills >= 2) return true;
-    if (match.currentRound >= 3) return true;
-    return false;
+    const lastRound = match.roundResults[match.roundResults.length - 1];
+    return lastRound === RoundResult.Player1Kill || lastRound === RoundResult.Player2Kill;
   }
 
   private _determineMatchOutcome(match: ActiveMatch): MatchResult {
-    const p1Kills = match.roundResults.filter((r) => r === RoundResult.Player1Kill).length;
-    const p2Kills = match.roundResults.filter((r) => r === RoundResult.Player2Kill).length;
-    if (p1Kills > p2Kills) return MatchResult.Player1Win;
-    if (p2Kills > p1Kills) return MatchResult.Player2Win;
-    return MatchResult.Draw;
+    const lastRound = match.roundResults[match.roundResults.length - 1];
+    if (lastRound === RoundResult.Player1Kill) return MatchResult.Player1Win;
+    return MatchResult.Player2Win;
   }
 
   // ── DB Persistence ──
@@ -361,32 +352,6 @@ export class MatchService {
         draws: { increment: score2 === 0.5 ? 1 : 0 },
       },
     });
-  }
-
-  private async _saveReplay(match: ActiveMatch): Promise<string> {
-    const rounds = await this._prisma.round.findMany({
-      where: { matchId: match.matchId },
-      orderBy: { roundNumber: 'asc' },
-    });
-
-    const replay = await this._prisma.replay.create({
-      data: {
-        matchId: match.matchId,
-        dataJson: JSON.stringify({
-          matchId: match.matchId,
-          mapId: match.map.mapId,
-          player1Hero: match.player1HeroId,
-          player2Hero: match.player2HeroId,
-          rounds: rounds.map((r) => ({
-            roundNumber: r.roundNumber,
-            outcome: r.outcome,
-            steps: r.stepsJson ? JSON.parse(r.stepsJson) : [],
-          })),
-        }),
-      },
-    });
-
-    return replay.id;
   }
 
   // ── State Management ──

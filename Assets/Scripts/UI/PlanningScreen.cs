@@ -49,6 +49,14 @@ namespace TacticalDuelist.UI
         [SerializeField] private Button _undoButton;
         [SerializeField] private TextMeshProUGUI _confirmButtonText;
 
+        [Header("Player Indicator")]
+        [SerializeField] private TextMeshProUGUI _playerLabel;
+
+        [Header("Pass Device (offline)")]
+        [SerializeField] private GameObject _passDeviceOverlay;
+        [SerializeField] private Button _passDeviceTapButton;
+        [SerializeField] private TextMeshProUGUI _passDeviceMessage;
+
         [Header("Timer Settings")]
         [SerializeField] private float _roundTimerDuration = 30f;
         [SerializeField] private float _laterRoundTimerDuration = 20f;
@@ -61,6 +69,11 @@ namespace TacticalDuelist.UI
         /// Fired when player confirms their action sequence.
         /// </summary>
         public event Action<List<ActionType>> OnActionsConfirmed;
+
+        /// <summary>
+        /// Fired when user taps through the "pass device" overlay.
+        /// </summary>
+        public event Action OnPassDeviceContinue;
 
         #endregion
 
@@ -97,6 +110,7 @@ namespace TacticalDuelist.UI
 
             _confirmButton?.onClick.AddListener(OnConfirmPressed);
             _undoButton?.onClick.AddListener(OnUndoPressed);
+            _passDeviceTapButton?.onClick.AddListener(OnPassDeviceTapped);
         }
 
         private void OnDisable()
@@ -111,6 +125,7 @@ namespace TacticalDuelist.UI
 
             _confirmButton?.onClick.RemoveAllListeners();
             _undoButton?.onClick.RemoveAllListeners();
+            _passDeviceTapButton?.onClick.RemoveAllListeners();
         }
 
         private void Update()
@@ -136,13 +151,16 @@ namespace TacticalDuelist.UI
         /// <summary>
         /// Opens planning for a given hero and round.
         /// </summary>
-        public void Show(HeroConfig hero, int round)
+        public void Show(HeroConfig hero, int round, string playerLabel = null)
         {
             gameObject.SetActive(true);
             _currentHero = hero;
             _currentRound = round;
             _confirmed = false;
             _actionQueue.Clear();
+
+            if (_playerLabel != null)
+                _playerLabel.text = playerLabel ?? $"Round {round} — {hero.displayName}";
 
             BuildQueueSlots();
             UpdateAllButtonStates();
@@ -159,6 +177,26 @@ namespace TacticalDuelist.UI
         {
             _timerActive = false;
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Shows a simplified overlay with a waiting message (e.g., after submitting actions).
+        /// </summary>
+        public void ShowWaitingOverlay(string message)
+        {
+            gameObject.SetActive(true);
+            _timerActive = false;
+            _confirmed = true;
+
+            if (_playerLabel != null)
+                _playerLabel.text = message;
+
+            if (_confirmButton != null)
+                _confirmButton.interactable = false;
+            if (_undoButton != null)
+                _undoButton.interactable = false;
+
+            SetActionButtonsInteractable(false);
         }
 
         /// <summary>
@@ -248,9 +286,18 @@ namespace TacticalDuelist.UI
             for (int i = 0; i < _currentHero.steps; i++)
             {
                 var slotObj = Instantiate(_queueSlotPrefab, _queueContainer);
+                slotObj.SetActive(true);
+
+                // Template has ignoreLayout=true; clones must participate in layout
+                var le = slotObj.GetComponent<UnityEngine.UI.LayoutElement>();
+                if (le != null) le.ignoreLayout = false;
+
                 var slotUI = slotObj.GetComponent<ActionSlotUI>();
                 if (slotUI != null)
+                {
+                    slotUI.SetStepNumber(i + 1);
                     _slots.Add(slotUI);
+                }
             }
 
             RefreshSlots();
@@ -259,6 +306,8 @@ namespace TacticalDuelist.UI
         private void RefreshSlots()
         {
             int cooldown = 0;
+            int nextEmptySlot = _actionQueue.Count;
+            bool highlightedOne = false;
 
             for (int i = 0; i < _slots.Count; i++)
             {
@@ -272,17 +321,19 @@ namespace TacticalDuelist.UI
                     else
                         cooldown = cooldown > 0 ? cooldown - 1 : 0;
                 }
+                else if (cooldown > 0)
+                {
+                    _slots[i].SetCooldownLock(cooldown);
+                    cooldown--;
+                }
+                else if (!highlightedOne && !_confirmed)
+                {
+                    _slots[i].SetHighlighted();
+                    highlightedOne = true;
+                }
                 else
                 {
-                    if (cooldown > 0)
-                    {
-                        _slots[i].SetCooldownLock(cooldown);
-                        cooldown--;
-                    }
-                    else
-                    {
-                        _slots[i].SetEmpty();
-                    }
+                    _slots[i].SetEmpty();
                 }
             }
 
@@ -387,17 +438,59 @@ namespace TacticalDuelist.UI
 
         #region Private — Helpers
 
+        private void SetActionButtonsInteractable(bool interactable)
+        {
+            if (_moveButton != null) _moveButton.interactable = interactable;
+            if (_turnLeftButton != null) _turnLeftButton.interactable = interactable;
+            if (_turnRightButton != null) _turnRightButton.interactable = interactable;
+            if (_turnAroundButton != null) _turnAroundButton.interactable = interactable;
+            if (_shootButton != null) _shootButton.interactable = interactable;
+            if (_waitButton != null) _waitButton.interactable = interactable;
+            if (_specialButton != null) _specialButton.interactable = interactable;
+        }
+
         private static string GetActionIcon(ActionType action) => action switch
         {
-            ActionType.Move => "➡️",
-            ActionType.TurnLeft => "↰",
-            ActionType.TurnRight => "↱",
-            ActionType.TurnAround => "↩️",
-            ActionType.Shoot => "🎯",
-            ActionType.Wait => "⏸",
-            ActionType.Special => "⚡",
+            ActionType.Move => ">>",
+            ActionType.TurnLeft => "<<",
+            ActionType.TurnRight => ">>",
+            ActionType.TurnAround => "<>",
+            ActionType.Shoot => "X",
+            ActionType.Wait => "--",
+            ActionType.Special => "*",
             _ => "?"
         };
+
+        #endregion
+
+        #region Pass Device Overlay
+
+        /// <summary>
+        /// Shows a full-screen overlay telling players to pass the device (offline mode).
+        /// </summary>
+        public void ShowPassDeviceOverlay(string message = null)
+        {
+            if (_passDeviceOverlay == null) return;
+
+            gameObject.SetActive(true);
+            _timerActive = false;
+            _passDeviceOverlay.SetActive(true);
+
+            if (_passDeviceMessage != null)
+                _passDeviceMessage.text = message ?? "Pass the device\nto the other player";
+        }
+
+        public void HidePassDeviceOverlay()
+        {
+            if (_passDeviceOverlay != null)
+                _passDeviceOverlay.SetActive(false);
+        }
+
+        private void OnPassDeviceTapped()
+        {
+            HidePassDeviceOverlay();
+            OnPassDeviceContinue?.Invoke();
+        }
 
         #endregion
     }

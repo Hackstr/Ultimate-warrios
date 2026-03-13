@@ -8,13 +8,13 @@ Tactical Duelist uses a client-server architecture with strict separation of con
 - **Server (NestJS):** Authoritative match resolution, matchmaking, anti-cheat, persistence.
 - **Communication:** WebSocket (Socket.IO) for real-time bidirectional events.
 
-All game logic is deterministic pure C# — identical code can run on both client (for prediction/replay) and server (for authoritative resolution).
+All game logic is deterministic pure C# — identical code can run on both client (for prediction) and server (for authoritative resolution).
 
 ### Target Platforms
 
 | Platform | Build Target | Primary Use | Auth Method |
 |----------|-------------|-------------|-------------|
-| **WebGL** | Telegram Mini App | Primary launch platform | Telegram WebApp initData |
+| **WebGL** | Telegram Mini App | Primary launch platform | Telegram WebApp initData + Solana wallet |
 | **Android** | Google Play / APK | Mobile native | Telegram Login / Google Play Games |
 | **iOS** | App Store / TestFlight | Mobile native | Telegram Login / Apple Game Center |
 | **Web** | Standalone browser | Desktop browser | Telegram Login / Email |
@@ -75,13 +75,13 @@ All game logic is deterministic pure C# — identical code can run on both clien
 │  ┌──────────────────▼───────────────────────────┐    │
 │  │            SERVICE LAYER (Business Logic)     │    │
 │  │  MatchService · MatchmakingService           │    │
-│  │  ActionResolverService · ReplayService       │    │
+│  │  ActionResolverService                        │    │
 │  │  PlayerService · AuthService · RankService   │    │
 │  └──────────────────┬───────────────────────────┘    │
 │                     │ Prisma ORM                     │
 │  ┌──────────────────▼───────────────────────────┐    │
 │  │            DATA LAYER                        │    │
-│  │  PostgreSQL (profiles, matches, replays)     │    │
+│  │  PostgreSQL (profiles, matches)               │    │
 │  │  Redis (sessions, matchmaking queue, cache)  │    │
 │  └──────────────────────────────────────────────┘    │
 └──────────────────────────────────────────────────────┘
@@ -169,9 +169,9 @@ src/
 │   ├── player.module.ts
 │   ├── player.service.ts         # Profile CRUD, mastery, rank
 │   └── player.controller.ts     # REST endpoints for profile
-├── replay/
-│   ├── replay.module.ts
-│   └── replay.service.ts        # Replay storage and retrieval
+├── solana/
+│   ├── solana.module.ts
+│   └── solana.service.ts        # Anchor escrow, match settlement, SPL rewards
 ├── shared/
 │   ├── models/                   # Shared DTOs, enums
 │   ├── guards/                   # Auth guards
@@ -186,7 +186,7 @@ src/
 - **Dependency Injection:** All services injected via constructors, defined as `@Injectable()`
 - **WebSocket Gateway:** `@WebSocketGateway()` with `@SubscribeMessage()` decorators for match events
 - **Guards:** `WsAuthGuard` validates Telegram initData on every WebSocket connection
-- **Modules:** Each feature domain (match, player, replay) is a self-contained module
+- **Modules:** Each feature domain (match, player) is a self-contained module
 - **Prisma:** Shared `PrismaService` injected into all data-access services
 
 ## Communication Protocol (WebSocket Events)
@@ -210,8 +210,62 @@ src/
 | `round:start` | `{ roundNumber, timeLimit, shrinkZone? }` | Round begins |
 | `round:both-committed` | `{}` | Both players committed, request reveal |
 | `round:results` | `{ steps: StepResult[] }` | Full round resolution |
-| `round:end` | `{ result, replay }` | Round outcome |
-| `match:end` | `{ winner, rewards, replay }` | Match outcome |
+| `round:end` | `{ result, shrinkData }` | Round outcome |
+| `match:end` | `{ winner, rewards }` | Match outcome |
+
+## Solana Integration
+
+### Architecture
+
+Solana is used as a trust and payment layer — NOT for game logic.
+Game logic runs on NestJS server. Solana handles staking and settlement.
+
+### Match Escrow Flow (Anchor Program)
+
+```
+1. DEPOSIT: Both players send SOL/SPL to escrow PDA
+   - Client: wallet signs transaction via Phantom deep link (TMA)
+   - Server: verifies on-chain deposit before starting match
+
+2. SETTLE: Server triggers settlement after match ends
+   - Winner receives both stakes (minus platform fee ~5%)
+   - Draw: both players refunded
+   - Forfeit/disconnect: opponent gets stake after timeout
+
+3. CANCEL: If opponent doesn't join within 60s
+   - Depositor gets full refund
+```
+
+### On-Chain Data (minimal)
+
+```
+Per match: 2-3 transactions total
+  - create_match (PDA with escrow)
+  - settle_match (transfer to winner)
+  - Optional: cancel_match (refund)
+
+NOT on chain:
+  - Individual game actions/steps
+  - Hero positions, cooldowns
+  - Match replays
+```
+
+### Wallet Connection in TMA
+
+```
+Option A: Phantom deep link (mobile)
+  - User taps "Connect Wallet" in TMA
+  - Deep link opens Phantom app
+  - Phantom returns signed approval back to TMA
+  - Works on iOS + Android
+
+Option B: Embedded wallet (Privy / Dynamic)
+  - Wallet created inside TMA (no external app needed)
+  - Lower friction but less control for user
+  - Good for onboarding crypto-newcomers
+
+MVP: Start with Phantom deep link (simpler, proven pattern)
+```
 
 ## Data Flow Per Match
 
@@ -253,10 +307,9 @@ src/
    WS → Both Clients: 'round:end' { result, shrinkData }
 
 5. MATCH END
-   PlayerService: updates Mastery, Rank, BattlePass XP
-   ReplayService: saves full replay to PostgreSQL
-   If staked match → TON smart contract settlement
-   WS → Both Clients: 'match:end' { winner, rewards, replayId }
+   PlayerService: updates Mastery, Rank
+   SolanaService: settles escrow (pays winner from on-chain escrow)
+   WS → Both Clients: 'match:end' { winner, rewards }
 ```
 
 ## Event System (Client-Side)
@@ -373,7 +426,6 @@ public interface IPlatformDeepLinks
 
 public interface IPlatformShare
 {
-    void ShareReplay(string replayId, string message);
     void InviteFriend(string matchId);
 }
 ```
@@ -463,8 +515,8 @@ No game code ever depends on a concrete platform class.
 4. **Event-driven View**: View subscribes to events, never polls.
    Model has no knowledge of View's existence.
 
-5. **Replay-friendly**: Every StepResult contains complete state snapshot.
-   Replay = feeding StepResults to View sequentially.
+5. **Execution-friendly**: Every StepResult contains complete state snapshot.
+   View plays back execution by feeding StepResults sequentially.
 
 6. **Server-authoritative**: Client sends actions, server resolves.
    Client only displays results. Hash commitment prevents cheating.
@@ -474,7 +526,7 @@ No game code ever depends on a concrete platform class.
    using an isometric projection helper.
 
 8. **WebSocket-first**: All real-time communication uses Socket.IO.
-   REST endpoints only for non-real-time data (profiles, leaderboards, replays).
+   REST endpoints only for non-real-time data (profiles, leaderboards).
 
 9. **Multi-platform from day one**: All platform-specific behavior is behind
    `IPlatformService` interfaces. Game logic, view layer, and networking code

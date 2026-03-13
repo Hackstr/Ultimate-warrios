@@ -10,7 +10,7 @@ Always reference docs/ folder for detailed specifications:
 - docs/MVP-SCOPE.md          — Phase A (offline) and Phase B (online) scope
 - docs/CODING-CONVENTIONS.md — Naming, patterns, WebGL rules, NestJS conventions, platform directives
 - docs/TASKS.md              — Implementation task list with dependencies
-- docs/GAME-DESIGN.md        — Core design pillars and game rules
+- docs/COLOSSEUM-SPRINT.md   — 4-week Colosseum Eternal sprint plan
 
 # PROJECT CONTEXT
 - Game: Tactical Duelist — players program hero actions simultaneously, then watch execution
@@ -20,6 +20,8 @@ Always reference docs/ folder for detailed specifications:
 - Backend: NestJS (TypeScript) — authoritative server with WebSocket (Socket.IO)
 - Database: PostgreSQL (Prisma ORM) + Redis (caching/sessions)
 - Core loop: Plan actions → Commit hash → Reveal → Server resolves → Replay animation
+- Blockchain: Solana (Anchor escrow for staked matches, SPL token rewards)
+- Wallet: Phantom deep link in TMA, or embedded wallet (Privy)
 - Match: up to 3 rounds, First Blood (1 HP system)
 - 12 asymmetric heroes with varied parameters (Steps, Range, Cooldown, Armor, Speed, Special)
 

@@ -21,9 +21,9 @@ namespace TacticalDuelist.UI
         [SerializeField] private Button _button;
 
         [Header("Colors")]
-        [SerializeField] private Color _normalColor = new(0.15f, 0.15f, 0.2f, 1f);
-        [SerializeField] private Color _highlightColor = new(0.3f, 0.5f, 1f, 1f);
-        [SerializeField] private Color _borderNormal = new(0.3f, 0.3f, 0.4f, 1f);
+        [SerializeField] private Color _normalColor = new(0.20f, 0.22f, 0.30f, 1f);
+        [SerializeField] private Color _highlightColor = new(0.25f, 0.40f, 0.70f, 1f);
+        [SerializeField] private Color _borderNormal = new(0.45f, 0.45f, 0.55f, 1f);
         [SerializeField] private Color _borderHighlight = new(1f, 0.85f, 0.2f, 1f);
 
         #endregion

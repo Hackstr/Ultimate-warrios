@@ -1,8 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 class TelegramAuthDto {
   initData!: string;
+}
+
+class DevAuthDto {
+  username!: string;
 }
 
 @Controller('auth')
@@ -18,5 +22,18 @@ export class AuthController {
     if (!result) throw new UnauthorizedException('Invalid Telegram credentials');
 
     return result;
+  }
+
+  @Post('dev')
+  async authenticateDev(@Body() dto: DevAuthDto) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new UnauthorizedException('Dev auth is disabled in production');
+    }
+
+    if (!dto.username || typeof dto.username !== 'string') {
+      throw new BadRequestException('username is required');
+    }
+
+    return this._auth.authenticateDev(dto.username);
   }
 }

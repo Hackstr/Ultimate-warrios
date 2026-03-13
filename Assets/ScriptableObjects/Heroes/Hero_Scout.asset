@@ -16,7 +16,7 @@ MonoBehaviour:
   heroName: Scout
   displayName: Scout
   difficulty: 3
-  heroPrefab: {fileID: 0}
+  heroPrefab: {fileID: 1400000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a504, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.2, g: 0.4, b: 0.8, a: 1}
@@ -27,5 +27,5 @@ MonoBehaviour:
   speed: 2
   specialAbility: 3
   specialName: Scan
-  specialDescription: "Reveals opponent's next planned action."
+  specialDescription: Reveals opponent's next planned action.
   specialVFXPrefab: {fileID: 0}

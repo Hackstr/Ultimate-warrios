@@ -87,6 +87,28 @@ server/coverage/
 server/.env
 
 # ===========================
+# WebGL Builds (deploy via rsync, not git)
+# ===========================
+builds/
+build_*/
+WebGLBuild/
+
+# ===========================
+# MCP config (may contain API keys)
+# ===========================
+.mcp.json
+
+# ===========================
+# Debug screenshots
+# ===========================
+Assets/Screenshots/
+
+# ===========================
+# Old HTML mockups (replaced by Pencil designs)
+# ===========================
+ui-screens/
+
+# ===========================
 # Cursor / Agent
 # ===========================
 .cursor/

@@ -19,6 +19,13 @@
       },
       "hash": "d76a8df311c48263872be0cd3e6a8ef1a0fa8e59"
     },
+    "com.cysharp.unitask": {
+      "version": "2.5.10",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
+    },
     "com.unity.burst": {
       "version": "1.8.28",
       "depth": 2,

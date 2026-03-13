@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
 
@@ -87,7 +88,7 @@ namespace TacticalDuelist.UI
         /// <summary>
         /// Initializes HUD with hero data. Called once at match start.
         /// </summary>
-        public void Initialize(Config.HeroConfig p1Hero, Config.HeroConfig p2Hero)
+        public void Initialize(HeroConfig p1Hero, HeroConfig p2Hero)
         {
             _p1Score = 0;
             _p2Score = 0;

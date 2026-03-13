@@ -16,7 +16,7 @@ MonoBehaviour:
   heroName: Archer
   displayName: Archer
   difficulty: 3
-  heroPrefab: {fileID: 0}
+  heroPrefab: {fileID: 1100000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a501, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
@@ -27,5 +27,5 @@ MonoBehaviour:
   speed: 1
   specialAbility: 0
   specialName: Ricochet
-  specialDescription: "Shot bounces off one wall, changing direction."
+  specialDescription: Shot bounces off one wall, changing direction.
   specialVFXPrefab: {fileID: 0}

@@ -177,6 +177,7 @@ namespace TacticalDuelist.UI
             for (int i = 0; i < roundResults.Length; i++)
             {
                 var detailObj = Instantiate(_roundDetailPrefab, _roundDetailContainer);
+                detailObj.SetActive(true);
                 var label = detailObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (label != null)
                     label.text = FormatRoundResult(i + 1, roundResults[i]);

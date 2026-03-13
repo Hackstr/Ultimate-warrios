@@ -512,7 +512,6 @@ MUTUAL CANCEL:
 │  +15 🏆  Rating: 1265 (+15)         │  ← Rating change
 │                                      │
 │  [🔄 Rematch]     [🏠 Menu]         │
-│                [📹 Replay]           │
 └──────────────────────────────────────┘
 ```
 
@@ -532,7 +531,6 @@ MUTUAL CANCEL:
 │  -10 🏆  Rating: 1240 (-10)         │
 │                                      │
 │  [🔄 Rematch]     [🏠 Menu]         │
-│                [📹 Replay]           │
 └──────────────────────────────────────┘
 ```
 
@@ -551,7 +549,6 @@ MUTUAL CANCEL:
 |--------|----------|
 | Rematch | → Matchmaking (same heroes) |
 | Menu | → Main Menu |
-| Replay | → Replay viewer (v1.0) |
 
 ---
 
@@ -569,7 +566,7 @@ MUTUAL CANCEL:
 │                                      │
 │  GAME                                │
 │  Language      [English ▼]           │
-│  Replay Speed  [1x] [2x]            │
+│  Execution Speed  [1x] [2x]         │
 │                                      │
 │  ACCOUNT                             │
 │  Telegram ID   @username             │
@@ -602,9 +599,9 @@ MUTUAL CANCEL:
 │  📡 Scout    ██░░░░░░ Lv.2          │
 │                                      │
 │  RECENT MATCHES                      │
-│  [W] Archer vs Tank    1:32  📹     │
-│  [L] Shadow vs Mage    2:01  📹     │
-│  [W] Scout vs Scout    0:58  📹     │
+│  [W] Archer vs Tank    1:32         │
+│  [L] Shadow vs Mage    2:01         │
+│  [W] Scout vs Scout    0:58         │
 │                                      │
 └──────────────────────────────────────┘
 ```
@@ -675,7 +672,6 @@ Zoom In:     0.5s, камера приближается к арене (matchmak
   + Profile
   + Hero Collection
   + Leaderboard
-  + Replay Viewer
   + Battle Pass
   + Shop
   + Club / Social

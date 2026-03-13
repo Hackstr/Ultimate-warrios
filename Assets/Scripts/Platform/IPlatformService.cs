@@ -80,7 +80,7 @@ namespace TacticalDuelist.Platform
     }
 
     /// <summary>
-    /// Deep link handling for invite URLs, replay sharing, etc.
+    /// Deep link handling for invite URLs, etc.
     /// </summary>
     public interface IPlatformDeepLinks
     {
@@ -89,11 +89,10 @@ namespace TacticalDuelist.Platform
     }
 
     /// <summary>
-    /// Replay sharing and friend invite through platform share sheets.
+    /// Friend invite through platform share sheets.
     /// </summary>
     public interface IPlatformShare
     {
-        void ShareReplay(string replayId, string message);
         void InviteFriend(string matchId);
     }
 }

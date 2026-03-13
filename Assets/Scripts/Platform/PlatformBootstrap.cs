@@ -24,8 +24,30 @@ namespace TacticalDuelist.Platform
             ServiceLocator.Register(platform.Share);
 
             Debug.Log($"[PlatformBootstrap] Initialized: {platform.CurrentPlatform}");
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            EnsureWebGLReceiver();
+            EnsureWebGLInputBridge();
+#endif
+
             DontDestroyOnLoad(gameObject);
         }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private static void EnsureWebGLReceiver()
+        {
+            if (GameObject.Find("WebGLSocketReceiver") != null) return;
+            var go = new GameObject("WebGLSocketReceiver");
+            go.AddComponent<WebGL.WebGLSocketReceiver>();
+        }
+
+        private static void EnsureWebGLInputBridge()
+        {
+            if (GameObject.Find("WebGLInputBridge") != null) return;
+            var go = new GameObject("WebGLInputBridge");
+            go.AddComponent<WebGL.WebGLInputBridge>();
+        }
+#endif
 
         private static IPlatformService CreatePlatformService()
         {

@@ -9,7 +9,9 @@ namespace TacticalDuelist.Core.Models
     public class SpecialResult
     {
         public SpecialAbility Ability;
-        public Vector2Int? TargetPosition;
-        public Direction? TargetDirection;
+        public bool HasTargetPosition;
+        public Vector2Int TargetPosition;
+        public bool HasTargetDirection;
+        public Direction TargetDirection;
     }
 }

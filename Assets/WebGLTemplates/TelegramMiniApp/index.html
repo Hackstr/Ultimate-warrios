@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Socket.IO client (must be loaded before Unity) -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div id="unity-container">
+        <canvas id="unity-canvas" tabindex="1" style="touch-action: none;"></canvas>
+    </div>
+
+    <div id="loading-cover">
+        <div id="loading-bar">
+            <div id="loading-bar-fill"></div>
+        </div>
+        <div id="loading-text">Loading...</div>
+    </div>
+
+    <script>
+        var buildUrl = "Build";
+        var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+
+        var config = {
+            dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+            frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_WASM
+            codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+            memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+            symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "{{{ COMPANY_NAME }}}",
+            productName: "{{{ PRODUCT_NAME }}}",
+            productVersion: "{{{ PRODUCT_VERSION }}}",
+            devicePixelRatio: 1,
+            matchWebGLToCanvasSize: true,
+        };
+
+        var canvas = document.getElementById("unity-canvas");
+        var loadingCover = document.getElementById("loading-cover");
+        var loadingBarFill = document.getElementById("loading-bar-fill");
+        var loadingText = document.getElementById("loading-text");
+
+        function resizeCanvas() {
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            canvas.style.width = w + "px";
+            canvas.style.height = h + "px";
+            canvas.width = w;
+            canvas.height = h;
+        }
+
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("orientationchange", function () {
+            setTimeout(resizeCanvas, 150);
+        });
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = function () {
+            createUnityInstance(canvas, config, function (progress) {
+                loadingBarFill.style.width = (progress * 100) + "%";
+                loadingText.textContent = "Loading... " + Math.round(progress * 100) + "%";
+            }).then(function (unityInstance) {
+                loadingCover.style.display = "none";
+                window.unityInstance = unityInstance;
+
+                canvas.focus();
+
+                if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                    Telegram.WebApp.ready();
+                    Telegram.WebApp.expand();
+                }
+
+                console.log("[TMA] Unity loaded. Canvas: " +
+                    canvas.width + "x" + canvas.height +
+                    " DPR: " + window.devicePixelRatio);
+            }).catch(function (message) {
+                console.error("Unity load error:", message);
+                loadingText.textContent = "Failed to load. Please refresh.";
+            });
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>

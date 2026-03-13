@@ -10,6 +10,12 @@ namespace TacticalDuelist.Platform
     /// </summary>
     public interface IWebSocketTransport
     {
+        /// <summary>
+        /// Sets the JWT auth token to include in the Socket.IO CONNECT handshake.
+        /// Must be called before Connect().
+        /// </summary>
+        void SetAuthToken(string token);
+
         UniTask Connect();
         void Send(string eventName, string jsonPayload);
         void Disconnect();

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf17114455fa485cb823c9c20615c277, type: 3}
+  m_Name: Hero_Mage
+  m_EditorClassIdentifier: 
+  heroId: mage
+  heroName: Mage
+  displayName: Mage
+  difficulty: 4
+  heroPrefab: {fileID: 0}
+  animatorController: {fileID: 0}
+  portrait: {fileID: 0}
+  heroColor: {r: 0.5, g: 0.2, b: 0.8, a: 1}
+  steps: 4
+  range: 6
+  cooldown: 2
+  armor: 0
+  speed: 1
+  specialAbility: 4
+  specialName: Phase Shot
+  specialDescription: Shot passes through walls, ignoring obstacles.
+  specialVFXPrefab: {fileID: 0}

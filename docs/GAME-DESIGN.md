@@ -23,7 +23,7 @@ PLAN → COMMIT → REVEAL → RESOLVE → REACT
 
 4. RESOLVE: Actions execute step by step, simultaneously.
    Each step: Movement → Combat → Damage.
-   View shows animated replay of execution.
+   View shows animated execution.
 
 5. REACT: Round ends on elimination or after all steps.
    If no kill → map shrinks → next round (max 3 rounds).
@@ -72,8 +72,10 @@ PLAN → COMMIT → REVEAL → RESOLVE → REACT
 - Competitive mobile gamers (Clash Royale, Brawl Stars tier)
 - Strategy game fans who want quick matches
 - 16-35 age range
-- Telegram Mini App users (crypto-optional, game-first)
+- Telegram Mini App users (game-first)
 
 ## Platform
 Unity → WebGL → Telegram Mini App
+Blockchain: Solana (staked matches via Anchor escrow, SPL token rewards)
+Wallet: Phantom deep link in TMA
 Future: iOS, Android native

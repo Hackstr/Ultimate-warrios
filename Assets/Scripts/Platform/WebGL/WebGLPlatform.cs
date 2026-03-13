@@ -3,12 +3,13 @@ using System;
 using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace TacticalDuelist.Platform.WebGL
 {
     /// <summary>
     /// WebGL / Telegram Mini App platform implementation.
-    /// Uses jslib interop for Telegram SDK and browser-native WebSocket.
+    /// Uses jslib interop for Telegram SDK and browser-native Socket.IO.
     /// </summary>
     public sealed class WebGLPlatform : IPlatformService
     {
@@ -40,14 +41,70 @@ namespace TacticalDuelist.Platform.WebGL
         [DllImport("__Internal")] private static extern string TMA_GetUserDisplayName();
         [DllImport("__Internal")] private static extern string TMA_GetUserAvatarUrl();
 
-        public UniTask<string> Authenticate()
+        private string _cachedToken;
+
+        /// <summary>
+        /// Retrieves Telegram initData, sends it to server /auth/telegram,
+        /// and returns the JWT token for Socket.IO authentication.
+        /// </summary>
+        public async UniTask<string> Authenticate()
         {
+            if (!string.IsNullOrEmpty(_cachedToken))
+                return _cachedToken;
+
             var initData = TMA_GetInitData();
-            return UniTask.FromResult(initData ?? string.Empty);
+            if (string.IsNullOrEmpty(initData))
+            {
+                Debug.LogWarning("[WebGLAuth] No initData from Telegram, auth will fail");
+                return string.Empty;
+            }
+
+            var serverUrl = WebGLConfig.GetServerUrl();
+            var body = $"{{\"initData\":\"{EscapeJson(initData)}\"}}";
+            var bodyBytes = System.Text.Encoding.UTF8.GetBytes(body);
+
+            using var req = new UnityWebRequest($"{serverUrl}/auth/telegram", "POST");
+            req.uploadHandler = new UploadHandlerRaw(bodyBytes);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = 10;
+
+            try
+            {
+                await req.SendWebRequest().ToUniTask();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[WebGLAuth] Auth request failed: {ex.Message}");
+                return string.Empty;
+            }
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError($"[WebGLAuth] Auth failed ({req.responseCode}): {req.downloadHandler.text}");
+                return string.Empty;
+            }
+
+            var response = JsonUtility.FromJson<TelegramAuthResponse>(req.downloadHandler.text);
+            _cachedToken = response.token;
+            Debug.Log($"[WebGLAuth] Authenticated (playerId={response.playerId})");
+            return _cachedToken;
         }
 
         public string GetDisplayName() => TMA_GetUserDisplayName() ?? "Player";
         public string GetAvatarUrl() => TMA_GetUserAvatarUrl() ?? string.Empty;
+
+        private static string EscapeJson(string s)
+        {
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n");
+        }
+
+        [Serializable]
+        private class TelegramAuthResponse
+        {
+            public string token;
+            public string playerId;
+        }
     }
     #endregion
 
@@ -67,9 +124,20 @@ namespace TacticalDuelist.Platform.WebGL
             new WebGLWebSocketTransport(url);
     }
 
+    /// <summary>
+    /// WebGL Socket.IO transport. Delegates to SocketIOPlugin.jslib which uses
+    /// the browser's socket.io-client library. Messages are routed back through
+    /// WebGLSocketReceiver MonoBehaviour via SendMessage.
+    /// </summary>
     internal sealed class WebGLWebSocketTransport : IWebSocketTransport
     {
+        [DllImport("__Internal")] private static extern void SocketIO_Connect(string url, string authToken);
+        [DllImport("__Internal")] private static extern void SocketIO_Send(string eventName, string payload);
+        [DllImport("__Internal")] private static extern void SocketIO_Disconnect();
+
         private readonly string _url;
+        private string _authToken;
+        private UniTaskCompletionSource _connectTcs;
 
         public event Action<string, string> OnMessage;
         public event Action<string> OnError;
@@ -77,22 +145,47 @@ namespace TacticalDuelist.Platform.WebGL
 
         public WebGLWebSocketTransport(string url) => _url = url;
 
+        public void SetAuthToken(string token) => _authToken = token;
+
         public UniTask Connect()
         {
-            // TODO: Implement via jslib interop (WebSocket_Connect)
-            Debug.Log($"[WebGL WS] Connecting to {_url}");
-            return UniTask.CompletedTask;
+            WebGLSocketReceiver.SetTransport(this);
+            _connectTcs = new UniTaskCompletionSource();
+            SocketIO_Connect(_url, _authToken ?? "");
+            return _connectTcs.Task;
         }
 
         public void Send(string eventName, string jsonPayload)
         {
-            // TODO: Implement via jslib interop (WebSocket_Send)
-            Debug.Log($"[WebGL WS] Send: {eventName}");
+            SocketIO_Send(eventName, jsonPayload);
         }
 
         public void Disconnect()
         {
-            // TODO: Implement via jslib interop (WebSocket_Close)
+            SocketIO_Disconnect();
+        }
+
+        internal void HandleConnected()
+        {
+            Debug.Log("[WebGL WS] Connected");
+            _connectTcs?.TrySetResult();
+        }
+
+        internal void HandleMessage(string eventName, string payload)
+        {
+            OnMessage?.Invoke(eventName, payload);
+        }
+
+        internal void HandleError(string error)
+        {
+            Debug.LogError($"[WebGL WS] Error: {error}");
+            OnError?.Invoke(error);
+            _connectTcs?.TrySetException(new Exception(error));
+        }
+
+        internal void HandleDisconnected(string reason)
+        {
+            Debug.Log($"[WebGL WS] Disconnected: {reason}");
             OnDisconnected?.Invoke();
         }
     }
@@ -136,12 +229,6 @@ namespace TacticalDuelist.Platform.WebGL
     internal sealed class WebGLShare : IPlatformShare
     {
         [DllImport("__Internal")] private static extern void TMA_ShareUrl(string url, string text);
-
-        public void ShareReplay(string replayId, string message)
-        {
-            var url = $"https://t.me/TacticalDuelistBot?startapp=replay_{replayId}";
-            TMA_ShareUrl(url, message);
-        }
 
         public void InviteFriend(string matchId)
         {

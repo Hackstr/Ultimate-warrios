@@ -155,15 +155,15 @@ namespace TacticalDuelist.Core.Systems
                 return;
 
             var pickupType = _grid.GetPickup(hero.Position);
-            if (pickupType == null)
+            if (pickupType == PickupType.None)
                 return;
 
             if (isPlayer1)
-                result.P1PickedUp = pickupType.Value;
+                result.P1PickedUp = pickupType;
             else
-                result.P2PickedUp = pickupType.Value;
+                result.P2PickedUp = pickupType;
 
-            ApplyPickup(hero, pickupType.Value);
+            ApplyPickup(hero, pickupType);
             _grid.RemovePickup(hero.Position);
         }
 

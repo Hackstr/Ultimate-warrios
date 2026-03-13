@@ -54,9 +54,8 @@ namespace TacticalDuelist.Core.Utils
         }
 
         /// <summary>
-        /// Serializes actions to a JSON array string.
-        /// Format must match server: ["Move","Shoot","Wait"]
-        /// Uses enum names (not integer values) for cross-platform compatibility.
+        /// Serializes actions to a JSON array of integers.
+        /// Must match server's JSON.stringify(actions) which emits numeric enum values: [0,4,5]
         /// </summary>
         private static string ActionsToJson(ActionType[] actions)
         {
@@ -64,7 +63,7 @@ namespace TacticalDuelist.Core.Utils
             for (int i = 0; i < actions.Length; i++)
             {
                 if (i > 0) sb.Append(',');
-                sb.Append('"').Append(actions[i].ToString()).Append('"');
+                sb.Append((int)actions[i]);
             }
             sb.Append(']');
             return sb.ToString();

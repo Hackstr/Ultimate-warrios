@@ -3,8 +3,7 @@ using UnityEngine;
 namespace TacticalDuelist.Core.Models
 {
     /// <summary>
-    /// Immutable output of a single step resolution. Consumed by View layer for animation
-    /// and by replay system for recording.
+    /// Immutable output of a single step resolution. Consumed by View layer for animation.
     /// </summary>
     public class StepResult
     {
@@ -52,8 +51,8 @@ namespace TacticalDuelist.Core.Models
 
         public SpecialResult P1Special;
         public SpecialResult P2Special;
-        public PickupType? P1PickedUp;
-        public PickupType? P2PickedUp;
+        public PickupType P1PickedUp = PickupType.None;
+        public PickupType P2PickedUp = PickupType.None;
 
         #endregion
     }

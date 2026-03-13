@@ -30,6 +30,7 @@ namespace TacticalDuelist.Networking
         private int _reconnectAttempt;
         private bool _connected;
         private bool _disposed;
+        private string _authToken;
 
         #endregion
 
@@ -56,6 +57,15 @@ namespace TacticalDuelist.Networking
         #region Public API
 
         /// <summary>
+        /// Sets the JWT auth token for Socket.IO CONNECT handshake.
+        /// Must be called before ConnectAsync().
+        /// </summary>
+        public void SetAuthToken(string token)
+        {
+            _authToken = token;
+        }
+
+        /// <summary>
         /// Establishes connection via platform's WebSocket transport.
         /// </summary>
         public async UniTask ConnectAsync()
@@ -67,6 +77,7 @@ namespace TacticalDuelist.Networking
 
         /// <summary>
         /// Emits a named event with JSON payload to the server.
+        /// The transport handles protocol framing (e.g. 42["event",{...}]).
         /// </summary>
         public void Emit(string eventName, string jsonPayload = "{}")
         {
@@ -134,6 +145,9 @@ namespace TacticalDuelist.Networking
         {
             var network = ServiceLocator.Get<IPlatformNetwork>();
             _transport = network.CreateWebSocket(_serverUrl);
+
+            if (!string.IsNullOrEmpty(_authToken))
+                _transport.SetAuthToken(_authToken);
 
             _transport.OnMessage += HandleMessage;
             _transport.OnError += HandleError;

@@ -16,7 +16,7 @@ MonoBehaviour:
   heroName: Tank
   displayName: Tank
   difficulty: 2
-  heroPrefab: {fileID: 0}
+  heroPrefab: {fileID: 1200000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a502, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
@@ -27,5 +27,5 @@ MonoBehaviour:
   speed: 1
   specialAbility: 1
   specialName: Push
-  specialDescription: "Pushes target 2 tiles in your facing direction."
+  specialDescription: Pushes target 2 tiles in your facing direction.
   specialVFXPrefab: {fileID: 0}

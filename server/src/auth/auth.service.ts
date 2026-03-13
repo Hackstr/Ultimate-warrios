@@ -109,4 +109,29 @@ export class AuthService {
       return null;
     }
   }
+
+  /**
+   * Development-only authentication. Creates/finds a player by username
+   * and issues a JWT without Telegram validation.
+   */
+  async authenticateDev(username: string): Promise<{ token: string; playerId: string }> {
+    const devTelegramId = `dev_${username}`;
+
+    const player = await this._prisma.player.upsert({
+      where: { telegramId: devTelegramId },
+      update: {},
+      create: {
+        telegramId: devTelegramId,
+        username,
+        displayName: username,
+      },
+    });
+
+    const token = this._jwt.sign({
+      sub: player.id,
+      telegramId: player.telegramId,
+    });
+
+    return { token, playerId: player.id };
+  }
 }

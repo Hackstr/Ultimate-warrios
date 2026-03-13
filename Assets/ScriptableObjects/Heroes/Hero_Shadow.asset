@@ -16,7 +16,7 @@ MonoBehaviour:
   heroName: Shadow
   displayName: Shadow
   difficulty: 4
-  heroPrefab: {fileID: 0}
+  heroPrefab: {fileID: 1300000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a503, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.4, g: 0.1, b: 0.6, a: 1}
@@ -27,5 +27,5 @@ MonoBehaviour:
   speed: 2
   specialAbility: 2
   specialName: Blink
-  specialDescription: "Teleport up to 4 tiles in any direction."
+  specialDescription: Teleport up to 4 tiles in any direction.
   specialVFXPrefab: {fileID: 0}

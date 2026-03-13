@@ -16,25 +16,29 @@ namespace TacticalDuelist.Gameplay
         [Header("Isometric Setup")]
         [Tooltip("Vertical angle from horizontal (higher = more top-down)")]
         [Range(30f, 70f)]
-        [SerializeField] private float _pitchAngle = 45f;
+        [SerializeField] private float _pitchAngle = 55f;
 
-        [Tooltip("Horizontal rotation around Y axis")]
+        [Tooltip("Horizontal rotation around Y axis (0 = grid-aligned for portrait)")]
         [Range(0f, 360f)]
-        [SerializeField] private float _yawAngle = 45f;
+        [SerializeField] private float _yawAngle = 0f;
 
-        [Tooltip("FOV for pseudo-ortho feel")]
-        [Range(20f, 60f)]
-        [SerializeField] private float _fieldOfView = 35f;
+        [Tooltip("FOV — wider fits more grid in portrait mode")]
+        [Range(20f, 70f)]
+        [SerializeField] private float _fieldOfView = 50f;
 
         [Header("Follow")]
         [SerializeField] private float _followSpeed = 5f;
         [SerializeField] private float _zoomSpeed = 3f;
-        [SerializeField] private float _defaultDistance = 15f;
+        [SerializeField] private float _defaultDistance = 20f;
         [SerializeField] private float _executionZoomMultiplier = 0.85f;
 
         [Header("Bounds")]
         [SerializeField] private float _minDistance = 8f;
-        [SerializeField] private float _maxDistance = 25f;
+        [SerializeField] private float _maxDistance = 35f;
+
+        [Header("Framing")]
+        [Tooltip("Extra padding multiplier for grid framing (>1 = more margin)")]
+        [SerializeField] private float _framePadding = 1.15f;
 
         #endregion
 
@@ -53,6 +57,12 @@ namespace TacticalDuelist.Gameplay
         {
             if (_camera == null)
                 _camera = GetComponent<Camera>();
+
+            if (_camera != null)
+            {
+                _camera.clearFlags = CameraClearFlags.SolidColor;
+                _camera.backgroundColor = new Color(0.08f, 0.08f, 0.12f, 1f);
+            }
         }
 
         private void Start()
@@ -75,13 +85,20 @@ namespace TacticalDuelist.Gameplay
 
         /// <summary>
         /// Sets up camera to frame the entire grid. Call at match start.
+        /// Accounts for portrait aspect ratio — uses the narrower (horizontal) FOV
+        /// as the limiting dimension so the grid fits on screen.
         /// </summary>
         public void FrameGrid(Vector3 gridCenter, float gridExtent)
         {
             _targetLookAt = gridCenter;
             _currentLookAt = gridCenter;
 
-            float requiredDistance = gridExtent / Mathf.Tan(_fieldOfView * 0.5f * Mathf.Deg2Rad);
+            float aspect = _camera != null ? _camera.aspect : (9f / 16f);
+            float vFovHalfRad = _fieldOfView * 0.5f * Mathf.Deg2Rad;
+            float hFovHalfRad = Mathf.Atan(Mathf.Tan(vFovHalfRad) * aspect);
+
+            float effectiveHalfFov = (aspect < 1f) ? hFovHalfRad : vFovHalfRad;
+            float requiredDistance = (gridExtent * _framePadding) / Mathf.Tan(effectiveHalfFov);
             _targetDistance = Mathf.Clamp(requiredDistance, _minDistance, _maxDistance);
             _currentDistance = _targetDistance;
 

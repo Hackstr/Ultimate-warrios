@@ -63,6 +63,19 @@ namespace TacticalDuelist.Gameplay
         #region Public Methods
 
         /// <summary>
+        /// Places both hero views at their grid spawn positions.
+        /// Called once at match start before any playback.
+        /// </summary>
+        public void SetInitialPositions(Vector2Int p1Spawn, Direction p1Facing,
+                                         Vector2Int p2Spawn, Direction p2Facing)
+        {
+            _hero1View?.SetGridPosition(p1Spawn, p1Facing);
+            _hero2View?.SetGridPosition(p2Spawn, p2Facing);
+            _hero1View?.gameObject.SetActive(true);
+            _hero2View?.gameObject.SetActive(true);
+        }
+
+        /// <summary>
         /// Starts visual playback of a list of step results.
         /// Called after MatchManager completes round resolution.
         /// </summary>
@@ -107,6 +120,13 @@ namespace TacticalDuelist.Gameplay
         {
             _isPlaying = true;
 
+            if (_pendingResults.Count > 0)
+            {
+                var first = _pendingResults[0];
+                _hero1View?.SetGridPosition(first.P1StartPos, first.P1StartFacing);
+                _hero2View?.SetGridPosition(first.P2StartPos, first.P2StartFacing);
+            }
+
             for (int i = 0; i < _pendingResults.Count; i++)
             {
                 var step = _pendingResults[i];
@@ -135,8 +155,6 @@ namespace TacticalDuelist.Gameplay
 
             // Pickups
             yield return StartCoroutine(PlayPickups(step));
-
-            GameEvents.StepResolved(step);
         }
 
         #endregion
@@ -248,13 +266,13 @@ namespace TacticalDuelist.Gameplay
 
         private IEnumerator PlayPickups(StepResult step)
         {
-            if (step.P1PickedUp.HasValue)
+            if (step.P1PickedUp != PickupType.None)
                 VFXManager.Instance?.SpawnPickupVFX(step.P1EndPos);
 
-            if (step.P2PickedUp.HasValue)
+            if (step.P2PickedUp != PickupType.None)
                 VFXManager.Instance?.SpawnPickupVFX(step.P2EndPos);
 
-            if (step.P1PickedUp.HasValue || step.P2PickedUp.HasValue)
+            if (step.P1PickedUp != PickupType.None || step.P2PickedUp != PickupType.None)
                 yield return new WaitForSeconds(AdjustedTime(0.2f));
         }
 
