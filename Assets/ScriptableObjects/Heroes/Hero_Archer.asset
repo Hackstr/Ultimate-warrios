@@ -15,9 +15,16 @@ MonoBehaviour:
   heroId: archer
   heroName: Archer
   displayName: Archer
+  loreName: Elara
+  loreTitle: Guardian of the Eternal Forest
+  loreDimension: Silvanis
+  loreBio: A keeper who never misses a target she can see. Came to protect her forest
+    from the Rifts.
   difficulty: 3
-  heroPrefab: {fileID: 1100000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a501, type: 3}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 0
+  heroPrefab: {fileID: 2181807595495683477, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a501, type: 3}
+  animatorController: {fileID: 9100000, guid: 5e048383ccb9b406992a87ef53f49292, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
   steps: 4
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 2
   armor: 0
   speed: 1
+  voiceKill: Target eliminated.
+  voiceDeath: The forest... remembers...
+  voiceSpecial: Ricochet!
+  voiceRoundStart: I see you.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 0
   specialName: Ricochet
   specialDescription: Shot bounces off one wall, changing direction.

@@ -1,0 +1,27 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="round-transition-root" class="overlay" style="background-color: rgba(15, 15, 26, 0.88);">
+        <ui:VisualElement class="col center" style="width: 100%; max-width: 700px; padding: 0 32px;">
+
+            <!-- Round Title -->
+            <ui:Label name="transition-title" text="ROUND 2" class="font-display" style="font-size: 72px; color: #EAEAF4; letter-spacing: 6px;" />
+
+            <!-- Round Result -->
+            <ui:Label name="transition-result" text="No elimination" style="font-size: 28px; color: #9898B0; margin-top: 12px;" />
+
+            <!-- Action Summary (built by controller) -->
+            <ui:VisualElement name="action-summary" class="col" style="margin-top: 24px; width: 100%; display: none;" />
+
+            <!-- Shrink Warning -->
+            <ui:VisualElement name="shrink-warning" class="row center" style="display: none; background-color: rgba(217,51,51,0.12); border-radius: 20px; padding: 16px 24px; margin-top: 20px; border-width: 1px; border-color: rgba(217,51,51,0.3);">
+                <ui:Label text="WARNING:" style="font-size: 24px; color: #D93333; -unity-font-style: bold; margin-right: 8px;" />
+                <ui:Label text="Map shrinking! Danger zone expanding." style="font-size: 24px; color: #D93333;" />
+            </ui:VisualElement>
+
+            <!-- Countdown -->
+            <ui:Label name="transition-countdown" text="" style="font-size: 32px; color: #9898B0; margin-top: 24px;" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

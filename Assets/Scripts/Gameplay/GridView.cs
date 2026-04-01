@@ -129,6 +129,69 @@ namespace TacticalDuelist.Gameplay
         }
 
         /// <summary>
+        /// Shows a preview path on the grid for the planned actions.
+        /// Renders semi-transparent markers along the hero's trajectory.
+        /// </summary>
+        public void ShowPathPreview(Vector2Int startPos, Direction startFacing,
+            System.Collections.Generic.List<ActionType> actions, bool isPlayer1)
+        {
+            ClearHighlights();
+
+            if (actions == null || actions.Count == 0) return;
+
+            var pos = startPos;
+            var facing = startFacing;
+            var material = isPlayer1 ? _highlightMoveMaterial : _highlightShootMaterial;
+
+            for (int i = 0; i < actions.Count; i++)
+            {
+                switch (actions[i])
+                {
+                    case ActionType.Move:
+                        var moveDir = GridSystem.DirectionToVector(facing);
+                        var nextPos = pos + moveDir;
+                        if (_grid != null && _grid.IsInBounds(nextPos) && _grid.IsWalkable(nextPos))
+                            pos = nextPos;
+                        break;
+                    case ActionType.TurnLeft:
+                        facing = GridSystem.TurnLeft(facing);
+                        break;
+                    case ActionType.TurnRight:
+                        facing = GridSystem.TurnRight(facing);
+                        break;
+                    case ActionType.TurnAround:
+                        facing = GridSystem.TurnLeft(GridSystem.TurnLeft(facing));
+                        break;
+                }
+
+                // Show marker at current position after this action
+                CreateHighlight(pos, material);
+            }
+
+            // Final position — brighter marker
+            var finalMarker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            finalMarker.transform.SetParent(_highlightParent);
+            finalMarker.transform.position = GridHelper.GridToWorld(pos, _tileSize) + Vector3.up * 0.15f;
+            finalMarker.transform.localScale = Vector3.one * _tileSize * 0.3f;
+            finalMarker.name = "FinalPos";
+
+            var col = finalMarker.GetComponent<Collider>();
+            if (col != null) Destroy(col);
+
+            var renderer = finalMarker.GetComponent<Renderer>();
+            if (renderer != null && material != null)
+                renderer.sharedMaterial = material;
+        }
+
+        /// <summary>
+        /// Clears path preview.
+        /// </summary>
+        public void ClearPathPreview()
+        {
+            ClearHighlights();
+        }
+
+        /// <summary>
         /// Returns the world-space center of the grid for camera framing.
         /// </summary>
         public Vector3 GetGridCenter()
@@ -146,6 +209,47 @@ namespace TacticalDuelist.Gameplay
         public float GetGridExtent()
         {
             return Mathf.Max(_width, _height) * _tileSize * 0.5f;
+        }
+
+        #endregion
+
+        #region Shoot Lines
+
+        private readonly System.Collections.Generic.List<GameObject> _shootLines = new();
+
+        /// <summary>
+        /// Shows a shoot line from source to target on the grid.
+        /// Red = hit, grey = miss.
+        /// </summary>
+        public void ShowShootLine(Vector2Int from, Vector2Int to, bool hit)
+        {
+            var startPos = GridHelper.GridToWorld(from, _tileSize) + Vector3.up * 0.3f;
+            var endPos = GridHelper.GridToWorld(to, _tileSize) + Vector3.up * 0.3f;
+
+            var lineGo = new GameObject("ShootLine");
+            lineGo.transform.SetParent(transform);
+
+            var lr = lineGo.AddComponent<LineRenderer>();
+            lr.positionCount = 2;
+            lr.SetPosition(0, startPos);
+            lr.SetPosition(1, endPos);
+            lr.startWidth = hit ? 0.08f : 0.04f;
+            lr.endWidth = hit ? 0.08f : 0.04f;
+
+            var mat = new Material(Shader.Find("Sprites/Default"));
+            var color = hit ? new Color(1f, 0.3f, 0.2f, 0.8f) : new Color(0.5f, 0.5f, 0.6f, 0.4f);
+            mat.color = color;
+            lr.material = mat;
+            lr.sortingOrder = 10;
+
+            _shootLines.Add(lineGo);
+        }
+
+        public void ClearShootLines()
+        {
+            foreach (var line in _shootLines)
+                if (line != null) Destroy(line);
+            _shootLines.Clear();
         }
 
         #endregion

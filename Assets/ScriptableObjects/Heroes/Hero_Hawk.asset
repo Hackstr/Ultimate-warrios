@@ -15,8 +15,14 @@ MonoBehaviour:
   heroId: hawk
   heroName: Hawk
   displayName: Hawk
+  loreName: Lynx
+  loreTitle: One Shot
+  loreDimension: Stillness
+  loreBio: A sniper who waits hours for one perfect shot. Every bullet decides everything.
   difficulty: 3
-  heroPrefab: {fileID: 0}
+  isUnlocked: 0
+  unlockPrice: 500
+  heroPrefab: {fileID: 4508507915461398601, guid: 8d03a108ea61f4d34b8fca0e1947b0e2, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.3, g: 0.6, b: 0.9, a: 1}
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 3
   armor: 0
   speed: 1
+  voiceKill: One shot. One kill.
+  voiceDeath: Patience... wasn't enough...
+  voiceSpecial: Pierce!
+  voiceRoundStart: Breathe. Aim. Wait.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 10
   specialName: Pierce
   specialDescription: Shot pierces through the first target, hitting behind.

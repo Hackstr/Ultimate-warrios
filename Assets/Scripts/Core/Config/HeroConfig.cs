@@ -12,11 +12,19 @@ namespace TacticalDuelist.Core.Config
         public string heroId;
         public string heroName;
         public string displayName;
+        public string loreName;        // e.g. "Elara"
+        public string loreTitle;       // e.g. "Guardian of the Eternal Forest"
+        public string loreDimension;   // e.g. "Silvanis"
+        [TextArea(2, 4)] public string loreBio;
         [Range(1, 5)] public int difficulty = 3;
 
         #endregion
 
         #region 3D Assets
+
+        [Header("Unlock")]
+        public bool isUnlocked = true;
+        public int unlockPrice = 0;
 
         [Header("3D Assets")]
         public GameObject heroPrefab;
@@ -39,6 +47,18 @@ namespace TacticalDuelist.Core.Config
         #endregion
 
         #region Special
+
+        [Header("Voice Lines")]
+        public string voiceKill = "Target down.";
+        public string voiceDeath = "Not like this...";
+        public string voiceSpecial = "Special!";
+        public string voiceRoundStart = "Let's go.";
+
+        [Header("Projectile")]
+        public Color projectileColor = Color.yellow;
+        public float projectileSpeed = 15f;
+        public float projectileSize = 0.12f;
+        public GameObject projectilePrefab; // override if custom prefab exists
 
         [Header("Special")]
         public SpecialAbility specialAbility;

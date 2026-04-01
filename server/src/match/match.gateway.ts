@@ -39,7 +39,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly _matchmaking: MatchmakingService,
     private readonly _matchService: MatchService,
     private readonly _prisma: PrismaService,
-  ) {}
+  ) {
+    // Wire forfeit callback so MatchService can notify the opponent
+    // when grace period expires after disconnect.
+    this._matchService.setForfeitCallback((matchId, opponentId, winner) => {
+      const oppSocket = this._getSocket(opponentId);
+      if (oppSocket) {
+        oppSocket.emit('match:end', { winner });
+      }
+    });
+  }
 
   // ── Connection Lifecycle ──
 
@@ -54,13 +63,24 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (playerId) {
       this._socketToPlayer.delete(client.id);
 
-      // Only remove from queue/match if THIS socket is the player's active socket.
-      // Prevents a stale 2nd connection from nuking the 1st connection's state.
+      // Only process if THIS socket is the player's active socket.
       const activeSocketId = this._playerToSocket.get(playerId);
       if (activeSocketId === client.id) {
         this._matchmaking.removeFromQueue(playerId);
-        this._matchService.handleDisconnect(playerId);
         this._playerToSocket.delete(playerId);
+
+        // Start grace period instead of immediate cleanup
+        const result = this._matchService.handleDisconnect(playerId);
+        if (result) {
+          // Notify opponent that the other player disconnected
+          const oppSocket = this._getSocket(result.opponentId);
+          if (oppSocket) {
+            oppSocket.emit('match:opponent-disconnected', {
+              matchId: result.matchId,
+              gracePeriod: 60,
+            });
+          }
+        }
       } else {
         this._logger.log(`Stale socket ${client.id} for player ${playerId}, active socket preserved`);
       }
@@ -171,17 +191,60 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
 
       if (result.matchEnded) {
-        this.server.to(roomId).emit('match:end', {
-          winner: result.matchOutcome,
-        });
+        // Send per-player match end data (each sees their own ELO delta + coins)
+        const p1Sock = result.player1Id ? this._getSocket(result.player1Id) : undefined;
+        const p2Sock = result.player2Id ? this._getSocket(result.player2Id) : undefined;
+
+        if (p1Sock) {
+          p1Sock.emit('match:end', {
+            winner: result.matchOutcome,
+            ratingDelta: result.p1RatingDelta ?? 0,
+            coinsEarned: result.p1Coins ?? 0,
+          });
+        }
+        if (p2Sock) {
+          p2Sock.emit('match:end', {
+            winner: result.matchOutcome,
+            ratingDelta: result.p2RatingDelta ?? 0,
+            coinsEarned: result.p2Coins ?? 0,
+          });
+        }
       } else {
+        const timeLimit = result.nextRound === 1 ? 30 : result.nextRound === 2 ? 25 : result.nextRound === 3 ? 20 : 15;
         this.server.to(roomId).emit('round:start', {
           roundNumber: result.nextRound,
-          timeLimit: 30,
+          timeLimit,
           shrinkZone: result.shrinkZone,
         });
       }
     }
+  }
+
+  // ── Rejoin ──
+
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('match:rejoin')
+  handleRejoin(@ConnectedSocket() client: Socket) {
+    const playerId = client.data.playerId as string;
+    this._registerSocket(client, playerId);
+
+    const state = this._matchService.rejoinMatch(playerId);
+    if (!state) {
+      client.emit('match:rejoin:ack', { success: false, error: 'No active match found' });
+      return;
+    }
+
+    // Re-join the socket.io room
+    client.join(state.roomId);
+
+    // Notify opponent that player reconnected
+    const opponentId = state.opponentId;
+    const oppSocket = this._getSocket(opponentId);
+    if (oppSocket) {
+      oppSocket.emit('match:opponent-reconnected', { matchId: state.matchId });
+    }
+
+    client.emit('match:rejoin:ack', { success: true, state });
   }
 
   // ── Surrender ──
@@ -190,15 +253,18 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('match:surrender')
   async handleSurrender(@ConnectedSocket() client: Socket) {
     const playerId = client.data.playerId as string;
-    const result = await this._matchService.surrender(playerId);
-
-    if (result) {
-      const roomId = this._matchService.getRoomId(playerId);
-      if (roomId) {
-        this.server.to(roomId).emit('match:end', {
-          winner: result.winner,
-        });
+    try {
+      const result = await this._matchService.surrender(playerId);
+      if (result) {
+        const roomId = this._matchService.getRoomId(playerId);
+        if (roomId) {
+          this.server.to(roomId).emit('match:end', {
+            winner: result.winner,
+          });
+        }
       }
+    } catch (err) {
+      this._logger.error(`Surrender failed for ${playerId}`, err);
     }
   }
 

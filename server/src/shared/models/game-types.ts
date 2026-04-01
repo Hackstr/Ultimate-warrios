@@ -127,6 +127,8 @@ export interface StepResult {
   p2ArmorBroken: boolean;
   p1Eliminated: boolean;
   p2Eliminated: boolean;
+  p1Shielded: boolean;
+  p2Shielded: boolean;
 
   p1PickedUp: PickupType | null;
   p2PickedUp: PickupType | null;
@@ -154,6 +156,8 @@ export function createEmptyStepResult(stepIndex: number): StepResult {
     p2ArmorBroken: false,
     p1Eliminated: false,
     p2Eliminated: false,
+    p1Shielded: false,
+    p2Shielded: false,
     p1PickedUp: null,
     p2PickedUp: null,
   };

@@ -67,6 +67,101 @@ namespace TacticalDuelist.Gameplay
         }
 
         /// <summary>
+        /// Swap the visual model at runtime. Destroys old children and
+        /// instantiates the prefab as a child. Used when hero is selected.
+        /// </summary>
+        public void SwapModel(GameObject prefab, RuntimeAnimatorController animController = null)
+        {
+            if (prefab == null) return;
+
+            // Destroy current visual children (capsule + arrow)
+            for (int i = transform.childCount - 1; i >= 0; i--)
+                Destroy(transform.GetChild(i).gameObject);
+
+            // Destroy own mesh (if capsule primitive)
+            var ownFilter = GetComponent<MeshFilter>();
+            if (ownFilter != null) Destroy(ownFilter);
+            var ownRenderer = GetComponent<MeshRenderer>();
+            if (ownRenderer != null) Destroy(ownRenderer);
+            var ownCollider = GetComponent<Collider>();
+            if (ownCollider != null) Destroy(ownCollider);
+
+            // Instantiate prefab as child
+            var model = Instantiate(prefab, transform);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localRotation = Quaternion.identity;
+
+            // Auto-scale to ~1.6 units height (smaller, fits grid better)
+            var renderers = model.GetComponentsInChildren<Renderer>();
+            if (renderers.Length > 0)
+            {
+                var bounds = renderers[0].bounds;
+                for (int i = 1; i < renderers.Length; i++)
+                    bounds.Encapsulate(renderers[i].bounds);
+
+                if (bounds.size.y > 0.1f)
+                {
+                    float scale = 1.6f / bounds.size.y;
+                    model.transform.localScale *= scale;
+                }
+
+                // Re-calculate bounds after scaling and center at feet
+                bounds = new Bounds(model.transform.position, Vector3.zero);
+                renderers = model.GetComponentsInChildren<Renderer>();
+                foreach (var r in renderers)
+                    bounds.Encapsulate(r.bounds);
+
+                // Place feet at y=0 local
+                model.transform.localPosition = new Vector3(0f, -bounds.min.y + transform.position.y - _heightOffset, 0f);
+            }
+
+            // Update references
+            _mainRenderer = model.GetComponentInChildren<Renderer>();
+
+            // Find or create Animator — prefer existing one (has correct Avatar)
+            _animator = model.GetComponentInChildren<Animator>();
+
+            if (animController != null)
+            {
+                if (_animator == null)
+                {
+                    _animator = model.AddComponent<Animator>();
+                    Debug.Log("[HeroView3D] Created new Animator (none found on model)");
+                }
+
+                // Store existing avatar before assigning controller
+                var existingAvatar = _animator.avatar;
+                _animator.runtimeAnimatorController = animController;
+                _animator.applyRootMotion = false;
+
+                // Restore avatar if it was cleared by controller assignment
+                if (_animator.avatar == null && existingAvatar != null)
+                    _animator.avatar = existingAvatar;
+
+                // Force rebind to apply new controller
+                _animator.Rebind();
+                _animator.Update(0f);
+
+                // Ensure avatar is set — try to get from model's existing rig
+                if (_animator.avatar == null)
+                {
+                    // Search all child SkinnedMeshRenderers for a bone structure
+                    var smr = model.GetComponentInChildren<SkinnedMeshRenderer>();
+                    if (smr != null && smr.rootBone != null)
+                    {
+                        Debug.Log($"[HeroView3D] Found SkinnedMeshRenderer with root bone: {smr.rootBone.name}");
+                    }
+                }
+
+                Debug.Log($"[HeroView3D] Swapped model to: {prefab.name} (animator: yes, controller: {animController.name}, avatar: {(_animator.avatar != null ? _animator.avatar.name : "NONE")})");
+            }
+            else
+            {
+                Debug.Log($"[HeroView3D] Swapped model to: {prefab.name} (no animation controller)");
+            }
+        }
+
+        /// <summary>
         /// Instantly sets grid position and facing (no animation). Used at match start.
         /// </summary>
         public void SetGridPosition(Vector2Int gridPos, Direction facing)

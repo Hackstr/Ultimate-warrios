@@ -19,8 +19,11 @@ model Player {
   wins          Int      @default(0)
   losses        Int      @default(0)
   draws         Int      @default(0)
+  coins         Int      @default(0)
+  unlockedHeroes String[] @default(["archer", "tank", "scout"])
   battlePassXp  Int      @default(0)
-  tonWallet     String?
+  walletAddress String?
+  walletChain   String?  // "solana" | "ton"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -127,4 +130,30 @@ model Replay {
   match       Match    @relation(fields: [matchId], references: [id])
 
   createdAt   DateTime @default(now())
+}
+
+// ── Season ──
+
+model Season {
+  id          Int      @id @default(autoincrement())
+  name        String   @default("Season 1")
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ── Season Rating (per-player per-season) ──
+
+model SeasonRating {
+  id          String   @id @default(uuid())
+  playerId    String
+  seasonId    Int
+  rating      Int      @default(1000)
+  peakRating  Int      @default(1000)
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId, rating(sort: Desc)])
 }

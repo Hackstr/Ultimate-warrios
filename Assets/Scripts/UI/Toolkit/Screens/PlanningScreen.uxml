@@ -1,0 +1,102 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="planning-root" class="screen" style="justify-content: space-between; background-color: rgba(0,0,0,0);">
+
+        <!-- HUD Bar: P1 HP | Timer | P2 HP -->
+        <ui:VisualElement class="hud__top-bar">
+            <ui:VisualElement class="row" style="align-items: center;">
+                <ui:VisualElement class="hud__hp-track">
+                    <ui:VisualElement class="hud__hp-fill hud__hp-fill--p1" style="width: 200px;" />
+                </ui:VisualElement>
+                <ui:Label text="AK" style="font-size: 28px; color: #EAEAF4; -unity-font-style: bold; margin-left: 12px;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="hud__timer-circle">
+                <ui:Label name="timer-label" text="15" class="font-display" style="font-size: 52px; color: #FF6B35;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="row" style="align-items: center;">
+                <ui:Label text="OPP" style="font-size: 28px; color: #EAEAF4; -unity-font-style: bold; margin-right: 12px;" />
+                <ui:VisualElement class="hud__hp-track">
+                    <ui:VisualElement class="hud__hp-fill hud__hp-fill--p2" style="width: 166px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Round Label -->
+        <ui:Label name="round-label" text="ROUND 1 -- PLANNING" style="font-size: 26px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; -unity-text-align: middle-center; margin-top: 8px;" />
+
+        <!-- Grid Area (transparent - 3D shows through) -->
+        <ui:VisualElement class="flex-1" style="min-height: 160px;" />
+
+        <!-- Action Buttons Row 1: Movement -->
+        <ui:VisualElement class="row w-full" style="padding: 12px 32px 8px 32px; justify-content: center;">
+            <ui:Button name="btn-move" class="action-btn action-btn--move" style="margin-right: 12px;">
+                <ui:Label text="+" class="action-btn__icon" style="color: #4ADE80;" />
+                <ui:Label text="Move" class="action-btn__label" style="color: #4ADE80;" />
+            </ui:Button>
+            <ui:Button name="btn-turn-left" class="action-btn action-btn--turn" style="margin-right: 12px;">
+                <ui:Label text="L" class="action-btn__icon" style="color: #60A5FA;" />
+                <ui:Label text="TurnL" class="action-btn__label" style="color: #60A5FA;" />
+            </ui:Button>
+            <ui:Button name="btn-turn-right" class="action-btn action-btn--turn" style="margin-right: 12px;">
+                <ui:Label text="R" class="action-btn__icon" style="color: #60A5FA;" />
+                <ui:Label text="TurnR" class="action-btn__label" style="color: #60A5FA;" />
+            </ui:Button>
+            <ui:Button name="btn-turn-around" class="action-btn action-btn--turn">
+                <ui:Label text="U" class="action-btn__icon" style="color: #60A5FA;" />
+                <ui:Label text="U-Turn" class="action-btn__label" style="color: #60A5FA;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+        <!-- Action Buttons Row 2: Combat -->
+        <ui:VisualElement class="row w-full" style="padding: 0 32px 8px 32px; justify-content: center;">
+            <ui:Button name="btn-shoot" class="action-btn action-btn--shoot" style="margin-right: 12px;">
+                <ui:Label text="X" class="action-btn__icon" style="color: #D93333;" />
+                <ui:Label text="Shoot" class="action-btn__label" style="color: #D93333;" />
+            </ui:Button>
+            <ui:Button name="btn-wait" class="action-btn action-btn--wait" style="margin-right: 12px;">
+                <ui:Label text="||" class="action-btn__icon" style="color: #9898B0;" />
+                <ui:Label text="Wait" class="action-btn__label" style="color: #9898B0;" />
+            </ui:Button>
+            <ui:Button name="btn-shield" class="action-btn action-btn--shield" style="margin-right: 12px;">
+                <ui:Label text="O" class="action-btn__icon" style="color: #38BDF8;" />
+                <ui:Label text="Shield" class="action-btn__label" style="color: #38BDF8;" />
+            </ui:Button>
+            <ui:Button name="btn-special" class="action-btn action-btn--special">
+                <ui:Label text="SP" class="action-btn__icon" style="color: #FFD933;" />
+                <ui:Label text="Special" class="action-btn__label" style="color: #FFD933;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+        <!-- Action Queue -->
+        <ui:VisualElement name="action-queue" class="row" style="justify-content: center; padding: 8px 40px;" />
+
+        <!-- Confirm / Undo -->
+        <ui:VisualElement class="row w-full" style="padding: 12px 40px 40px 40px;">
+            <ui:Button name="btn-undo" style="width: 220px; height: 112px; background-color: rgba(0,0,0,0); border-radius: 28px; border-width: 2px; border-color: rgba(152,152,176,0.25); align-items: center; justify-content: center; margin-right: 16px;">
+                <ui:Label text="UNDO" style="font-size: 32px; color: #9898B0; -unity-font-style: bold;" />
+            </ui:Button>
+            <ui:Button name="btn-confirm" style="flex-grow: 1; height: 112px; background-color: #FF6B35; border-radius: 28px; border-width: 0; align-items: center; justify-content: center;">
+                <ui:Label text="CONFIRM" class="font-display" style="font-size: 44px; color: white; letter-spacing: 3px;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+        <!-- Pass Device Overlay -->
+        <ui:VisualElement name="pass-device-overlay" class="overlay">
+            <ui:VisualElement class="panel col center" style="padding: 64px 48px; width: 640px; border-radius: 32px;">
+                <ui:Label text="PASS DEVICE" class="font-display" style="font-size: 48px; color: #EAEAF4; margin-bottom: 16px;" />
+                <ui:Label name="pass-message" text="Hand the device to Player 2" style="font-size: 32px; color: #9898B0; -unity-text-align: middle-center; margin-bottom: 48px;" />
+                <ui:Button name="btn-pass-continue" text="READY" class="btn btn--primary w-full" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Waiting Overlay -->
+        <ui:VisualElement name="waiting-overlay" class="overlay">
+            <ui:VisualElement class="col center">
+                <ui:Label text="..." style="font-size: 72px; color: #FF6B35; margin-bottom: 32px;" />
+                <ui:Label name="waiting-message" text="Waiting for opponent..." style="font-size: 32px; color: #9898B0;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

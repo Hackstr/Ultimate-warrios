@@ -15,9 +15,16 @@ MonoBehaviour:
   heroId: shadow
   heroName: Shadow
   displayName: Shadow
+  loreName: Kai
+  loreTitle: Blade Without Shadow
+  loreDimension: Umbra
+  loreBio: An assassin who moves between shadows. Nobody sees him until it's too
+    late.
   difficulty: 4
-  heroPrefab: {fileID: 1300000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a503, type: 3}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 200
+  heroPrefab: {fileID: 5759067707311823591, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a503, type: 3}
+  animatorController: {fileID: 9100000, guid: 7a6a9e9cd4420469098df33e6f6b2516, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.4, g: 0.1, b: 0.6, a: 1}
   steps: 6
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 1
   armor: 0
   speed: 2
+  voiceKill: Too slow.
+  voiceDeath: Interesting...
+  voiceSpecial: Now you see me...
+  voiceRoundStart: Entertain me.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 2
   specialName: Blink
   specialDescription: Teleport up to 4 tiles in any direction.

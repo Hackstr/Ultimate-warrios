@@ -15,8 +15,15 @@ MonoBehaviour:
   heroId: berserker
   heroName: Berserker
   displayName: Berserker
+  loreName: Grok
+  loreTitle: Primal Fury
+  loreDimension: Primordis
+  loreBio: A tribal chief who solves everything with fists. Came for the biggest
+    fight.
   difficulty: 5
-  heroPrefab: {fileID: 0}
+  isUnlocked: 0
+  unlockPrice: 500
+  heroPrefab: {fileID: 7942974810805518729, guid: 7bee3f16dcd3c4864bc36f5cbb214849, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.9, g: 0.2, b: 0.1, a: 1}
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 0
   armor: 0
   speed: 1
+  voiceKill: SMASH!
+  voiceDeath: Good... fight...
+  voiceSpecial: CHARGE!
+  voiceRoundStart: GROK CRUSH!
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 9
   specialName: Charge
   specialDescription: Rush 3 tiles forward, killing anyone in the path.

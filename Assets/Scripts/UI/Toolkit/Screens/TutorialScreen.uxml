@@ -1,0 +1,47 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="tutorial-root" class="screen center" style="padding: 120px 80px;">
+
+        <!-- Slide 1: Plan -->
+        <ui:VisualElement name="slide-0" class="col center" style="position: absolute; width: 100%; height: 100%; padding: 120px 80px;">
+            <ui:VisualElement style="width: 280px; height: 280px; border-radius: 140px; background-color: rgba(255,107,53,0.08); border-width: 3px; border-color: #FF6B35; align-items: center; justify-content: center;">
+                <ui:Label text="1" class="font-display" style="font-size: 120px; color: #FF6B35;" />
+            </ui:VisualElement>
+            <ui:Label text="PLAN YOUR MOVES" class="font-display" style="font-size: 56px; color: #EAEAF4; letter-spacing: 4px; -unity-text-align: middle-center; margin-top: 48px;" />
+            <ui:Label text="Program a sequence of actions for your hero: Move, Turn, Shoot, or Wait. You have limited steps based on your hero." style="font-size: 32px; color: #9898B0; -unity-text-align: middle-center; white-space: normal; max-width: 640px; margin-top: 24px;" />
+            <ui:Label text="●  ○  ○" style="font-size: 36px; color: #FF6B35; letter-spacing: 16px; margin-top: 40px;" />
+        </ui:VisualElement>
+
+        <!-- Slide 2: Reveal -->
+        <ui:VisualElement name="slide-1" class="col center" style="position: absolute; width: 100%; height: 100%; padding: 120px 80px; display: none;">
+            <ui:VisualElement style="width: 280px; height: 280px; border-radius: 140px; background-color: rgba(64,115,243,0.08); border-width: 3px; border-color: #4073F3; align-items: center; justify-content: center;">
+                <ui:Label text="2" class="font-display" style="font-size: 120px; color: #4073F3;" />
+            </ui:VisualElement>
+            <ui:Label text="BLIND REVEAL" class="font-display" style="font-size: 56px; color: #EAEAF4; letter-spacing: 4px; -unity-text-align: middle-center; margin-top: 48px;" />
+            <ui:Label text="Neither player sees the other's plan until both lock in. Actions execute simultaneously. Prediction is everything!" style="font-size: 32px; color: #9898B0; -unity-text-align: middle-center; white-space: normal; max-width: 640px; margin-top: 24px;" />
+            <ui:Label text="○  ●  ○" style="font-size: 36px; color: #4073F3; letter-spacing: 16px; margin-top: 40px;" />
+        </ui:VisualElement>
+
+        <!-- Slide 3: Win -->
+        <ui:VisualElement name="slide-2" class="col center" style="position: absolute; width: 100%; height: 100%; padding: 120px 80px; display: none;">
+            <ui:VisualElement style="width: 280px; height: 280px; border-radius: 140px; background-color: rgba(255,217,51,0.08); border-width: 3px; border-color: #FFD933; align-items: center; justify-content: center;">
+                <ui:Label text="3" class="font-display" style="font-size: 120px; color: #FFD933;" />
+            </ui:VisualElement>
+            <ui:Label text="OUTSMART AND WIN" class="font-display" style="font-size: 56px; color: #EAEAF4; letter-spacing: 4px; -unity-text-align: middle-center; margin-top: 48px;" />
+            <ui:Label text="Eliminate your opponent to win. Shoot where you think they'll be, not where they are. Choose your hero wisely!" style="font-size: 32px; color: #9898B0; -unity-text-align: middle-center; white-space: normal; max-width: 640px; margin-top: 24px;" />
+            <ui:Label text="○  ○  ●" style="font-size: 36px; color: #FFD933; letter-spacing: 16px; margin-top: 40px;" />
+        </ui:VisualElement>
+
+        <!-- Buttons -->
+        <ui:VisualElement style="position: absolute; bottom: 120px; left: 80px; right: 80px; align-items: center;">
+            <ui:Button name="btn-next" class="btn btn--primary w-full" style="height: 112px; border-radius: 28px;">
+                <ui:Label name="btn-next-label" text="NEXT" class="font-display" style="font-size: 44px; color: white; letter-spacing: 4px; -unity-text-align: middle-center;" />
+            </ui:Button>
+            <ui:Button name="btn-skip" style="background-color: rgba(0,0,0,0); border-width: 0; margin-top: 16px;">
+                <ui:Label text="Skip tutorial" style="font-size: 30px; color: #9898B0;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

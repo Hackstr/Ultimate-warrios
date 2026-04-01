@@ -15,9 +15,16 @@ MonoBehaviour:
   heroId: tank
   heroName: Tank
   displayName: Tank
+  loreName: Ferro
+  loreTitle: Last Guardian of the Citadel
+  loreDimension: Ferritum
+  loreBio: The last defender of a fallen fortress. His shield absorbed a thousand
+    blows.
   difficulty: 2
-  heroPrefab: {fileID: 1200000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a502, type: 3}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 0
+  heroPrefab: {fileID: 6038685545013187421, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a502, type: 3}
+  animatorController: {fileID: 9100000, guid: 375df747df06e4ac58ab795b730e8f26, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
   steps: 4
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 1
   armor: 1
   speed: 1
+  voiceKill: The Citadel stands.
+  voiceDeath: My shield... cracked...
+  voiceSpecial: PUSH!
+  voiceRoundStart: Hold the line.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 1
   specialName: Push
   specialDescription: Pushes target 2 tiles in your facing direction.

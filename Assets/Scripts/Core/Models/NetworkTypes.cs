@@ -36,6 +36,16 @@ namespace TacticalDuelist.Core.Models
         public int rankTier;
     }
 
+    /// <summary>
+    /// Sent to rejoin an active match after reconnection.
+    /// Server finds the match by player auth token — no matchId needed.
+    /// </summary>
+    [System.Serializable]
+    public class RejoinMessage
+    {
+        // Empty — server identifies match via JWT playerId
+    }
+
     #endregion
 
     #region Server → Client
@@ -86,6 +96,8 @@ namespace TacticalDuelist.Core.Models
     public class MatchEndMessage
     {
         public int winner;
+        public int ratingDelta;
+        public int coinsEarned;
     }
 
     /// <summary>
@@ -96,6 +108,60 @@ namespace TacticalDuelist.Core.Models
     {
         public string code;
         public string message;
+    }
+
+    /// <summary>
+    /// Received in response to match:rejoin. Contains full match state snapshot.
+    /// </summary>
+    [System.Serializable]
+    public class RejoinAckMessage
+    {
+        public bool success;
+        public string error;
+        public RejoinStateData state;
+    }
+
+    [System.Serializable]
+    public class RejoinStateData
+    {
+        public string matchId;
+        public int currentRound;
+        public string phase; // "planning", "committed", "resolving"
+        public string yourHeroId;
+        public string opponentHeroId;
+        public string opponentId;
+        public string mapId;
+        public int mapWidth;
+        public int mapHeight;
+        public SerializableVector2Int yourPos;
+        public SerializableVector2Int opponentPos;
+        public int yourFacing;
+        public int opponentFacing;
+        public bool yourAlive;
+        public bool opponentAlive;
+        public bool yourArmor;
+        public bool opponentArmor;
+        public bool hasCommitted;
+        public float timeLimit;
+    }
+
+    /// <summary>
+    /// Received when opponent disconnects during a match.
+    /// </summary>
+    [System.Serializable]
+    public class OpponentDisconnectedMessage
+    {
+        public string matchId;
+        public int gracePeriod;
+    }
+
+    /// <summary>
+    /// Received when opponent reconnects during grace period.
+    /// </summary>
+    [System.Serializable]
+    public class OpponentReconnectedMessage
+    {
+        public string matchId;
     }
 
     #endregion
@@ -159,6 +225,8 @@ namespace TacticalDuelist.Core.Models
         public bool p2ArmorBroken;
         public bool p1Eliminated;
         public bool p2Eliminated;
+        public bool p1Shielded;
+        public bool p2Shielded;
 
         public string p1PickedUp;
         public string p2PickedUp;

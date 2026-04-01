@@ -4,8 +4,15 @@
 1v1 tactical game where you program your hero's actions blindly,
 then watch them execute simultaneously against your opponent.
 
+## Universe
+See **LORE.md** for full story. In short: Rifts between dimensions
+opened ancient Arenas where time flows parallel. The Order of Duelists
+holds tournaments — two fighters enter, plan simultaneously, and the
+winner claims Rift Essence. Each of 12 heroes comes from a unique dimension.
+
 ## Core fantasy
-"I read my opponent perfectly" — the thrill of prediction.
+"I read my opponent perfectly" — the thrill of prediction and outsmarting.
+You are a Duelist from another dimension, reading your opponent in the Rift Arena.
 
 ## Core loop (30-90 seconds per round)
 
@@ -76,6 +83,6 @@ PLAN → COMMIT → REVEAL → RESOLVE → REACT
 
 ## Platform
 Unity → WebGL → Telegram Mini App
-Blockchain: Solana (staked matches via Anchor escrow, SPL token rewards)
+Blockchain: Solana (match rewards via Anchor program, Rift Essence / SPL tokens)
 Wallet: Phantom deep link in TMA
 Future: iOS, Android native

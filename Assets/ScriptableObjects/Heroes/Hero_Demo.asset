@@ -15,9 +15,15 @@ MonoBehaviour:
   heroId: demo
   heroName: Demo
   displayName: Demo
+  loreName: Boomer
+  loreTitle: The Merry Demolisher
+  loreDimension: Chaoticum
+  loreBio: "The only one who finds explosions funny. Not evil \u2014 just very enthusiastic."
   difficulty: 3
-  heroPrefab: {fileID: 0}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 300
+  heroPrefab: {fileID: 8147051938669192713, guid: 815717c59fc554e64b693c672f1e2e6a, type: 3}
+  animatorController: {fileID: 9100000, guid: 5f29b046d48a645819c1a2955bfd4c84, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.9, g: 0.5, b: 0.1, a: 1}
   steps: 4
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 2
   armor: 0
   speed: 1
+  voiceKill: BOOM! Haha!
+  voiceDeath: That was... explosive...
+  voiceSpecial: Fire in the hole!
+  voiceRoundStart: Let's blow stuff up!
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 5
   specialName: Bomb
   specialDescription: Places a bomb that explodes in a 3x3 area next step.

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using TacticalDuelist.Core.Config;
 
 namespace TacticalDuelist.Editor
 {
@@ -23,6 +24,7 @@ namespace TacticalDuelist.Editor
             WireHeroPrefabs();
             WireGameBootstrapMaterials();
             AddShaderToAlwaysIncluded();
+            UIToolkitSetup.SetupUIToolkit();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
@@ -65,26 +67,54 @@ namespace TacticalDuelist.Editor
 
         private static void WireHeroPrefabs()
         {
-            var heroToPrefab = new System.Collections.Generic.Dictionary<string, string>
-            {
-                { "archer", "Hero_Archer" },
-                { "tank", "Hero_Tank" },
-                { "shadow", "Hero_Shadow" },
-                { "scout", "Hero_Scout" },
-            };
+            EnsureFolder(PrefabsPath);
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
 
             var guids = AssetDatabase.FindAssets("t:TacticalDuelist.Core.Config.HeroConfig", new[] { HeroesPath });
             foreach (var guid in guids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 var hero = AssetDatabase.LoadAssetAtPath<Core.Config.HeroConfig>(path);
-                if (hero == null) continue;
+                if (hero == null || string.IsNullOrEmpty(hero.heroId)) continue;
 
-                if (heroToPrefab.TryGetValue(hero.heroId, out var prefabName))
+                var prefabName = $"Hero_{hero.heroId.Substring(0,1).ToUpper()}{hero.heroId.Substring(1)}";
+                var prefabPath = $"{PrefabsPath}/{prefabName}.prefab";
+
+                // Create prefab if it doesn't exist
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefab == null && shader != null)
                 {
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsPath}/{prefabName}.prefab");
-                    if (prefab != null) hero.heroPrefab = prefab;
+                    var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                    go.name = prefabName;
+                    go.transform.localScale = new Vector3(0.8f, 1f, 0.8f);
+
+                    var mat = new Material(shader) { color = hero.heroColor };
+                    var matPath = $"Assets/Materials/Heroes/{hero.heroId}.mat";
+                    EnsureFolder("Assets/Materials/Heroes");
+
+                    var existingMat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+                    if (existingMat == null)
+                    {
+                        AssetDatabase.CreateAsset(mat, matPath);
+                    }
+                    else
+                    {
+                        existingMat.color = hero.heroColor;
+                        mat = existingMat;
+                        EditorUtility.SetDirty(existingMat);
+                    }
+
+                    go.GetComponent<Renderer>().sharedMaterial = mat;
+                    go.AddComponent<Gameplay.HeroView3D>();
+
+                    prefab = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
+                    Object.DestroyImmediate(go);
+                    Debug.Log($"[ProjectSetup] Created hero prefab: {prefabName}");
                 }
+
+                if (prefab != null)
+                    hero.heroPrefab = prefab;
+
                 EditorUtility.SetDirty(hero);
             }
         }
@@ -109,6 +139,21 @@ namespace TacticalDuelist.Editor
             SetMat(so, "_matSpawnP2", "SpawnP2");
             SetMat(so, "_matHeroP1", "HeroP1");
             SetMat(so, "_matHeroP2", "HeroP2");
+
+            // Wire all maps
+            var allMapGuids = AssetDatabase.FindAssets("t:MapConfig", new[] { "Assets/ScriptableObjects/Maps" });
+            var mapsProp = so.FindProperty("_allMaps");
+            if (mapsProp != null)
+            {
+                mapsProp.arraySize = allMapGuids.Length;
+                for (int i = 0; i < allMapGuids.Length; i++)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(allMapGuids[i]);
+                    var map = AssetDatabase.LoadAssetAtPath<MapConfig>(path);
+                    mapsProp.GetArrayElementAtIndex(i).objectReferenceValue = map;
+                }
+            }
+
             so.ApplyModifiedProperties();
             EditorUtility.SetDirty(bootstrap);
         }

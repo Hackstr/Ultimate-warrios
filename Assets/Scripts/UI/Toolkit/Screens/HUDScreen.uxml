@@ -1,0 +1,57 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="hud-root" class="screen" style="background-color: rgba(0,0,0,0); justify-content: space-between; padding: 0 33px 33px 33px;">
+
+        <!-- Top Bar -->
+        <ui:VisualElement class="hud__top-bar">
+
+            <!-- P1 Info -->
+            <ui:VisualElement class="row" style="gap: 22px; align-items: center;">
+                <ui:VisualElement name="hud-p1-frame" style="width: 100px; height: 100px; border-radius: 50px; background-color: #22223A; align-items: center; justify-content: center; border-width: 3px; border-color: #33CC66;">
+                    <ui:Label text="P1" style="font-size: 28px; color: #EAEAF4;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="col" style="gap: 6px;">
+                    <ui:Label name="hud-p1-name" text="Player 1" style="font-size: 30px; color: #EAEAF4; -unity-font-style: bold;" />
+                    <ui:VisualElement class="row" style="gap: 11px;">
+                        <ui:Label name="hud-p1-score" text="0" style="font-size: 39px; color: #FFD933; -unity-font-style: bold;" />
+                        <ui:VisualElement name="hud-p1-armor" style="width: 33px; height: 33px; border-radius: 17px; background-color: #4073F3;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Center: Round + Phase + Timer -->
+            <ui:VisualElement class="col center" style="gap: 6px;">
+                <ui:Label name="hud-round" text="Round 1" style="font-size: 28px; color: #9898B0;" />
+                <ui:Label name="hud-phase" text="PLANNING" style="font-size: 33px; color: #FF6B35; -unity-font-style: bold; letter-spacing: 3px;" />
+                <ui:Label name="hud-timer" text="" style="font-size: 50px; -unity-font-style: bold; color: #EAEAF4;" />
+            </ui:VisualElement>
+
+            <!-- P2 Info -->
+            <ui:VisualElement class="row" style="gap: 22px; align-items: center; flex-direction: row-reverse;">
+                <ui:VisualElement name="hud-p2-frame" style="width: 100px; height: 100px; border-radius: 50px; background-color: #22223A; align-items: center; justify-content: center; border-width: 3px; border-color: #33CC66;">
+                    <ui:Label text="P2" style="font-size: 28px; color: #EAEAF4;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="col" style="gap: 6px; align-items: flex-end;">
+                    <ui:Label name="hud-p2-name" text="Player 2" style="font-size: 30px; color: #EAEAF4; -unity-font-style: bold;" />
+                    <ui:VisualElement class="row" style="gap: 11px; flex-direction: row-reverse;">
+                        <ui:Label name="hud-p2-score" text="0" style="font-size: 39px; color: #FFD933; -unity-font-style: bold;" />
+                        <ui:VisualElement name="hud-p2-armor" style="width: 33px; height: 33px; border-radius: 17px; background-color: #4073F3;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- Combat Feedback (centered, large text, fades) -->
+        <ui:VisualElement style="position: absolute; width: 100%; height: 100%; align-items: center; justify-content: center; picking-mode: Ignore;">
+            <ui:Label name="combat-text" text="" class="font-display" style="font-size: 80px; color: white; -unity-text-align: middle-center; opacity: 0; picking-mode: Ignore; letter-spacing: 4px;" />
+        </ui:VisualElement>
+
+        <!-- Step indicator (bottom) -->
+        <ui:VisualElement style="flex-direction: row; align-items: center; justify-content: center; background-color: rgba(15, 15, 26, 0.75); border-radius: 22px; padding: 17px 44px;">
+            <ui:Label name="hud-step" text="" style="font-size: 33px; color: #9898B0;" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

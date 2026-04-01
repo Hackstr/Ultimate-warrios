@@ -29,6 +29,26 @@ namespace TacticalDuelist.Core.Models
         public bool IsCloaked { get; set; }
         public int CloakStepsRemaining { get; set; }
 
+        // Bomb (Demo)
+        public Vector2Int BombPosition { get; set; }
+        public bool BombActive { get; set; }
+
+        // Barrier (Guardian)
+        public Vector2Int BarrierPosition { get; set; }
+        public bool BarrierActive { get; set; }
+
+        // Turret (Engineer)
+        public Vector2Int TurretPosition { get; set; }
+        public Direction TurretFacing { get; set; }
+        public bool TurretActive { get; set; }
+
+        // Decoy (Mirage)
+        public Vector2Int DecoyPosition { get; set; }
+        public bool DecoyActive { get; set; }
+
+        // Charge (Berserker)
+        public bool ChargeHit { get; set; }
+
         public int EffectiveSpeed => Config.speed + BonusSpeed;
         public int EffectiveRange => Config.range + BonusRange;
 
@@ -61,6 +81,11 @@ namespace TacticalDuelist.Core.Models
             HasIntel = false;
             IsCloaked = false;
             CloakStepsRemaining = 0;
+            BombActive = false;
+            BarrierActive = false;
+            TurretActive = false;
+            DecoyActive = false;
+            ChargeHit = false;
         }
 
         #endregion

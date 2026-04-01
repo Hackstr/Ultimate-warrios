@@ -21,6 +21,7 @@ namespace TacticalDuelist.Platform.WebGL
         public IPlatformNotifications Notifications { get; private set; }
         public IPlatformDeepLinks DeepLinks { get; private set; }
         public IPlatformShare Share { get; private set; }
+        public IBlockchainService Blockchain { get; private set; }
 
         public void Initialize()
         {
@@ -31,6 +32,11 @@ namespace TacticalDuelist.Platform.WebGL
             Notifications = new WebGLNotifications();
             DeepLinks = new WebGLDeepLinks();
             Share = new WebGLShare();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            var bc = new WebGLBlockchain();
+            bc.Initialize();
+            Blockchain = bc;
+#endif
         }
     }
 

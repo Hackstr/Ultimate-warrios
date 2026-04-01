@@ -83,6 +83,12 @@ namespace TacticalDuelist.Core.Systems
 
         #endregion
 
+        #region Voice / Toast
+
+        public static System.Action<string> ShowToast;
+
+        #endregion
+
         #region Cleanup
 
         /// <summary>

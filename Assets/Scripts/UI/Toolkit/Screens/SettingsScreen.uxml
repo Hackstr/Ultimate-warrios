@@ -1,0 +1,60 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="settings-root" class="screen">
+
+        <!-- Header -->
+        <ui:VisualElement class="row w-full" style="justify-content: space-between; align-items: center; padding: 40px 32px 24px 32px;">
+            <ui:Button name="btn-back" text="Back" style="font-size: 30px; color: #9898B0; background-color: rgba(26,26,40,0.5); border-width: 0; -unity-font-style: bold; padding: 12px 24px; border-radius: 16px;" />
+            <ui:Label text="SETTINGS" class="font-display" style="font-size: 48px; color: #EAEAF4; letter-spacing: 3px;" />
+            <ui:VisualElement style="width: 64px;" />
+        </ui:VisualElement>
+
+        <!-- Content -->
+        <ui:VisualElement class="col w-full" style="padding: 0 32px;">
+
+            <!-- Audio -->
+            <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                <ui:Label text="AUDIO" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                <ui:Button name="btn-music" style="background-color: rgba(0,0,0,0); border-width: 0; padding: 8px 0; margin-bottom: 8px;">
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:Label text="Music" style="font-size: 30px; color: #EAEAF4;" />
+                        <ui:Label name="music-value" text="ON" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="btn-sfx" style="background-color: rgba(0,0,0,0); border-width: 0; padding: 8px 0;">
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:Label text="SFX" style="font-size: 30px; color: #EAEAF4;" />
+                        <ui:Label name="sfx-value" text="ON" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
+            <!-- Gameplay -->
+            <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                <ui:Label text="GAMEPLAY" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                <ui:Button name="btn-vibration" style="background-color: rgba(0,0,0,0); border-width: 0; padding: 8px 0;">
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:Label text="Vibration" style="font-size: 30px; color: #EAEAF4;" />
+                        <ui:Label name="vibration-value" text="OFF" style="font-size: 28px; color: #9898B0; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
+            <!-- Account -->
+            <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                <ui:Label text="ACCOUNT" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                <ui:VisualElement class="row justify-between w-full">
+                    <ui:Label text="Connected via Telegram" style="font-size: 30px; color: #EAEAF4;" />
+                    <ui:Label text="OK" style="font-size: 28px; color: #33CC66; -unity-font-style: bold;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <!-- Version -->
+            <ui:VisualElement class="row" style="justify-content: center; margin-top: 16px;">
+                <ui:Label text="v0.5.0" style="font-size: 24px; color: rgba(152,152,176,0.4);" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

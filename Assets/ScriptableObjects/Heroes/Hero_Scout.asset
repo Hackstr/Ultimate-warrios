@@ -15,9 +15,15 @@ MonoBehaviour:
   heroId: scout
   heroName: Scout
   displayName: Scout
+  loreName: Nova
+  loreTitle: Agent of Sector Zero
+  loreDimension: Nexus
+  loreBio: An intel operative whose visor sees through walls. Knowledge is her weapon.
   difficulty: 3
-  heroPrefab: {fileID: 1400000000000000, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a504, type: 3}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 0
+  heroPrefab: {fileID: 8272296178345422216, guid: e1f2a3b4c5d6e7f8a9b0c1d2e3f4a504, type: 3}
+  animatorController: {fileID: 9100000, guid: 8210897084cdb4220b1adc8cf9f1691b, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.2, g: 0.4, b: 0.8, a: 1}
   steps: 5
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 1
   armor: 0
   speed: 2
+  voiceKill: Data acquired.
+  voiceDeath: Signal lost...
+  voiceSpecial: Scanning...
+  voiceRoundStart: Eyes on target.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 3
   specialName: Scan
   specialDescription: Reveals opponent's next planned action.

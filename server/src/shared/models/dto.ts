@@ -87,6 +87,8 @@ export interface StepResultPayload {
   p2ArmorBroken: boolean;
   p1Eliminated: boolean;
   p2Eliminated: boolean;
+  p1Shielded: boolean;
+  p2Shielded: boolean;
   p1PickedUp: number | null;
   p2PickedUp: number | null;
 }

@@ -50,6 +50,7 @@ namespace TacticalDuelist.Core.Systems
                     case ActionType.TurnRight:
                     case ActionType.TurnAround:
                     case ActionType.Wait:
+                    case ActionType.Shield:
                         break;
 
                     default:

@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="heroes-collection-root" class="screen">
+
+        <!-- Header -->
+        <ui:VisualElement class="row w-full" style="justify-content: space-between; align-items: center; padding: 40px 32px 16px 32px;">
+            <ui:Button name="btn-back" text="Back" style="font-size: 30px; color: #9898B0; background-color: rgba(26,26,40,0.5); border-width: 0; -unity-font-style: bold; padding: 12px 24px; border-radius: 16px;" />
+            <ui:Label text="HEROES" class="font-display" style="font-size: 48px; color: #EAEAF4; letter-spacing: 3px;" />
+            <ui:VisualElement style="border-radius: 20px; background-color: rgba(255,107,53,0.13); padding: 6px 16px;">
+                <ui:Label name="hero-count" text="3/12" style="font-size: 24px; color: #FF6B35; -unity-font-style: bold;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Coins bar -->
+        <ui:VisualElement class="row center" style="padding: 0 32px 12px 32px;">
+            <ui:Label name="coins-label" text="0 coins" style="font-size: 28px; color: #FFD933; -unity-font-style: bold;" />
+        </ui:VisualElement>
+
+        <!-- Hero Grid -->
+        <ui:ScrollView class="w-full flex-1 scrollview-hidden" style="padding: 0 24px;">
+            <ui:VisualElement name="heroes-grid" class="row" style="flex-wrap: wrap; justify-content: flex-start; padding: 8px;" />
+        </ui:ScrollView>
+
+    </ui:VisualElement>
+</ui:UXML>

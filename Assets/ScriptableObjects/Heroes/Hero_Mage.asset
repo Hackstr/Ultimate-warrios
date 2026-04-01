@@ -15,8 +15,14 @@ MonoBehaviour:
   heroId: mage
   heroName: Mage
   displayName: Mage
+  loreName: Orion
+  loreTitle: Keeper of the Spirals
+  loreDimension: Arcana
+  loreBio: Manipulates the fabric of reality. Seeks to understand the nature of Rifts.
   difficulty: 4
-  heroPrefab: {fileID: 0}
+  isUnlocked: 0
+  unlockPrice: 200
+  heroPrefab: {fileID: 4416227720843438770, guid: 7626b9f2c04d74eeaac42f35fe2c52dc, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.5, g: 0.2, b: 0.8, a: 1}
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 2
   armor: 0
   speed: 1
+  voiceKill: Reality bends to my will.
+  voiceDeath: The spirals... unravel...
+  voiceSpecial: Phase shift!
+  voiceRoundStart: The fabric trembles.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 4
   specialName: Phase Shot
   specialDescription: Shot passes through walls, ignoring obstacles.

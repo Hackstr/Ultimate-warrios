@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="matchmaking-root" class="screen" style="align-items: center; justify-content: center; gap: 40px;">
+
+        <!-- Title -->
+        <ui:Label name="status-text" text="FINDING OPPONENT" class="font-display" style="font-size: 52px; color: #EAEAF4; letter-spacing: 3px;" />
+
+        <!-- Timer -->
+        <ui:Label name="timer-text" text="0:00" style="font-size: 80px; color: #9898B0;" />
+
+        <!-- VS Section (built by controller) -->
+        <ui:VisualElement name="vs-section" class="row" style="align-items: center;" />
+
+        <!-- Map Preview -->
+        <ui:VisualElement style="width: 100%; max-width: 700px; border-radius: 32px; background-color: #1A1A28; padding: 24px 32px; align-items: center; flex-direction: column;">
+            <ui:Label text="ARENA" style="font-size: 24px; color: #FF6B35; -unity-font-style: bold; letter-spacing: 4px;" />
+            <ui:Label text="Random Arena" style="font-size: 32px; color: #EAEAF4; -unity-font-style: bold; margin-top: 8px;" />
+            <ui:Label text="Map selected by matchmaking" style="font-size: 26px; color: #9898B0; margin-top: 4px;" />
+        </ui:VisualElement>
+
+        <!-- Search Dots -->
+        <ui:Label name="search-dots" text="●  ●  ●  ○  ○" style="font-size: 32px; color: #FF6B35; letter-spacing: 8px;" />
+
+        <!-- Tip -->
+        <ui:VisualElement style="width: 100%; max-width: 700px; border-radius: 32px; background-color: #1A1A28; padding: 24px 32px; align-items: center;">
+            <ui:Label text="TIP" style="font-size: 24px; color: #FF6B35; -unity-font-style: bold; letter-spacing: 4px;" />
+            <ui:Label text="Plan your actions wisely -- all moves are revealed simultaneously!" style="font-size: 30px; color: #9898B0; -unity-text-align: middle-center; white-space: normal; max-width: 600px; margin-top: 8px;" />
+        </ui:VisualElement>
+
+        <!-- Cancel Button -->
+        <ui:Button name="btn-cancel" class="btn btn--secondary" style="width: 100%; max-width: 600px; height: 112px; border-radius: 28px;">
+            <ui:Label text="CANCEL" style="font-size: 34px; color: #9898B0; -unity-font-style: bold; letter-spacing: 3px; -unity-text-align: middle-center;" />
+        </ui:Button>
+
+    </ui:VisualElement>
+</ui:UXML>

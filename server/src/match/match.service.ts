@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PlayerService } from '../player/player.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { ActionResolverService } from './action-resolver.service';
 import { ActionType, Direction, MatchResult, RoundResult, TileType } from '../shared/models/enums';
 import {
@@ -34,12 +36,46 @@ interface ActiveMatch {
   /** Persistent resolver across rounds */
   resolver: ActionResolverService;
   roundResults: RoundResult[];
+  /** Disconnect grace period tracking */
+  disconnectTimers: Map<string, ReturnType<typeof setTimeout>>;
+  /** Which phase the match is in for reconnection */
+  phase: 'planning' | 'committed' | 'resolving';
+  /** Guard against double _endMatch calls */
+  isEnded: boolean;
+  /** Reveal timeout — ends match if reveal not received in time */
+  revealTimer: ReturnType<typeof setTimeout> | null;
+  /** Stake amount in lamports (0 = free match) */
+  stakeLevel: number;
 }
 
 interface CreateMatchResult {
   roomId: string;
   payloadForPlayer1: MatchFoundPayload;
   payloadForPlayer2: MatchFoundPayload;
+}
+
+interface RejoinResult {
+  matchId: string;
+  roomId: string;
+  currentRound: number;
+  phase: 'planning' | 'committed' | 'resolving';
+  yourHeroId: string;
+  opponentHeroId: string;
+  opponentId: string;
+  mapId: string;
+  mapWidth: number;
+  mapHeight: number;
+  gridData: number[][];
+  yourPos: { x: number; y: number };
+  opponentPos: { x: number; y: number };
+  yourFacing: number;
+  opponentFacing: number;
+  yourAlive: boolean;
+  opponentAlive: boolean;
+  yourArmor: boolean;
+  opponentArmor: boolean;
+  hasCommitted: boolean;
+  timeLimit: number;
 }
 
 interface CommitResult {
@@ -58,6 +94,13 @@ interface RevealResult {
   matchOutcome?: number;
   nextRound?: number;
   shrinkZone?: { x: number; y: number }[];
+  /** Per-player match-end data (only when matchEnded=true) */
+  p1RatingDelta?: number;
+  p2RatingDelta?: number;
+  p1Coins?: number;
+  p2Coins?: number;
+  player1Id?: string;
+  player2Id?: string;
 }
 
 @Injectable()
@@ -71,6 +114,8 @@ export class MatchService {
 
   constructor(
     private readonly _prisma: PrismaService,
+    private readonly _players: PlayerService,
+    private readonly _blockchain: BlockchainService,
   ) {}
 
   // ── Match Creation ──
@@ -81,7 +126,7 @@ export class MatchService {
     p2Id: string,
     p2HeroId: string,
   ): Promise<CreateMatchResult> {
-    const map = this._getDefaultMap();
+    const map = this._getRandomMap();
     const p1Config = this._getHeroConfig(p1HeroId);
     const p2Config = this._getHeroConfig(p2HeroId);
 
@@ -120,6 +165,11 @@ export class MatchService {
       p2Reveal: null,
       resolver,
       roundResults: [],
+      disconnectTimers: new Map(),
+      phase: 'planning',
+      isEnded: false,
+      revealTimer: null,
+      stakeLevel: 0, // Set by gateway when staked match
     };
 
     this._matches.set(dbMatch.id, active);
@@ -137,7 +187,7 @@ export class MatchService {
 
   async submitCommit(playerId: string, hash: string): Promise<CommitResult> {
     const match = this._playerMatches.get(playerId);
-    if (!match) return { success: false, error: 'No active match', bothCommitted: false };
+    if (!match || match.isEnded) return { success: false, error: 'No active match', bothCommitted: false };
 
     if (playerId === match.player1Id) {
       if (match.p1Commit) return { success: false, error: 'Already committed', bothCommitted: false };
@@ -148,6 +198,23 @@ export class MatchService {
     }
 
     const both = match.p1Commit !== null && match.p2Commit !== null;
+    if (both) {
+      match.phase = 'committed';
+      // Start 40s reveal timeout — if neither reveals, end match as draw
+      if (match.revealTimer) clearTimeout(match.revealTimer);
+      match.revealTimer = setTimeout(async () => {
+        try {
+          if (!match.isEnded && match.phase === 'committed') {
+            this._logger.warn(`Reveal timeout for match ${match.matchId} — ending as draw`);
+            await this._endMatch(match, MatchResult.Draw);
+            this._onForfeit?.(match.matchId, match.player1Id, MatchResult.Draw);
+            this._onForfeit?.(match.matchId, match.player2Id, MatchResult.Draw);
+          }
+        } catch (err) {
+          this._logger.error(`Reveal timeout error: ${err}`);
+        }
+      }, 40_000);
+    }
     return { success: true, bothCommitted: both };
   }
 
@@ -157,7 +224,7 @@ export class MatchService {
     nonce: string,
   ): Promise<RevealResult> {
     const match = this._playerMatches.get(playerId);
-    if (!match) return { success: false, error: 'No active match', roundResolved: false };
+    if (!match || match.isEnded) return { success: false, error: 'No active match', roundResolved: false };
 
     const expectedHash = playerId === match.player1Id ? match.p1Commit : match.p2Commit;
     if (!expectedHash) return { success: false, error: 'No commit found', roundResolved: false };
@@ -176,7 +243,8 @@ export class MatchService {
       return { success: true, roundResolved: false };
     }
 
-    // Both revealed — resolve the round
+    // Both revealed — cancel reveal timeout and resolve
+    if (match.revealTimer) { clearTimeout(match.revealTimer); match.revealTimer = null; }
     return this._resolveRound(match);
   }
 
@@ -184,7 +252,7 @@ export class MatchService {
 
   async surrender(playerId: string): Promise<{ winner: number } | null> {
     const match = this._playerMatches.get(playerId);
-    if (!match) return null;
+    if (!match || match.isEnded) return null;
 
     const winner = playerId === match.player1Id
       ? MatchResult.Player2Win
@@ -194,12 +262,105 @@ export class MatchService {
     return { winner };
   }
 
-  // ── Disconnect ──
+  // ── Disconnect / Reconnect ──
 
-  handleDisconnect(playerId: string): void {
+  private static readonly DISCONNECT_GRACE_SEC = 60;
+
+  handleDisconnect(playerId: string): { matchId: string; opponentId: string } | null {
     const match = this._playerMatches.get(playerId);
-    if (!match) return;
-    this._logger.warn(`Player ${playerId} disconnected from match ${match.matchId}`);
+    if (!match) return null;
+
+    this._logger.warn(`Player ${playerId} disconnected from match ${match.matchId} — starting ${MatchService.DISCONNECT_GRACE_SEC}s grace period`);
+
+    // Clear any existing timer for this player (e.g. rapid re-disconnect)
+    const existing = match.disconnectTimers.get(playerId);
+    if (existing) clearTimeout(existing);
+
+    const opponentId = playerId === match.player1Id ? match.player2Id : match.player1Id;
+
+    const timer = setTimeout(async () => {
+      try {
+        match.disconnectTimers.delete(playerId);
+        this._logger.warn(`Grace period expired for ${playerId} — forfeit match ${match.matchId}`);
+
+        const winner = playerId === match.player1Id
+          ? MatchResult.Player2Win
+          : MatchResult.Player1Win;
+        await this._endMatch(match, winner);
+
+        // Notify via callback (gateway will emit match:end to opponent)
+        this._onForfeit?.(match.matchId, opponentId, winner);
+      } catch (err) {
+        this._logger.error(`Forfeit timer error for match ${match.matchId}`, err);
+        // Still try to notify opponent even if _endMatch failed
+        this._onForfeit?.(match.matchId, opponentId,
+          playerId === match.player1Id ? MatchResult.Player2Win : MatchResult.Player1Win);
+      }
+    }, MatchService.DISCONNECT_GRACE_SEC * 1000);
+
+    match.disconnectTimers.set(playerId, timer);
+
+    return { matchId: match.matchId, opponentId };
+  }
+
+  /** Callback set by gateway to notify opponent of forfeit after grace period. */
+  private _onForfeit?: (matchId: string, opponentId: string, winner: number) => void;
+
+  setForfeitCallback(cb: (matchId: string, opponentId: string, winner: number) => void): void {
+    this._onForfeit = cb;
+  }
+
+  /**
+   * Rejoin a match after reconnect. Cancels the grace timer and returns
+   * full match state so the client can restore.
+   */
+  rejoinMatch(playerId: string): RejoinResult | null {
+    const match = this._playerMatches.get(playerId);
+    if (!match || match.isEnded) return null;
+
+    // Cancel disconnect timer
+    const timer = match.disconnectTimers.get(playerId);
+    if (timer) {
+      clearTimeout(timer);
+      match.disconnectTimers.delete(playerId);
+      this._logger.log(`Player ${playerId} rejoined match ${match.matchId} — grace timer cancelled`);
+    }
+
+    const isP1 = playerId === match.player1Id;
+    const heroes = match.resolver.getHeroStates();
+    const myHero = isP1 ? heroes.p1 : heroes.p2;
+    const oppHero = isP1 ? heroes.p2 : heroes.p1;
+
+    return {
+      matchId: match.matchId,
+      roomId: match.roomId,
+      currentRound: match.currentRound,
+      phase: match.phase,
+      yourHeroId: isP1 ? match.player1HeroId : match.player2HeroId,
+      opponentHeroId: isP1 ? match.player2HeroId : match.player1HeroId,
+      opponentId: isP1 ? match.player2Id : match.player1Id,
+      mapId: match.map.mapId,
+      mapWidth: match.map.width,
+      mapHeight: match.map.height,
+      gridData: match.map.gridData.map((row) => row.map(Number)),
+      yourPos: myHero.position,
+      opponentPos: oppHero.position,
+      yourFacing: myHero.facing,
+      opponentFacing: oppHero.facing,
+      yourAlive: myHero.isAlive,
+      opponentAlive: oppHero.isAlive,
+      yourArmor: myHero.hasArmor,
+      opponentArmor: oppHero.hasArmor,
+      hasCommitted: isP1 ? match.p1Commit !== null : match.p2Commit !== null,
+      timeLimit: 30,
+    };
+  }
+
+  /**
+   * Find the active match for a player (used by gateway for rejoin).
+   */
+  getActiveMatchId(playerId: string): string | null {
+    return this._playerMatches.get(playerId)?.matchId ?? null;
   }
 
   // ── Queries ──
@@ -207,6 +368,8 @@ export class MatchService {
   getRoomId(playerId: string): string | null {
     return this._playerMatches.get(playerId)?.roomId ?? null;
   }
+
+
 
   // ── Round Resolution ──
 
@@ -239,7 +402,9 @@ export class MatchService {
 
     if (matchEnded) {
       const matchOutcome = this._determineMatchOutcome(match);
-      await this._endMatch(match, matchOutcome);
+      const p1Id = match.player1Id;
+      const p2Id = match.player2Id;
+      const endData = await this._endMatch(match, matchOutcome);
 
       return {
         success: true,
@@ -248,6 +413,12 @@ export class MatchService {
         roundOutcome,
         matchEnded: true,
         matchOutcome,
+        p1RatingDelta: endData.p1RatingDelta,
+        p2RatingDelta: endData.p2RatingDelta,
+        p1Coins: endData.p1Coins,
+        p2Coins: endData.p2Coins,
+        player1Id: p1Id,
+        player2Id: p2Id,
       };
     }
 
@@ -263,7 +434,7 @@ export class MatchService {
       roundOutcome,
       matchEnded: false,
       nextRound: match.currentRound,
-      shrinkZone: [],
+      shrinkZone: this._calculateShrinkZone(match),
     };
   }
 
@@ -300,7 +471,16 @@ export class MatchService {
 
   // ── DB Persistence ──
 
-  private async _endMatch(match: ActiveMatch, outcome: MatchResult): Promise<void> {
+  private async _endMatch(match: ActiveMatch, outcome: MatchResult): Promise<{
+    p1RatingDelta: number; p2RatingDelta: number; p1Coins: number; p2Coins: number;
+  }> {
+    // Guard against double-call (forfeit timer + normal end race)
+    if (match.isEnded) {
+      this._logger.warn(`Match ${match.matchId} already ended — skipping duplicate _endMatch`);
+      return { p1RatingDelta: 0, p2RatingDelta: 0, p1Coins: 0, p2Coins: 0 };
+    }
+    match.isEnded = true;
+
     const dbOutcome = outcome === MatchResult.Player1Win
       ? 'PLAYER1_WIN'
       : outcome === MatchResult.Player2Win
@@ -312,15 +492,48 @@ export class MatchService {
       data: { status: 'COMPLETED', outcome: dbOutcome, endedAt: new Date() },
     });
 
-    await this._updatePlayerStats(match, outcome);
+    const { p1RatingDelta, p2RatingDelta } = await this._updatePlayerStats(match, outcome);
+
+    // Award coins
+    const p1Outcome = outcome === MatchResult.Player1Win ? 'win' : outcome === MatchResult.Player2Win ? 'loss' : 'draw';
+    const p2Outcome = outcome === MatchResult.Player2Win ? 'win' : outcome === MatchResult.Player1Win ? 'loss' : 'draw';
+    const p1Coins = await this._players.awardCoins(match.player1Id, p1Outcome as 'win' | 'loss' | 'draw');
+    const p2Coins = await this._players.awardCoins(match.player2Id, p2Outcome as 'win' | 'loss' | 'draw');
+
+    // Award hero mastery XP
+    await this._players.awardHeroXP(match.player1Id, match.player1HeroId, p1Outcome as 'win' | 'loss' | 'draw');
+    await this._players.awardHeroXP(match.player2Id, match.player2HeroId, p2Outcome as 'win' | 'loss' | 'draw');
+
+    // On-chain settlement for staked matches
+    if (match.stakeLevel > 0 && outcome !== MatchResult.Draw) {
+      try {
+        const winnerId = outcome === MatchResult.Player1Win ? match.player1Id : match.player2Id;
+        const winner = await this._prisma.player.findUnique({
+          where: { id: winnerId },
+          select: { walletAddress: true },
+        });
+        if (winner?.walletAddress) {
+          const totalStake = BigInt(match.stakeLevel) * 2n;
+          const txSig = await this._blockchain.settleMatch(match.matchId, winner.walletAddress, totalStake);
+          this._logger.log(`On-chain settlement: match=${match.matchId}, winner=${winner.walletAddress}, tx=${txSig}`);
+        }
+      } catch (err) {
+        this._logger.error(`On-chain settlement failed for match ${match.matchId}: ${err}`);
+        // Non-critical — off-chain rewards still work
+      }
+    }
+
     this._cleanupMatch(match);
+    return { p1RatingDelta, p2RatingDelta, p1Coins, p2Coins };
   }
 
-  private async _updatePlayerStats(match: ActiveMatch, outcome: MatchResult): Promise<void> {
+  private async _updatePlayerStats(match: ActiveMatch, outcome: MatchResult): Promise<{
+    p1RatingDelta: number; p2RatingDelta: number;
+  }> {
     const K = 32;
     const p1 = await this._prisma.player.findUnique({ where: { id: match.player1Id } });
     const p2 = await this._prisma.player.findUnique({ where: { id: match.player2Id } });
-    if (!p1 || !p2) return;
+    if (!p1 || !p2) return { p1RatingDelta: 0, p2RatingDelta: 0 };
 
     const expected1 = 1 / (1 + Math.pow(10, (p2.rating - p1.rating) / 400));
     const expected2 = 1 - expected1;
@@ -333,6 +546,8 @@ export class MatchService {
 
     const newRating1 = Math.round(p1.rating + K * (score1 - expected1));
     const newRating2 = Math.round(p2.rating + K * (score2 - expected2));
+    const p1RatingDelta = newRating1 - p1.rating;
+    const p2RatingDelta = newRating2 - p2.rating;
 
     await this._prisma.player.update({
       where: { id: p1.id },
@@ -352,18 +567,51 @@ export class MatchService {
         draws: { increment: score2 === 0.5 ? 1 : 0 },
       },
     });
+
+    return { p1RatingDelta, p2RatingDelta };
   }
 
   // ── State Management ──
+
+  /** Calculate danger zone tiles based on current round (shrinks from outer ring inward) */
+  private _calculateShrinkZone(match: ActiveMatch): { x: number; y: number }[] {
+    const round = match.currentRound;
+    if (round < 3) return []; // No shrink for rounds 1-2
+
+    const shrinkLevel = round - 2; // round 3 = level 1, round 4 = level 2, etc.
+    const w = match.map.width;
+    const h = match.map.height;
+    const tiles: { x: number; y: number }[] = [];
+
+    for (let layer = 0; layer < shrinkLevel && layer < Math.min(w, h) / 2; layer++) {
+      for (let x = layer; x < w - layer; x++) {
+        for (let y = layer; y < h - layer; y++) {
+          // Only outer ring of this layer
+          if (x === layer || x === w - 1 - layer || y === layer || y === h - 1 - layer) {
+            tiles.push({ x, y });
+          }
+        }
+      }
+    }
+    return tiles;
+  }
 
   private _resetRoundState(match: ActiveMatch): void {
     match.p1Commit = null;
     match.p2Commit = null;
     match.p1Reveal = null;
     match.p2Reveal = null;
+    match.phase = 'planning';
   }
 
   private _cleanupMatch(match: ActiveMatch): void {
+    // Clear any pending timers
+    for (const timer of match.disconnectTimers.values()) {
+      clearTimeout(timer);
+    }
+    match.disconnectTimers.clear();
+    if (match.revealTimer) { clearTimeout(match.revealTimer); match.revealTimer = null; }
+
     this._matches.delete(match.matchId);
     this._playerMatches.delete(match.player1Id);
     this._playerMatches.delete(match.player2Id);
@@ -425,25 +673,27 @@ export class MatchService {
     }
   }
 
-  private _getDefaultMap(): MapConfig {
-    const W = 10;
-    const H = 10;
-    // Column-major: gridData[x][y] matches C# _grid[col, row]
+  private _getRandomMap(): MapConfig {
+    const maps = this._getAllMaps();
+    return maps[Math.floor(Math.random() * maps.length)];
+  }
+
+  private _getAllMaps(): MapConfig[] {
+    return [
+      this._buildMap('arena_01', 10, 10, [vec2(1, 1), vec2(8, 8)], [Direction.Up, Direction.Left]),
+      this._buildMap('arena_02', 8, 8, [vec2(1, 1), vec2(6, 6)], [Direction.Up, Direction.Left]),
+      this._buildMap('arena_03', 10, 8, [vec2(1, 1), vec2(8, 6)], [Direction.Up, Direction.Left]),
+    ];
+  }
+
+  private _buildMap(mapId: string, w: number, h: number, spawns: Vec2[], facings: Direction[]): MapConfig {
     const grid: TileType[][] = [];
-    for (let x = 0; x < W; x++) {
+    for (let x = 0; x < w; x++) {
       const col: TileType[] = [];
-      for (let y = 0; y < H; y++) col.push(TileType.Empty);
+      for (let y = 0; y < h; y++) col.push(TileType.Empty);
       grid.push(col);
     }
-    return {
-      mapId: 'arena_01',
-      width: W,
-      height: H,
-      gridData: grid,
-      pickups: [],
-      spawnPoints: [vec2(1, 1), vec2(8, 8)],
-      spawnFacings: [Direction.Up, Direction.Left],
-    };
+    return { mapId, width: w, height: h, gridData: grid, pickups: [], spawnPoints: spawns, spawnFacings: facings };
   }
 
   private _getHeroConfig(heroId: string): HeroConfig {

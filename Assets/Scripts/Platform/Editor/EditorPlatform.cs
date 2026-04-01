@@ -21,6 +21,7 @@ namespace TacticalDuelist.Platform.Editor
         public IPlatformNotifications Notifications { get; private set; }
         public IPlatformDeepLinks DeepLinks { get; private set; }
         public IPlatformShare Share { get; private set; }
+        public IBlockchainService Blockchain { get; private set; }
 
         public void Initialize()
         {
@@ -31,6 +32,7 @@ namespace TacticalDuelist.Platform.Editor
             Notifications = new EditorNotifications();
             DeepLinks = new EditorDeepLinks();
             Share = new EditorShare();
+            Blockchain = new EditorBlockchain();
         }
     }
 

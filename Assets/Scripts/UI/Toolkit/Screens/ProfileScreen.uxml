@@ -1,0 +1,79 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="profile-root" class="screen">
+
+        <!-- Header -->
+        <ui:VisualElement class="row w-full" style="justify-content: space-between; align-items: center; padding: 40px 32px 16px 32px;">
+            <ui:Button name="btn-back" text="Back" style="font-size: 30px; color: #9898B0; background-color: rgba(26,26,40,0.5); border-width: 0; -unity-font-style: bold; padding: 12px 24px; border-radius: 16px;" />
+            <ui:Label text="PROFILE" class="font-display" style="font-size: 48px; color: #EAEAF4; letter-spacing: 3px;" />
+            <ui:VisualElement style="width: 64px;" />
+        </ui:VisualElement>
+
+        <!-- Scrollable Content -->
+        <ui:ScrollView class="scrollview-hidden" style="flex-grow: 1; padding: 0 32px;">
+            <ui:VisualElement style="padding-bottom: 32px;">
+
+                <!-- Player Card -->
+                <ui:VisualElement style="border-radius: 28px; background-color: #1A1A28; padding: 32px; align-items: center;">
+                    <ui:VisualElement style="width: 96px; height: 96px; border-radius: 48px; background-color: #FF6B35; align-items: center; justify-content: center;">
+                        <ui:Label name="avatar-initials" text="DU" style="font-size: 40px; color: #0F0F1A; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                    <ui:Label name="display-name" text="Duelist" class="font-display" style="font-size: 40px; color: #EAEAF4; margin-top: 12px;" />
+                    <ui:Label name="rank-badge" text="BRONZE" style="font-size: 22px; color: #FF6B35; -unity-font-style: bold; letter-spacing: 3px; background-color: rgba(255,107,53,0.12); padding: 6px 20px; border-radius: 16px; margin-top: 8px;" />
+                </ui:VisualElement>
+
+                <!-- Rating -->
+                <ui:VisualElement style="border-radius: 28px; background-color: #1A1A28; padding: 24px; align-items: center; margin-top: 12px;">
+                    <ui:Label text="ELO RATING" style="font-size: 22px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px;" />
+                    <ui:Label name="elo-rating" text="1000" class="font-display" style="font-size: 64px; color: #EAEAF4; margin-top: 4px;" />
+                </ui:VisualElement>
+
+                <!-- Stats 2x2 -->
+                <ui:VisualElement style="flex-direction: row; margin-top: 12px;">
+                    <ui:VisualElement style="flex: 1; border-radius: 20px; background-color: #1A1A28; padding: 20px; align-items: center; margin-right: 8px;">
+                        <ui:Label name="stat-wins" text="0" style="font-size: 40px; color: #33CC66; -unity-font-style: bold;" />
+                        <ui:Label text="WINS" style="font-size: 18px; color: #9898B0; letter-spacing: 2px; margin-top: 4px;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex: 1; border-radius: 20px; background-color: #1A1A28; padding: 20px; align-items: center;">
+                        <ui:Label name="stat-losses" text="0" style="font-size: 40px; color: #D93333; -unity-font-style: bold;" />
+                        <ui:Label text="LOSSES" style="font-size: 18px; color: #9898B0; letter-spacing: 2px; margin-top: 4px;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement style="flex-direction: row; margin-top: 8px;">
+                    <ui:VisualElement style="flex: 1; border-radius: 20px; background-color: #1A1A28; padding: 20px; align-items: center; margin-right: 8px;">
+                        <ui:Label name="stat-matches" text="0" style="font-size: 40px; color: #EAEAF4; -unity-font-style: bold;" />
+                        <ui:Label text="MATCHES" style="font-size: 18px; color: #9898B0; letter-spacing: 2px; margin-top: 4px;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex: 1; border-radius: 20px; background-color: #1A1A28; padding: 20px; align-items: center;">
+                        <ui:Label name="stat-winrate" text="0%" style="font-size: 40px; color: #FF6B35; -unity-font-style: bold;" />
+                        <ui:Label text="WIN RATE" style="font-size: 18px; color: #9898B0; letter-spacing: 2px; margin-top: 4px;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Details -->
+                <ui:VisualElement style="border-radius: 28px; background-color: #1A1A28; padding: 24px; margin-top: 12px;">
+                    <ui:Label text="DETAILS" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                    <ui:VisualElement class="row" style="justify-content: space-between; width: 100%; margin-bottom: 12px;">
+                        <ui:Label text="Favorite Hero" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="favorite-hero" text="---" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="row" style="justify-content: space-between; width: 100%; margin-bottom: 12px;">
+                        <ui:Label text="Coins" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="coins-value" text="0" style="font-size: 28px; color: #FFD933; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="row" style="justify-content: space-between; width: 100%; margin-bottom: 12px;">
+                        <ui:Label text="Heroes Unlocked" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="heroes-unlocked" text="3/12" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="row" style="justify-content: space-between; width: 100%;">
+                        <ui:Label text="Member Since" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="member-since" text="---" style="font-size: 28px; color: #9898B0;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

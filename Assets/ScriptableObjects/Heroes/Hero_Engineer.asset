@@ -15,9 +15,15 @@ MonoBehaviour:
   heroId: engineer
   heroName: Engineer
   displayName: Engineer
+  loreName: Tinker
+  loreTitle: The Mad Inventor
+  loreDimension: Mechanicus
+  loreBio: Builds devices from anything he finds. His drone Sparky is his best friend.
   difficulty: 3
-  heroPrefab: {fileID: 0}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 400
+  heroPrefab: {fileID: 3951794958078972368, guid: d863f6a8663af4b4985c36f0d1d79d18, type: 3}
+  animatorController: {fileID: 9100000, guid: 3a9c387f6252048d499f09c4da1f21ef, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.8, g: 0.8, b: 0.2, a: 1}
   steps: 4
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 2
   armor: 0
   speed: 1
+  voiceKill: Sparky says hello!
+  voiceDeath: Malfunction...
+  voiceSpecial: Deploying turret!
+  voiceRoundStart: Tinker time!
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 8
   specialName: Turret
   specialDescription: Places a turret that shoots forward each step.

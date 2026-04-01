@@ -73,6 +73,11 @@ export class ActionResolverService {
     resetHeroForNewRound(this._p2);
   }
 
+  /** Returns current hero states for reconnection snapshots. */
+  getHeroStates(): { p1: HeroState; p2: HeroState } {
+    return { p1: this._p1, p2: this._p2 };
+  }
+
   // ── Step Resolution ──
 
   private _resolveStep(stepIndex: number, p1Action: ActionType, p2Action: ActionType): StepResult {
@@ -274,11 +279,24 @@ export class ActionResolverService {
   // ── Phase 3: Damage ──
 
   private _resolveDamage(result: StepResult): void {
+    // Shield action: grant temporary armor for this step
+    if (result.p1Action === ActionType.Shield && !this._p1.hasArmor) {
+      this._p1.hasArmor = true;
+      result.p1Shielded = true;
+    }
+    if (result.p2Action === ActionType.Shield && !this._p2.hasArmor) {
+      this._p2.hasArmor = true;
+      result.p2Shielded = true;
+    }
+
     // Mutual cancel: both shots hit — both nullified
     if (result.p1Hit && result.p2Hit) {
       result.mutualCancel = true;
       result.p1Hit = false;
       result.p2Hit = false;
+      // Remove shield-granted armor if no hit absorbed it
+      if (result.p1Shielded) this._p1.hasArmor = false;
+      if (result.p2Shielded) this._p2.hasArmor = false;
       return;
     }
 
@@ -289,6 +307,12 @@ export class ActionResolverService {
     if (result.p2Hit) {
       ActionResolverService._applyDamage(this._p1, result, true);
     }
+
+    // Remove shield-granted armor after damage resolution (temporary, one-step only)
+    if (result.p1Shielded && !result.p1ArmorBroken)
+      this._p1.hasArmor = false;
+    if (result.p2Shielded && !result.p2ArmorBroken)
+      this._p2.hasArmor = false;
   }
 
   private static _applyDamage(target: HeroState, result: StepResult, isTarget1: boolean): void {

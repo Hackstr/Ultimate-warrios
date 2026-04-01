@@ -15,8 +15,15 @@ MonoBehaviour:
   heroId: mirage
   heroName: Mirage
   displayName: Mirage
+  loreName: Mirror
+  loreTitle: Trickster of Reflections
+  loreDimension: Reflectum
+  loreBio: Creates copies of himself. Nobody knows which one is real. Deception over
+    victory.
   difficulty: 4
-  heroPrefab: {fileID: 0}
+  isUnlocked: 0
+  unlockPrice: 600
+  heroPrefab: {fileID: 5011943613404329837, guid: 7eab5367c10734aa68449c3113c22a01, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.8, g: 0.3, b: 0.6, a: 1}
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 1
   armor: 0
   speed: 1
+  voiceKill: Which one was real?
+  voiceDeath: Just a reflection...
+  voiceSpecial: Catch me if you can!
+  voiceRoundStart: Nothing is what it seems.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 11
   specialName: Decoy
   specialDescription: Creates a fake copy of yourself at target location.

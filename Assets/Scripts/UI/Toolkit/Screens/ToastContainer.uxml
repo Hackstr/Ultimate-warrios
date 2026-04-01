@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <!-- Toast container sits at top of screen, above all other content -->
+    <ui:VisualElement name="toast-root" style="position: absolute; width: 100%; padding: 100px 56px 0 56px; align-items: center;">
+        <ui:VisualElement name="toast-container" style="width: 100%;" />
+    </ui:VisualElement>
+</ui:UXML>

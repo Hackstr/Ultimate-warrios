@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
 using TacticalDuelist.Core.Utils;
@@ -22,6 +23,15 @@ namespace TacticalDuelist.Gameplay
         [SerializeField] private CameraController _cameraController;
         [SerializeField] private GridView _gridView;
 
+        public HeroView3D Hero1View => _hero1View;
+        public HeroView3D Hero2View => _hero2View;
+
+        public void SetHeroConfigs(HeroConfig p1, HeroConfig p2)
+        {
+            _p1Config = p1;
+            _p2Config = p2;
+        }
+
         [Header("Timing (seconds)")]
         [SerializeField] private float _stepDelay = 0.3f;
         [SerializeField] private float _moveDuration = 0.25f;
@@ -29,7 +39,7 @@ namespace TacticalDuelist.Gameplay
         [SerializeField] private float _shootDuration = 0.3f;
         [SerializeField] private float _hitDuration = 0.4f;
         [SerializeField] private float _eliminationDuration = 0.8f;
-        [SerializeField] private float _endOfRoundDelay = 1.5f;
+        [SerializeField] private float _endOfRoundDelay = 0.8f;
 
         [Header("Playback")]
         [SerializeField] private float _playbackSpeed = 1f;
@@ -41,6 +51,8 @@ namespace TacticalDuelist.Gameplay
         private List<StepResult> _pendingResults;
         private bool _isPlaying;
         private Coroutine _playbackCoroutine;
+        private HeroConfig _p1Config;
+        private HeroConfig _p2Config;
 
         #endregion
 
@@ -142,6 +154,9 @@ namespace TacticalDuelist.Gameplay
 
         private IEnumerator PlayStepCoroutine(StepResult step)
         {
+            // Clear previous shoot lines
+            if (_gridView != null) _gridView.ClearShootLines();
+
             UpdateCameraForStep(step);
 
             // Phase 1: Movement (both heroes move simultaneously)
@@ -183,6 +198,38 @@ namespace TacticalDuelist.Gameplay
 
             if (c1 != null) yield return c1;
             if (c2 != null) yield return c2;
+
+            // Spawn special ability VFX after movement
+            SpawnSpecialAbilityVFX(step);
+
+            // Shield VFX
+            if (step.P1Shielded && VFXManager.Instance != null)
+                VFXManager.Instance.SpawnShieldVFX(step.P1EndPos, 1f);
+            if (step.P2Shielded && VFXManager.Instance != null)
+                VFXManager.Instance.SpawnShieldVFX(step.P2EndPos, 1f);
+        }
+
+        private void SpawnSpecialAbilityVFX(StepResult step)
+        {
+            if (VFXManager.Instance == null) return;
+
+            if (step.P1Special != null)
+            {
+                var target = step.P1Special.HasTargetPosition ? step.P1Special.TargetPosition : step.P1EndPos;
+                VFXManager.Instance.SpawnSpecialVFX(step.P1Special.Ability, step.P1EndPos, target);
+
+                if (_p1Config != null && !string.IsNullOrEmpty(_p1Config.voiceSpecial))
+                    GameEvents.ShowToast?.Invoke(_p1Config.voiceSpecial);
+            }
+
+            if (step.P2Special != null)
+            {
+                var target = step.P2Special.HasTargetPosition ? step.P2Special.TargetPosition : step.P2EndPos;
+                VFXManager.Instance.SpawnSpecialVFX(step.P2Special.Ability, step.P2EndPos, target);
+
+                if (_p2Config != null && !string.IsNullOrEmpty(_p2Config.voiceSpecial))
+                    GameEvents.ShowToast?.Invoke(_p2Config.voiceSpecial);
+            }
         }
 
         private IEnumerator AnimateHeroMove(HeroView3D hero, Vector2Int from, Vector2Int to, Direction endFacing)
@@ -199,13 +246,13 @@ namespace TacticalDuelist.Gameplay
             if (step.P1Fired && _hero1View != null)
             {
                 c1 = StartCoroutine(_hero1View.AnimateShoot(AdjustedTime(_shootDuration)));
-                SpawnShootVFX(step.P1EndPos, step.P1EndFacing);
+                SpawnShootVFX(step.P1EndPos, step.P1EndFacing, _p1Config, step.P1Hit || step.MutualCancel);
             }
 
             if (step.P2Fired && _hero2View != null)
             {
                 c2 = StartCoroutine(_hero2View.AnimateShoot(AdjustedTime(_shootDuration)));
-                SpawnShootVFX(step.P2EndPos, step.P2EndFacing);
+                SpawnShootVFX(step.P2EndPos, step.P2EndFacing, _p2Config, step.P2Hit || step.MutualCancel);
             }
 
             if (c1 != null) yield return c1;
@@ -214,6 +261,16 @@ namespace TacticalDuelist.Gameplay
 
         private IEnumerator PlayDamagePhase(StepResult step)
         {
+            // Debug: log combat results + voice lines
+            if (step.P1Fired || step.P2Fired)
+                Debug.Log($"[Combat] P1Fired={step.P1Fired} P2Fired={step.P2Fired} P1Hit={step.P1Hit} P2Hit={step.P2Hit} MutualCancel={step.MutualCancel} P1Elim={step.P1Eliminated} P2Elim={step.P2Eliminated}");
+
+            // Voice lines on kill
+            if (step.P2Eliminated && _p1Config != null && !string.IsNullOrEmpty(_p1Config.voiceKill))
+                GameEvents.ShowToast?.Invoke(_p1Config.voiceKill);
+            if (step.P1Eliminated && _p2Config != null && !string.IsNullOrEmpty(_p2Config.voiceKill))
+                GameEvents.ShowToast?.Invoke(_p2Config.voiceKill);
+
             if (step.MutualCancel)
             {
                 var midpoint = new Vector2Int(
@@ -294,12 +351,17 @@ namespace TacticalDuelist.Gameplay
             _cameraController.FrameAction(p1World, p2World);
         }
 
-        private void SpawnShootVFX(Vector2Int from, Direction facing)
+        private void SpawnShootVFX(Vector2Int from, Direction facing, HeroConfig heroConfig, bool hit = false)
         {
             if (VFXManager.Instance == null) return;
+            int range = heroConfig != null ? heroConfig.range : 5;
             var dir = GridHelper.DirectionToVector(facing);
-            var target = from + dir * 3;
+            var target = from + dir * range;
             VFXManager.Instance.SpawnShootVFX(from, target);
+
+            // Show shoot line on grid
+            if (_gridView != null)
+                _gridView.ShowShootLine(from, target, hit);
         }
 
         private void ApplyFinalState(StepResult lastStep)

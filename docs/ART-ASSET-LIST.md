@@ -1,433 +1,177 @@
-# Tactical Duelist — Asset List
+# Tactical Duelist — Art Asset List (Updated 2026-03-16)
 
-## Как читать этот документ
-
-Каждый ассет помечен приоритетом:
-- 🔴 **MVP** — нужно для первой играбельной версии
-- 🟡 **v0.2** — нужно для онлайн-версии / специальных способностей
-- 🟢 **v1.0** — нужно для полного релиза
-- ⚪ **Post-launch** — контентные обновления
+Полный список ассетов с текущим статусом. Что есть, что нужно.
 
 ---
 
-## 1. ГЕРОИ (3D модели)
-
-### Модель героя — требования
-- Стилистика: low-poly stylized (Brawl Stars / Clash Mini уровень детализации)
-- Полигонаж: 3000-5000 tri на героя (WebGL лимит)
-- Риг: гуманоидный, Unity Humanoid compatible
-- Текстуры: 512×512 atlas, URP Lit shader
-- Масштаб: ~1 Unity unit высота
-
-### Список героев
-
-```
-🔴 MVP (4 героя):
-  [ ] Hero_Archer     — лучник, стройный, капюшон, лук за спиной
-  [ ] Hero_Tank       — тяжёлый, массивный, щит, короткий ствол
-  [ ] Hero_Shadow     — ниндзя/ассасин, лёгкий, плащ, двойные клинки
-  [ ] Hero_Scout      — разведчик, бинокль/сканер, средний билд
-
-🟡 v0.2 (ещё 4 героя):
-  [ ] Hero_Mage       — маг, посох, мантия, магические руны
-  [ ] Hero_Demo       — подрывник, рюкзак со взрывчаткой, детонатор
-  [ ] Hero_Guardian   — страж, тяжёлая броня, энергетический щит
-  [ ] Hero_Ghost      — призрак, полупрозрачный, парящий
-
-🟢 v1.0 (финальные 4 героя):
-  [ ] Hero_Engineer   — инженер, очки, инструменты, дрон/турель
-  [ ] Hero_Berserker  — берсерк, огромный, минимум брони, два топора
-  [ ] Hero_Hawk       — ястреб, снайпер, длинная винтовка, прицел
-  [ ] Hero_Mirage     — мираж, двоящийся силуэт, зеркальные элементы
-```
-
-### Анимации на каждого героя
-
-```
-🔴 MVP (минимальный набор):
-  [ ] Idle            — дыхание, лёгкое покачивание (loop)
-  [ ] Walk            — движение вперёд (loop, 0.4s на тайл)
-  [ ] Turn            — поворот на месте (0.2s)
-  [ ] Shoot           — атака дальнего боя (0.3s)
-  [ ] Hit_Receive     — получение урона, отшатывание (0.3s)
-  [ ] Death           — падение / исчезновение (0.5s)
-
-🟡 v0.2 (расширенный набор):
-  [ ] Special_Cast    — использование способности (уникальна для героя)
-  [ ] Armor_Break     — броня разрушается (0.3s)
-  [ ] Victory_Pose    — поза победы (2s, для экрана результата)
-  [ ] Defeat_Pose     — поза поражения (2s)
-
-🟢 v1.0 (полировка):
-  [ ] Idle_Rare       — редкий idle (каждые 10-15с, уникальный для героя)
-  [ ] Taunt           — провокация (эмоут)
-  [ ] Walk_Fast       — бег (для Speed 2 героев)
-  [ ] Spawn           — появление на арене (начало матча)
-```
+## Статус
+- ✅ Готово
+- 🔶 Placeholder (работает, но не финальное)
+- ❌ Отсутствует
 
 ---
 
-## 2. ОКРУЖЕНИЕ / КАРТЫ
+## 1. 3D МОДЕЛИ ГЕРОЕВ (0/12)
 
-### Тайлы сетки
+Стиль: Low-poly stylized, 3000-5000 tri, Humanoid rig.
+Pipeline: Nano Banana Pro → Tripo AI → Blender → Mixamo → Unity.
 
-```
-🔴 MVP:
-  [ ] Tile_Floor         — базовый пол (1×1 unit, плоский quad или low-poly 3D)
-  [ ] Tile_Wall          — неразрушимая стена (1×1×1 куб, стилизованный)
-  [ ] Tile_Highlight_Move    — подсветка возможного движения (зелёный контур/glow)
-  [ ] Tile_Highlight_Shoot   — подсветка линии выстрела (красный контур/glow)
-  [ ] Tile_Highlight_Select  — подсветка выбранного тайла (жёлтый)
-  [ ] Grid_Lines         — линии сетки (тонкие, полупрозрачные)
+| # | Герой | Цвет | Приоритет | Статус |
+|---|-------|------|-----------|--------|
+| 1 | Archer | Зелёный | MVP | ❌ Capsule |
+| 2 | Tank | Синий | MVP | ❌ Capsule |
+| 3 | Scout | Жёлтый | MVP | ❌ Capsule |
+| 4 | Shadow | Фиолетовый | MVP | ❌ Capsule |
+| 5 | Mage | Голубой | v0.2 | ❌ Capsule |
+| 6 | Demo | Красный | v0.2 | ❌ Capsule |
+| 7 | Guardian | Золотой | v0.2 | ❌ Capsule |
+| 8 | Ghost | Серый | v0.2 | ❌ Capsule |
+| 9 | Engineer | Оранжевый | v0.2 | ❌ Capsule |
+| 10 | Berserker | Тёмно-красный | v0.2 | ❌ Capsule |
+| 11 | Hawk | Белый | v0.2 | ❌ Capsule |
+| 12 | Mirage | Розовый | v0.2 | ❌ Capsule |
 
-🟡 v0.2:
-  [ ] Tile_DestructibleWall  — разрушимая стена (трещины, другой материал)
-  [ ] Tile_DangerZone        — опасная зона (красное свечение, огонь/энергия)
-  [ ] Tile_Pickup_Spot       — точка спавна пикапа (лёгкий glow на полу)
-
-🟢 v1.0:
-  [ ] Map_Theme_Arena    — арена (песок/камень, Колизей стиль)
-  [ ] Map_Theme_Tech     — техно (металл, неон, киберпанк)
-  [ ] Map_Theme_Nature   — природа (трава, деревья, камни)
-  [ ] Map_Theme_Ice      — лёд (скользкий визуал, кристаллы)
-  [ ] Map_Border         — декоративная граница карты (зрители? пропасть?)
-  [ ] Map_Background     — skybox / задний план для каждой темы
-```
-
-### Карты (Layout'ы)
-
-```
-🔴 MVP:
-  [ ] Map_Arena01   — 10×10, симметричная, 6-8 стен, открытый центр
-
-🟡 v0.2:
-  [ ] Map_Arena02   — 10×10, больше стен, коридоры, chokepoints
-  [ ] Map_Arena03   — 8×8, маленькая, агрессивная
-
-🟢 v1.0:
-  [ ] Map_Arena04   — 12×12, большая, много укрытий, для снайперов
-  [ ] Map_Arena05   — 10×10, ассиметричная (разные стороны = разная тактика)
-  [ ] Map_Arena06   — 10×10, разрушимые стены, динамичная
-```
+**Путь**: `Assets/Prefabs/Heroes/Hero_{Name}.prefab` → `HeroConfig.heroPrefab`
 
 ---
 
-## 3. VFX (Визуальные эффекты)
+## 2. АНИМАЦИИ (0/12 контроллеров)
 
-```
-🔴 MVP:
-  [ ] VFX_Shoot_Projectile  — линия/трассер выстрела (быстрый луч)
-  [ ] VFX_Hit_Impact        — попадание (вспышка + частицы)
-  [ ] VFX_Death_Explosion   — гибель героя (взрыв/рассыпание)
-  [ ] VFX_Armor_Break       — разрушение брони (осколки)
-  [ ] VFX_Mutual_Cancel     — взаимная отмена (столкновение двух лучей)
-  [ ] VFX_Step_Indicator    — индикатор текущего шага выполнения
+Humanoid Animator Controllers. Нужны после получения rigged моделей.
 
-🟡 v0.2 (способности):
-  [ ] VFX_Ricochet_Bounce   — отскок выстрела от стены
-  [ ] VFX_Blink_Teleport    — телепортация (исчезновение + появление)
-  [ ] VFX_Push_Force        — волна толчка
-  [ ] VFX_Scan_Wave         — волна сканирования
-  [ ] VFX_PhaseShot_Ghost   — призрачный выстрел сквозь стену
-  [ ] VFX_Bomb_Explosion    — взрыв бомбы 3×3
-  [ ] VFX_Barrier_Appear    — появление барьера
-  [ ] VFX_Cloak_Fade        — исчезновение/появление призрака
-  [ ] VFX_Turret_Spawn      — установка турели
-  [ ] VFX_Charge_Trail      — след от рывка берсерка
-  [ ] VFX_Pierce_Through    — пробивающий выстрел
-  [ ] VFX_Decoy_Spawn       — появление обманки
-  [ ] VFX_DangerZone_Fire   — огонь/энергия на опасных тайлах
+| Анимация | Trigger/Bool | Длительность | Приоритет |
+|----------|-------------|-------------|-----------|
+| Idle | default state | ~2s loop | MVP |
+| Walk | IsMoving (bool) | 0.25s/step | MVP |
+| Turn | (blend with walk) | 0.15s | MVP |
+| Shoot | Shoot (trigger) | 0.3s | MVP |
+| Hit | Hit (trigger) | 0.4s | MVP |
+| Death | Death (trigger) | 0.8s | MVP |
+| Victory | Victory (trigger) | 2s | v0.2 |
+| Defeat | Defeat (trigger) | 2s | v0.2 |
 
-🟢 v1.0:
-  [ ] VFX_Pickup_Collect    — подбор предмета (свечение вверх)
-  [ ] VFX_Round_Start       — начало раунда (обратный отсчёт)
-  [ ] VFX_Match_Victory     — победа в матче (фейерверк/confetti)
-  [ ] VFX_Map_Shrink        — анимация сжатия карты
-```
+**Путь**: `Assets/Animations/{HeroName}/` → `HeroConfig.animatorController`
 
 ---
 
-## 4. UI ЭЛЕМЕНТЫ
+## 3. ПОРТРЕТЫ ГЕРОЕВ (0/12)
 
-### Иконки
+| Размер | Формат | Приоритет |
+|--------|--------|-----------|
+| 256×256 | PNG transparent | MVP (4 стартовых) |
+| 512×512 | PNG (Collection) | v0.2 |
 
-```
-🔴 MVP:
-  [ ] Icon_Action_Move       — стрелка вперёд
-  [ ] Icon_Action_TurnLeft   — стрелка поворота влево
-  [ ] Icon_Action_TurnRight  — стрелка поворота вправо
-  [ ] Icon_Action_TurnAround — стрелка разворота (U-turn)
-  [ ] Icon_Action_Shoot      — прицел / перекрестье
-  [ ] Icon_Action_Wait       — часы / пауза
-  [ ] Icon_Action_Special    — звезда / молния (для будущих спешлов)
-  [ ] Icon_Armor             — щит
-  [ ] Icon_Cooldown          — перезарядка (число на затемнении)
-  [ ] Icon_Timer             — таймер планирования
-  [ ] Icon_Undo              — отмена последнего действия
-  [ ] Icon_Confirm           — галочка подтверждения
-  [ ] Icon_Direction_Arrow   — стрелка направления героя (на сетке)
-
-🟡 v0.2:
-  [ ] Icon_Special_Ricochet  — отскок
-  [ ] Icon_Special_Push      — толчок
-  [ ] Icon_Special_Blink     — телепорт
-  [ ] Icon_Special_Scan      — сканирование
-  [ ] Icon_Special_PhaseShot — фазовый выстрел
-  [ ] Icon_Special_Bomb      — бомба
-  [ ] Icon_Special_Barrier   — барьер
-  [ ] Icon_Special_Cloak     — невидимость
-  [ ] Icon_Special_Turret    — турель
-  [ ] Icon_Special_Charge    — рывок
-  [ ] Icon_Special_Pierce    — пробивание
-  [ ] Icon_Special_Decoy     — обманка
-  [ ] Icon_Pickup_Armor      — осколок брони
-  [ ] Icon_Pickup_Intel      — орб разведки
-  [ ] Icon_Pickup_Speed      — ускорение
-  [ ] Icon_Pickup_Range      — увеличение дальности
-
-🟢 v1.0:
-  [ ] Icon_Rank_Bronze       — ранг бронза
-  [ ] Icon_Rank_Silver       — ранг серебро
-  [ ] Icon_Rank_Gold         — ранг золото
-  [ ] Icon_Rank_Diamond      — ранг алмаз
-  [ ] Icon_Rank_Master       — ранг мастер
-  [ ] Icon_Rank_Legend        — ранг легенда
-  [ ] Icon_Currency_Coin     — внутриигровая валюта
-  [ ] Icon_Currency_Premium  — премиум валюта
-  [ ] Icon_XP                — опыт
-  [ ] Icon_BattlePass        — боевой пропуск
-  [ ] Icon_Settings          — шестерёнка
-  [ ] Icon_Friends           — друзья
-  [ ] Icon_Club              — клуб
-  [ ] Icon_Share             — поделиться
-```
-
-### Портреты героев (2D, для UI)
-
-```
-🔴 MVP:
-  [ ] Portrait_Archer    — 256×256, стилизованный, bust/face
-  [ ] Portrait_Tank
-  [ ] Portrait_Shadow
-  [ ] Portrait_Scout
-
-🟡 v0.2:
-  [ ] Portrait_Mage
-  [ ] Portrait_Demo
-  [ ] Portrait_Guardian
-  [ ] Portrait_Ghost
-
-🟢 v1.0:
-  [ ] Portrait_Engineer
-  [ ] Portrait_Berserker
-  [ ] Portrait_Hawk
-  [ ] Portrait_Mirage
-```
-
-### Hero Cards (для экрана выбора)
-
-```
-🔴 MVP:
-  [ ] Card_Hero_Template — шаблон карточки героя (фон, рамка, слоты для статов)
-  [ ] Card_Stat_Steps    — иконка + число шагов
-  [ ] Card_Stat_Range    — иконка + число дальности
-  [ ] Card_Stat_Cooldown — иконка + число перезарядки
-  [ ] Card_Stat_Armor    — иконка щита (есть/нет)
-  [ ] Card_Stat_Speed    — иконка + число скорости
-```
+**Путь**: `Assets/Art/Sprites/Heroes/{name}_portrait.png` → `HeroConfig.portrait`
 
 ---
 
-## 5. АУДИО
+## 4. UI ИКОНКИ (0/27)
 
-### Музыка
+### Действия (PlanningScreen) — 7 штук
+icon_move, icon_turn_left, icon_turn_right, icon_turn_around, icon_shoot, icon_wait, icon_special
+128×128 PNG
 
-```
-🔴 MVP:
-  [ ] Music_Menu         — главное меню (лёгкая, tactical vibe, loop ~60-90s)
-  [ ] Music_Planning     — фаза планирования (tension, thinking, loop ~30s)
-  [ ] Music_Execution    — фаза выполнения (action, dynamic, loop ~20s)
-  [ ] Music_Victory      — стингер победы (~5s)
-  [ ] Music_Defeat       — стингер поражения (~5s)
+### Интерфейс — 6 штук
+icon_armor (64), icon_cooldown (64), icon_coin (64), icon_elo (64), icon_lock (64), icon_back (48)
 
-🟢 v1.0:
-  [ ] Music_HeroSelect   — выбор героя (hype building)
-  [ ] Music_Draw         — стингер ничьи (~5s)
-  [ ] Music_Menu_Alt     — альтернативная тема меню
-```
+### Ранги — 7 штук
+rank_bronze, rank_silver, rank_gold, rank_platinum, rank_diamond, rank_master, rank_grandmaster
+128×128 PNG
 
-### SFX (звуковые эффекты)
+### Навбар — 4 штуки
+nav_home, nav_heroes, nav_rank, nav_settings
+48×48 PNG
 
-```
-🔴 MVP:
-  [ ] SFX_Shoot_Generic     — выстрел (универсальный)
-  [ ] SFX_Hit_Impact        — попадание
-  [ ] SFX_Death             — гибель героя
-  [ ] SFX_Armor_Break       — разрушение брони
-  [ ] SFX_Mutual_Cancel     — взаимная отмена (clash звук)
-  [ ] SFX_Move_Step         — шаг (движение по тайлу)
-  [ ] SFX_Turn              — поворот
-  [ ] SFX_UI_Button         — нажатие кнопки
-  [ ] SFX_UI_Confirm        — подтверждение действий
-  [ ] SFX_UI_Cancel         — отмена
-  [ ] SFX_Timer_Tick        — тик таймера (последние 5 секунд)
-  [ ] SFX_Timer_End         — конец таймера
-  [ ] SFX_Round_Start       — начало раунда
-  [ ] SFX_Step_Execute      — шаг выполняется (тик)
+### Прочее — 3 штуки
+logo_tactical_duelist, icon_telegram, icon_share
 
-🟡 v0.2:
-  [ ] SFX_Blink             — телепортация
-  [ ] SFX_Bomb_Place        — установка бомбы
-  [ ] SFX_Bomb_Explode      — взрыв бомбы
-  [ ] SFX_Barrier_Place     — установка барьера
-  [ ] SFX_Barrier_Break     — разрушение барьера
-  [ ] SFX_Cloak_On          — включение невидимости
-  [ ] SFX_Cloak_Off         — выключение невидимости
-  [ ] SFX_Turret_Place      — установка турели
-  [ ] SFX_Turret_Shoot      — выстрел турели
-  [ ] SFX_Charge            — рывок берсерка
-  [ ] SFX_Push              — толчок
-  [ ] SFX_Scan              — сканирование
-  [ ] SFX_Ricochet          — отскок
-  [ ] SFX_Pickup_Collect    — подбор предмета
-  [ ] SFX_DangerZone_Warn   — предупреждение опасной зоны
-  [ ] SFX_Wall_Destroy      — разрушение стены
-
-🟢 v1.0:
-  [ ] SFX_Matchmaking       — поиск матча
-  [ ] SFX_Match_Found       — матч найден
-  [ ] SFX_Rank_Up           — повышение ранга
-  [ ] SFX_Rank_Down         — понижение ранга
-  [ ] SFX_XP_Gain           — получение опыта
-  [ ] SFX_Reward_Open       — открытие награды
-```
+**Путь**: `Assets/Art/Sprites/UI/`, `Assets/Art/Sprites/Ranks/`
 
 ---
 
-## 6. FONTS / TYPOGRAPHY
+## 5. VFX ПРЕФАБЫ (3/12 runtime placeholder)
 
-```
-🔴 MVP:
-  [ ] Font_Primary     — основной шрифт UI (bold, readable, Brawl Stars vibe)
-                         Рекомендации: Lilita One, Bungee, или кастомный
-  [ ] Font_Secondary   — текст описаний, подписи (readable sans-serif)
-                         Рекомендации: Nunito, Inter
-  [ ] Font_Numbers     — числа статов, таймер, урон (monospace-like, bold)
-```
+| VFX | Описание | Приоритет | Статус |
+|-----|----------|-----------|--------|
+| VFX_Shoot | Трейсер пули | MVP | 🔶 Runtime sphere+trail |
+| VFX_Hit | Вспышка попадания | MVP | 🔶 Runtime red sphere |
+| VFX_Elimination | Взрыв смерти | MVP | 🔶 Runtime orange sphere |
+| VFX_ArmorBreak | Разлёт брони | MVP | ❌ |
+| VFX_MutualCancel | Столкновение | v0.2 | ❌ |
+| VFX_Pickup | Подбор бонуса | v0.2 | ❌ |
+| VFX_DangerZone | Мерцание зоны | v0.2 | ❌ |
+| VFX_Blink | Телепортация | v0.2 | ❌ |
+| VFX_Bomb | Взрыв | v0.2 | ❌ |
+| VFX_Barrier | Щит | v0.2 | ❌ |
+| VFX_Cloak | Невидимость | v0.2 | ❌ |
+| VFX_Charge | Рывок | v0.2 | ❌ |
 
----
-
-## 7. СКИНЫ (Post-launch контент)
-
-```
-⚪ Post-launch:
-  [ ] Skin system: recolor → texture swap → model swap (3 уровня)
-  [ ] 2-3 скина на героя при запуске
-  [ ] Seasonal skins (каждый сезон)
-  [ ] Анимированные портреты (для premium скинов)
-  [ ] Кастомные VFX выстрелов (для premium скинов)
-  [ ] Trail effects (для premium скинов)
-```
+**Путь**: `Assets/Prefabs/VFX/` → VFXManager + `HeroConfig.specialVFXPrefab`
 
 ---
 
-## Сводная таблица
+## 6. ОКРУЖЕНИЕ (0/6)
 
-| Категория | 🔴 MVP | 🟡 v0.2 | 🟢 v1.0 | ⚪ Post |
-|-----------|--------|---------|---------|--------|
-| 3D модели героев | 4 | 4 | 4 | скины |
-| Анимации (на героя) | 6 | 4 | 3 | — |
-| Тайлы окружения | 6 | 3 | 8+ | темы |
-| Карты (layout) | 1 | 2 | 3 | сезонные |
-| VFX | 6 | 13 | 4 | — |
-| UI иконки | 13 | 16 | 15+ | — |
-| Портреты | 4 | 4 | 4 | — |
-| Музыка | 5 треков | — | 3 трека | сезонная |
-| SFX | 14 | 16 | 6 | — |
-| Шрифты | 3 | — | — | — |
-
-### Итого для MVP:
-- **4** 3D модели героев (с 6 анимациями каждый = 24 анимации)
-- **6** тайлов окружения + 1 карта
-- **6** VFX эффектов
-- **13** UI иконок + 4 портрета + карточка героя
-- **5** музыкальных треков + **14** SFX
-- **3** шрифта
+| Ассет | Описание | Приоритет |
+|-------|----------|-----------|
+| Floor Tile | Клетка пола 1×1 | v0.2 |
+| Wall Block | Стена 1×1×2 | v0.2 |
+| Destructible Wall | Разрушаемая | v0.2 |
+| Spawn Marker | Точка появления | v0.2 |
+| Map Props | Бочки, ящики, столбы | v1.0 |
+| Skybox | Арена/небо | v1.0 |
 
 ---
 
-## 8. UI СПРАЙТЫ / ФОНЫ (для экранов)
+## 7. АУДИО (34/34 ✅ ГОТОВО)
 
-```
-🔴 MVP:
-  [ ] UI_BG_MainMenu        — фон главного меню (тёмный, с лёгким рисунком)
-  [ ] UI_BG_HeroSelect      — фон выбора героя
-  [ ] UI_BG_Planning         — фон нижней панели планирования
-  [ ] UI_BG_Result           — фон экрана результата
-  [ ] UI_Panel_Dark          — панель (тёмная, для карточек и секций)
-  [ ] UI_Panel_Highlighted   — панель (подсвеченная, для активных элементов)
-  [ ] UI_Button_Primary      — основная кнопка (оранжевая, 9-slice)
-  [ ] UI_Button_Secondary    — вторичная кнопка (серая, 9-slice)
-  [ ] UI_Button_Danger       — опасная кнопка (красная, shoot)
-  [ ] UI_Button_Special      — фиолетовая кнопка (special)
-  [ ] UI_Button_Movement     — синяя кнопка (move)
-  [ ] UI_Button_Turn         — жёлтая кнопка (turn)
-  [ ] UI_Slot_Empty          — пустой слот очереди действий
-  [ ] UI_Slot_Filled         — заполненный слот (9-slice, цвет через tint)
-  [ ] UI_Slot_Highlighted    — активный слот (следующий для заполнения)
-  [ ] UI_Slot_Locked         — заблокированный слот (cooldown)
-  [ ] UI_Frame_Player        — рамка портрета игрока в HUD
-  [ ] UI_Frame_HeroCard      — рамка карточки героя (обычная + selected)
-  [ ] UI_Bar_HP              — полоска здоровья
-  [ ] UI_Bar_Stat            — полоска характеристики (для экрана выбора)
-  [ ] UI_Difficulty_Star     — звезда сложности (заполненная + пустая)
-  [ ] UI_Logo                — логотип игры "Tactical Duelist"
-  [ ] UI_Divider             — горизонтальный разделитель
+### Музыка (4/4 ✅)
+music_menu, music_planning, music_execution, music_execution_alt
 
-🟡 v0.2:
-  [ ] UI_PassDevice_BG       — фон оверлея "передайте устройство"
-  [ ] UI_Matchmaking_BG      — фон экрана поиска матча
-  [ ] UI_PostRound_BG        — фон экрана между раундами
-  [ ] UI_Reconnect_Overlay   — оверлей переподключения
+### SFX (30/30 ✅)
+**Бой**: shoot, hit, death, armor_break, mutual_cancel, miss
+**Движение**: step, turn
+**Способности**: blink, bomb, barrier, cloak, charge, scan, turret, special_generic
+**UI**: ui_click, ui_confirm, ui_cancel, ui_navigate, ui_queue, ui_undo, ui_countdown_tick, toast
+**Матч**: match_found, round_start, round_end, victory, defeat
 
-🟢 v1.0:
-  [ ] UI_BG_Profile          — фон профиля
-  [ ] UI_BG_Settings         — фон настроек
-  [ ] UI_BG_Shop             — фон магазина
-  [ ] UI_BattlePass_BG       — фон боевого пропуска
-```
+**Путь**: `Assets/Resources/Audio/SFX/` и `Assets/Resources/Audio/Music/`
 
 ---
 
-## 9. СВОДНЫЙ ЧЕКЛИСТ ДЛЯ ИМПОРТА
+## 8. ШРИФТЫ (2/2 ✅ ГОТОВО)
 
-> Когда ассет готов — закидывай в соответствующую папку и отмечай здесь.
+| Шрифт | Назначение |
+|-------|------------|
+| Inter | Body text, UI |
+| Lilita One | Заголовки (font-display) |
 
-### Папки в проекте:
-```
-Assets/
-├── Models/Heroes/          ← 3D модели (.fbx)
-├── Animations/Heroes/      ← анимации (.fbx / .anim)
-├── Materials/Grid/         ← материалы сетки (уже есть)
-├── Materials/Heroes/       ← материалы героев
-├── Prefabs/Heroes/         ← префабы героев (уже 4 placeholder)
-├── Sprites/UI/Icons/       ← иконки действий, статов, рангов
-├── Sprites/UI/Portraits/   ← портреты героев (256x256)
-├── Sprites/UI/Backgrounds/ ← фоны экранов
-├── Sprites/UI/Elements/    ← кнопки, слоты, рамки, полоски
-├── Audio/Music/            ← музыка (.ogg)
-├── Audio/SFX/              ← звуковые эффекты (.ogg/.wav)
-├── Fonts/                  ← шрифты (.ttf/.otf)
-├── VFX/Prefabs/            ← VFX префабы
-└── VFX/Textures/           ← текстуры частиц
-```
+**Путь**: `Assets/Fonts/`
 
-### Требования к форматам:
-- 3D модели: `.fbx`, до 5000 tri, Unity Humanoid rig
-- Текстуры: `.png`, Power of 2 (512x512, 1024x1024)
-- Спрайты UI: `.png`, прозрачный фон, 9-slice где нужно
-- Портреты: `.png`, 256x256, прозрачный фон
-- Иконки: `.png`, 128x128, прозрачный фон
-- Музыка: `.ogg`, 128-192 kbps, loop-friendly
-- SFX: `.ogg` или `.wav`, короткие (0.1-2s)
-- Шрифты: `.ttf` или `.otf`, лицензия для коммерческого использования
+---
+
+## 9. МАТЕРИАЛЫ (19/23 ✅)
+
+| Категория | Есть | Всего |
+|-----------|------|-------|
+| Grid | 9 | 9 ✅ |
+| Hero цвета | 8 | 12 (❌ archer, tank, shadow, scout) |
+| Hero P1/P2 | 2 | 2 ✅ |
+
+---
+
+## СВОДКА
+
+| Категория | Нужно MVP | Есть | Делать |
+|-----------|-----------|------|--------|
+| 3D модели | 4 | 0 | **4** |
+| Animators | 4 | 0 | **4** |
+| Портреты | 4 | 0 | **4** |
+| UI иконки | 7 | 0 | **7** |
+| VFX | 4 | 3🔶 | **1** |
+| Аудио | 34 | 34 | **0 ✅** |
+| Шрифты | 2 | 2 | **0 ✅** |
+| Материалы | 11 | 11 | **0 ✅** |
+
+**Итого для MVP**: ~20 ассетов нужно создать.
+Основной блокер — **3D модели героев + animations**.

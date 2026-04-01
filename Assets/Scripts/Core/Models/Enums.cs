@@ -16,7 +16,8 @@ namespace TacticalDuelist.Core.Models
         TurnAround,
         Shoot,
         Wait,
-        Special
+        Special,
+        Shield
     }
 
     public enum GamePhase

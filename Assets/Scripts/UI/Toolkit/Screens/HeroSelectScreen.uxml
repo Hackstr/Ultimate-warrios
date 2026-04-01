@@ -1,0 +1,59 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="hero-select-root" class="screen" style="justify-content: space-between;">
+
+        <!-- === ZONE 1: HERO SHOWCASE (top 50%) === -->
+        <ui:VisualElement style="flex-grow: 1; flex-shrink: 0;">
+
+            <!-- Back button (floating over preview) -->
+            <ui:Button name="btn-back" text="Back" style="position: absolute; left: 32px; top: 40px; font-size: 30px; color: rgba(234,234,244,0.7); background-color: rgba(26,26,40,0.6); border-width: 0; padding: 14px 28px; border-radius: 16px; -unity-font-style: bold; z-index: 100;" />
+
+            <!-- Hero 3D Preview (fills entire zone) -->
+            <ui:VisualElement name="hero-preview" style="flex-grow: 1; background-color: #12121F; align-items: center; justify-content: flex-end; overflow: hidden;">
+                <ui:Label text="HERO" style="font-size: 48px; color: rgba(152,152,176,0.08);" class="font-display" />
+            </ui:VisualElement>
+
+            <!-- Gradient overlay at bottom of preview (name sits on top of it) -->
+            <ui:VisualElement style="position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background-color: rgba(15,15,26,0.85); align-items: center; justify-content: center;">
+                <ui:Label name="hero-name" text="ARCHER" class="font-display" style="font-size: 64px; color: #EAEAF4; letter-spacing: 5px;" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- === ZONE 2: COMPACT INFO === -->
+        <ui:VisualElement style="padding: 16px 32px 8px 32px;">
+
+            <!-- Ability (one-liner) -->
+            <ui:VisualElement class="row" style="align-items: center; padding: 12px 20px; background-color: #1A1A28; border-radius: 20px;">
+                <ui:VisualElement name="ability-icon" style="width: 48px; height: 48px; background-color: #4073F3; border-radius: 14px; align-items: center; justify-content: center; margin-right: 14px;">
+                    <ui:Label text="SP" style="font-size: 20px; color: white; -unity-font-style: bold;" />
+                </ui:VisualElement>
+                <ui:Label name="ability-name" text="Ricochet" style="font-size: 28px; color: #EAEAF4; -unity-font-style: bold; margin-right: 8px;" />
+                <ui:Label name="ability-desc" text="" style="font-size: 24px; color: #9898B0; flex-shrink: 1; overflow: hidden;" />
+            </ui:VisualElement>
+
+            <!-- Compact stats row (5 badges) -->
+            <ui:VisualElement name="hero-stats" class="row" style="justify-content: space-between; margin-top: 12px;" />
+
+            <!-- Subtitle for pass-and-play -->
+            <ui:Label name="hero-select-subtitle" text="" style="font-size: 24px; color: #9898B0; -unity-text-align: middle-center; margin-top: 4px;" />
+
+        </ui:VisualElement>
+
+        <!-- === ZONE 3: HERO PICKER + ACTION === -->
+
+        <!-- Horizontal hero picker -->
+        <ui:ScrollView name="roster-scroll" scroll-direction="Horizontal" class="scrollview-hidden" style="height: 160px; flex-shrink: 0; padding: 0 24px;">
+            <ui:VisualElement name="roster-grid" class="row" style="height: 100%; align-items: center; padding: 8px 0;" />
+        </ui:ScrollView>
+
+        <!-- SELECT button -->
+        <ui:VisualElement style="padding: 8px 32px 36px 32px;">
+            <ui:Button name="btn-select" class="btn btn--primary w-full" style="height: 112px; border-radius: 28px;">
+                <ui:Label text="SELECT" class="font-display" style="font-size: 44px; color: white; letter-spacing: 4px; -unity-text-align: middle-center;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

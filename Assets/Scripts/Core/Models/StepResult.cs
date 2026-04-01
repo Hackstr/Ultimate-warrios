@@ -44,6 +44,8 @@ namespace TacticalDuelist.Core.Models
         public bool P2ArmorBroken;
         public bool P1Eliminated;
         public bool P2Eliminated;
+        public bool P1Shielded;
+        public bool P2Shielded;
 
         #endregion
 

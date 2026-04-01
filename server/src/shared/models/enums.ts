@@ -18,6 +18,7 @@ export enum ActionType {
   Shoot = 4,
   Wait = 5,
   Special = 6,
+  Shield = 7,
 }
 
 export enum GamePhase {

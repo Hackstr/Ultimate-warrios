@@ -30,7 +30,7 @@ namespace TacticalDuelist.Editor
             // caused by pointer/Nullable fields in Unity internal packages (Collections,
             // InputSystem, RenderPipelines) when using .NET Framework profile with IL2CPP.
             PlayerSettings.SetApiCompatibilityLevel(
-                BuildTargetGroup.WebGL,
+                NamedBuildTarget.WebGL,
                 ApiCompatibilityLevel.NET_Standard
             );
 

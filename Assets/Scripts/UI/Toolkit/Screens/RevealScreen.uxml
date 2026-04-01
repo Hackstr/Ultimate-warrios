@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="reveal-root" class="overlay" style="background-color: rgba(15, 15, 26, 0.92);">
+        <ui:VisualElement class="col center" style="width: 100%; max-width: 700px; padding: 0 32px;">
+
+            <!-- REVEAL Title -->
+            <ui:Label name="reveal-title" text="REVEAL" class="font-display" style="font-size: 80px; color: #FF6B35; letter-spacing: 8px;" />
+
+            <!-- Plans side by side -->
+            <ui:VisualElement class="row" style="width: 100%; margin-top: 40px; justify-content: center;">
+
+                <!-- YOUR PLAN -->
+                <ui:VisualElement class="col" style="flex: 1; align-items: center; margin-right: 16px;">
+                    <ui:Label text="YOUR PLAN" style="font-size: 22px; color: #FF6B35; -unity-font-style: bold; letter-spacing: 3px; margin-bottom: 16px;" />
+                    <ui:VisualElement name="reveal-p1-actions" class="col" style="align-items: center; width: 100%;" />
+                </ui:VisualElement>
+
+                <!-- Divider -->
+                <ui:VisualElement style="width: 2px; background-color: rgba(152,152,176,0.15); margin: 0 8px;" />
+
+                <!-- OPPONENT'S PLAN -->
+                <ui:VisualElement class="col" style="flex: 1; align-items: center; margin-left: 16px;">
+                    <ui:Label text="OPPONENT" style="font-size: 22px; color: #4073F3; -unity-font-style: bold; letter-spacing: 3px; margin-bottom: 16px;" />
+                    <ui:VisualElement name="reveal-p2-actions" class="col" style="align-items: center; width: 100%;" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <!-- EXECUTE button -->
+            <ui:Label name="reveal-execute" text="" class="font-display" style="font-size: 56px; color: #33CC66; letter-spacing: 6px; margin-top: 40px; opacity: 0;" />
+
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -22,12 +22,15 @@ namespace TacticalDuelist.Platform
             ServiceLocator.Register(platform.Notifications);
             ServiceLocator.Register(platform.DeepLinks);
             ServiceLocator.Register(platform.Share);
+            if (platform.Blockchain != null)
+                ServiceLocator.Register(platform.Blockchain);
 
             Debug.Log($"[PlatformBootstrap] Initialized: {platform.CurrentPlatform}");
 
 #if UNITY_WEBGL && !UNITY_EDITOR
             EnsureWebGLReceiver();
             EnsureWebGLInputBridge();
+            EnsureBlockchainReceiver();
 #endif
 
             DontDestroyOnLoad(gameObject);
@@ -46,6 +49,13 @@ namespace TacticalDuelist.Platform
             if (GameObject.Find("WebGLInputBridge") != null) return;
             var go = new GameObject("WebGLInputBridge");
             go.AddComponent<WebGL.WebGLInputBridge>();
+        }
+
+        private static void EnsureBlockchainReceiver()
+        {
+            if (GameObject.Find("WebGLBlockchainReceiver") != null) return;
+            var go = new GameObject("WebGLBlockchainReceiver");
+            go.AddComponent<WebGL.WebGLBlockchainReceiver>();
         }
 #endif
 

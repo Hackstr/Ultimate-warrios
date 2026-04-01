@@ -289,6 +289,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0a107a57c4df49d7b1c2884273b6c5c1, type: 2}
   - {fileID: 11400000, guid: a58ae12068b64f0793d496a4650a9fd5, type: 2}
   _defaultMap: {fileID: 11400000, guid: c4d0f615fdbc4e438a5322d1ac50d54b, type: 2}
+  _allMaps:
+  - {fileID: 11400000, guid: c4d0f615fdbc4e438a5322d1ac50d54b, type: 2}
+  - {fileID: 11400000, guid: 3033af882836b493496ab265b4a842d7, type: 2}
+  - {fileID: 11400000, guid: cc0ab42ec016a41989d02939ffc90edb, type: 2}
   _matFloor: {fileID: 2100000, guid: 93524ef3ac56d4a35863cd34ae646e43, type: 2}
   _matFloorAlt: {fileID: 2100000, guid: adf8743c4c68b4af5b7899140e43f2b3, type: 2}
   _matWall: {fileID: 2100000, guid: 855de34dd9ef34d02b99e25717839fe6, type: 2}
@@ -299,6 +303,7 @@ MonoBehaviour:
   _matSpawnP2: {fileID: 2100000, guid: d3f71f514299b46868e60990ba199c5a, type: 2}
   _matHeroP1: {fileID: 2100000, guid: 3c9b5857cfdbf4d65b2cf469d11f9168, type: 2}
   _matHeroP2: {fileID: 2100000, guid: ae0ddc328a3194b248435345175b4629, type: 2}
+  _uiManagerPrefab: {fileID: 0}
 --- !u!4 &797900887
 Transform:
   m_ObjectHideFlags: 0
@@ -406,6 +411,92 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1435784114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1435784117}
+  - component: {fileID: 1435784116}
+  - component: {fileID: 1435784115}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1435784115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435784114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d1b6c4a5d74f43c68f15e22f2942a64, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TacticalDuelist::TacticalDuelist.UI.Toolkit.UIManager
+  _uiDocument: {fileID: 1435784116}
+  _mainMenuTemplate: {fileID: 9197481963319205126, guid: 8ec53b358b48546feabc60c4e6729e99, type: 3}
+  _heroSelectTemplate: {fileID: 9197481963319205126, guid: 8f2bcb3c07573442d8a07532a32327ee, type: 3}
+  _matchmakingTemplate: {fileID: 9197481963319205126, guid: 676530eb9858043449cc8c6241f62394, type: 3}
+  _planningTemplate: {fileID: 9197481963319205126, guid: 621a8fb3a671f462b968889020f0d08b, type: 3}
+  _resultTemplate: {fileID: 9197481963319205126, guid: 0da10e9dd901a45e6860cc67da3d8ee2, type: 3}
+  _hudTemplate: {fileID: 9197481963319205126, guid: 4dd0a11d98c894c9a8c0932090f6df19, type: 3}
+  _splashTemplate: {fileID: 9197481963319205126, guid: 5a28365821f8b464ab68de1c3693b5c6, type: 3}
+  _settingsTemplate: {fileID: 9197481963319205126, guid: 4e954f7e4c6804d1c8ccaefd35dccf87, type: 3}
+  _heroesCollectionTemplate: {fileID: 9197481963319205126, guid: b4ff499c1b7e44a949aa3d6acc126f90, type: 3}
+  _leaderboardTemplate: {fileID: 9197481963319205126, guid: b9cc6b92c2204454cb009b7f3ce1a1f2, type: 3}
+  _tutorialTemplate: {fileID: 9197481963319205126, guid: 49e77108632bf491f9b14b6b094bba68, type: 3}
+  _profileTemplate: {fileID: 9197481963319205126, guid: b7389bf28b7f94385bb30c333c412ddb, type: 3}
+  _preMatchTemplate: {fileID: 9197481963319205126, guid: 67ce6357786774fd6bfbe08b411cc77b, type: 3}
+  _roundTransitionTemplate: {fileID: 9197481963319205126, guid: 5cf3bfa970d2e4015b518764ec686942, type: 3}
+  _revealTemplate: {fileID: 9197481963319205126, guid: 3995a2d13385d432a8aa32432aa67186, type: 3}
+  _reconnectingTemplate: {fileID: 9197481963319205126, guid: f6bc19327b1b14e36b5a5734a4e9c7ea, type: 3}
+  _toastTemplate: {fileID: 9197481963319205126, guid: 0ce4f3d35a2c94ac2b45f73145b3bc97, type: 3}
+--- !u!114 &1435784116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435784114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
+  m_PanelSettings: {fileID: 11400000, guid: dead1a89684b04495afa81bea7e85e9d, type: 2}
+  m_ParentUI: {fileID: 0}
+  sourceAsset: {fileID: 0}
+  m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
+--- !u!4 &1435784117
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435784114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -413,3 +504,4 @@ SceneRoots:
   - {fileID: 1237164013}
   - {fileID: 250811389}
   - {fileID: 797900887}
+  - {fileID: 1435784117}

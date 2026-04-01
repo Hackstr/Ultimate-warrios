@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PlayerService } from './player.service';
 
@@ -17,5 +17,25 @@ export class PlayerController {
   @Get('leaderboard')
   async getLeaderboard() {
     return this._players.getLeaderboard();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('unlock-hero')
+  async unlockHero(
+    @Request() req: { user: { playerId: string } },
+    @Body() body: { heroId: string },
+  ) {
+    return this._players.unlockHero(req.user.playerId, body.heroId);
+  }
+
+  @Get('hero-prices')
+  getHeroPrices() {
+    return this._players.getHeroPrices();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('match-history')
+  async getMatchHistory(@Request() req: { user: { playerId: string } }) {
+    return this._players.getMatchHistory(req.user.playerId);
   }
 }

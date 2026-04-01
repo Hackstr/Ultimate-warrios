@@ -31,6 +31,8 @@ namespace TacticalDuelist.Core.Systems
 
         public float CurrentPlanningTime => CurrentRound == 1 ? PlanningTimeRound1 : PlanningTimeLater;
 
+        public HeroState GetPlayerState(int playerIndex) => playerIndex == 0 ? Player1 : Player2;
+
         #endregion
 
         #region Fields
@@ -230,6 +232,7 @@ namespace TacticalDuelist.Core.Systems
                 case RoundResult.MutualCancel:
                     // Both eliminated simultaneously — sudden death rematch
                     CurrentRound++;
+                    CleanupBarriers();
                     Player1.ResetForNewRound();
                     Player2.ResetForNewRound();
                     if (EnableShrink || CurrentRound > MaxRounds)
@@ -241,10 +244,26 @@ namespace TacticalDuelist.Core.Systems
                     // Force shrink after MaxRounds even if EnableShrink is off
                     if (EnableShrink || CurrentRound > MaxRounds)
                         _shrink.ApplyShrink(CurrentRound);
+                    CleanupBarriers();
                     Player1.ResetForNewRound();
                     Player2.ResetForNewRound();
                     StartPlanningPhase();
                     break;
+            }
+        }
+
+        /// <summary>
+        /// Removes any active barriers from the grid before round reset.
+        /// </summary>
+        private void CleanupBarriers()
+        {
+            if (Player1.BarrierActive)
+            {
+                Grid.RemoveBarrier(Player1.BarrierPosition);
+            }
+            if (Player2.BarrierActive)
+            {
+                Grid.RemoveBarrier(Player2.BarrierPosition);
             }
         }
 

@@ -46,6 +46,8 @@ namespace TacticalDuelist.Networking
         public event Action OnConnected;
         public event Action<string> OnDisconnected;
         public event Action<string> OnError;
+        /// <summary>Fired before each reconnect attempt: (attemptNumber, maxAttempts).</summary>
+        public event Action<int, int> OnReconnectAttempt;
 
         #endregion
 
@@ -212,6 +214,7 @@ namespace TacticalDuelist.Networking
                     MaxReconnectDelaySec);
 
                 Debug.Log($"[SocketIO] Reconnect attempt {_reconnectAttempt}/{MaxReconnectAttempts} in {delay:F1}s");
+                OnReconnectAttempt?.Invoke(_reconnectAttempt, MaxReconnectAttempts);
                 await UniTask.Delay(TimeSpan.FromSeconds(delay));
 
                 if (_intentionalDisconnect || _disposed) return;

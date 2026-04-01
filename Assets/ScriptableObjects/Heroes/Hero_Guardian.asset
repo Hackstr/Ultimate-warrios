@@ -15,8 +15,14 @@ MonoBehaviour:
   heroId: guardian
   heroName: Guardian
   displayName: Guardian
+  loreName: Aurora
+  loreTitle: Shield of Dawn
+  loreDimension: Luminis
+  loreBio: A paladin-defender whose energy shield is impenetrable. Protects the weak.
   difficulty: 2
-  heroPrefab: {fileID: 0}
+  isUnlocked: 0
+  unlockPrice: 300
+  heroPrefab: {fileID: 2534900032605071363, guid: 220e941c1728b46fcb531c01599de30c, type: 3}
   animatorController: {fileID: 0}
   portrait: {fileID: 0}
   heroColor: {r: 0.8, g: 0.7, b: 0.2, a: 1}
@@ -25,6 +31,14 @@ MonoBehaviour:
   cooldown: 2
   armor: 1
   speed: 1
+  voiceKill: Justice served.
+  voiceDeath: The light... fades...
+  voiceSpecial: Shield up!
+  voiceRoundStart: I protect the weak.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 6
   specialName: Barrier
   specialDescription: Places a 1-tile wall that blocks shots and movement.

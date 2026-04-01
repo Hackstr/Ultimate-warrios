@@ -27,6 +27,7 @@ namespace TacticalDuelist.Platform
         IPlatformNotifications Notifications { get; }
         IPlatformDeepLinks DeepLinks { get; }
         IPlatformShare Share { get; }
+        IBlockchainService Blockchain { get; }
 
         void Initialize();
     }

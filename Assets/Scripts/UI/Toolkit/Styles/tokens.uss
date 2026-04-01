@@ -1,0 +1,645 @@
+/* ============================================
+   Tactical Duelist — Design Tokens (HD 1080×1920)
+   Source: Pencil design system
+   All values 1:1 from Pencil at 1080×1920
+   PanelSettings referenceResolution = 1080×1920
+   ============================================ */
+
+/* ── Fonts ── */
+.font-display {
+    -unity-font-definition: url("/Assets/Fonts/Lilita_One/LilitaOne-Regular.ttf");
+}
+
+* {
+    -unity-font-definition: url("/Assets/Fonts/Inter/static/Inter_18pt-Regular.ttf");
+
+    /* ── Background ── */
+    --color-bg:              #0F0F1A;
+    --color-panel:           #1A1A28;
+    --color-secondary:       #22223A;
+    --color-card:            #2A2A40;
+
+    /* ── Accent ── */
+    --color-orange:          #FF6B35;
+    --color-red:             #D93333;
+    --color-gold:            #FFD933;
+    --color-blue:            #4073F3;
+    --color-green:           #33CC66;
+    --color-success:         #33CC66;
+
+    /* ── Text ── */
+    --color-text:            #EAEAF4;
+    --color-text-secondary:  #9898B0;
+    --color-text-muted:      rgba(152, 152, 176, 0.25);
+
+    /* ── UI Elements ── */
+    --color-border:          #333350;
+    --color-bar-bg:          #22223A;
+
+    /* ── Spacing (HD) ── */
+    --sp-xs:  11px;
+    --sp-sm:  22px;
+    --sp-md:  44px;
+    --sp-lg:  56px;
+    --sp-xl:  88px;
+
+    /* ── Radius (HD) ── */
+    --radius-sm:  11px;
+    --radius-md:  22px;
+    --radius-lg:  33px;
+    --radius-xl:  44px;
+    --radius-pill: 277px;
+
+    /* ── Font Sizes (HD) ── */
+    --fs-hero:       133px;  /* Victory banner, splash title */
+    --fs-display:    89px;   /* Hero name on main menu */
+    --fs-title:      66px;   /* Hero name on select, section titles */
+    --fs-heading:    61px;   /* Screen headers (SELECT HERO, PROFILE) */
+    --fs-subheading: 50px;   /* CONFIRM text, timer */
+    --fs-body:       39px;   /* Player name, descriptions */
+    --fs-caption:    36px;   /* Stat labels, hero names in cards */
+    --fs-label:      33px;   /* Stat values, ability name */
+    --fs-small:      30px;   /* Section headers (HERO MASTERY) */
+    --fs-micro:      28px;   /* Category labels (AUDIO, ARENA) */
+    --fs-nano:       24px;   /* Nav labels, small text */
+}
+
+/* ============================================
+   Base Screen
+   ============================================ */
+
+.screen {
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg);
+    flex-direction: column;
+}
+
+.screen-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    transition-property: opacity, translate, scale;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out-cubic;
+}
+
+.screen--visible {
+    display: flex;
+    transition-property: opacity, translate, scale;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out-cubic;
+}
+
+/* ── Universal Button Feedback ── */
+Button {
+    transition-property: scale, opacity;
+    transition-duration: 80ms;
+    transition-timing-function: ease-out-cubic;
+}
+Button:active {
+    scale: 0.96;
+    opacity: 0.85;
+}
+
+/* ============================================
+   Overlay
+   ============================================ */
+
+.overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(15, 15, 26, 0.85);
+}
+
+.overlay--visible {
+    display: flex;
+}
+
+/* ============================================
+   Typography
+   ============================================ */
+
+.text-display { color: var(--color-text); -unity-font-style: bold; letter-spacing: 5px; font-size: var(--fs-display); }
+.text-body    { color: var(--color-text); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-muted   { color: var(--color-text-muted); }
+
+.text-orange { color: var(--color-orange); }
+.text-gold   { color: var(--color-gold); }
+.text-blue   { color: var(--color-blue); }
+.text-red    { color: var(--color-red); }
+.text-green  { color: var(--color-green); }
+
+.text-center { -unity-text-align: middle-center; }
+.text-left   { -unity-text-align: middle-left; }
+.text-right  { -unity-text-align: middle-right; }
+.text-bold   { -unity-font-style: bold; }
+
+/* ============================================
+   Buttons (HD)
+   ============================================ */
+
+.btn {
+    height: 133px;
+    border-radius: var(--radius-lg);
+    -unity-text-align: middle-center;
+    color: white;
+    -unity-font-style: bold;
+    font-size: var(--fs-body);
+    letter-spacing: 3px;
+    border-width: 0;
+    padding: 0 var(--sp-lg);
+    transition-property: opacity, scale;
+    transition-duration: 100ms;
+}
+
+.btn:hover { opacity: 0.9; }
+.btn:active { scale: 0.97; opacity: 0.8; }
+
+.btn--primary { background-color: var(--color-orange); }
+.btn--primary-large {
+    background-color: var(--color-orange);
+    height: 177px;
+    font-size: 78px;
+    letter-spacing: 8px;
+    border-radius: var(--radius-xl);
+}
+.btn--secondary {
+    background-color: rgba(0,0,0,0);
+    border-width: 2px;
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-secondary);
+}
+
+/* Mode Tabs (HD) */
+.btn--tab {
+    height: 111px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-secondary);
+    border-width: 2px;
+    border-color: rgba(152, 152, 176, 0.25);
+    flex-grow: 1;
+    font-size: var(--fs-caption);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 28px 44px;
+    transition-property: background-color, color, border-color;
+    transition-duration: 150ms;
+}
+
+.btn--tab-active {
+    background-color: var(--color-orange);
+    color: white;
+    border-color: var(--color-orange);
+    border-width: 0;
+}
+.btn--ghost {
+    background-color: rgba(0,0,0,0);
+    border-width: 0;
+    color: var(--color-text-secondary);
+}
+.btn--disabled { opacity: 0.4; }
+
+/* ============================================
+   Panels & Cards (HD)
+   ============================================ */
+
+.panel {
+    background-color: var(--color-panel);
+    border-radius: var(--radius-xl);
+    padding: var(--sp-sm) var(--sp-md);
+}
+
+.card {
+    background-color: var(--color-card);
+    border-radius: var(--radius-lg);
+    padding: var(--sp-sm);
+}
+
+/* ============================================
+   Layout Helpers
+   ============================================ */
+
+.row { flex-direction: row; align-items: center; }
+.col { flex-direction: column; }
+.center { align-items: center; justify-content: center; }
+.stretch { flex-grow: 1; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.flex-1 { flex-grow: 1; }
+.flex-2 { flex-grow: 2; }
+.justify-between { justify-content: space-between; }
+.justify-around  { justify-content: space-around; }
+
+/* ============================================
+   Stat Bar (HD pill card)
+   ============================================ */
+
+.stat-bar {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    background-color: var(--color-panel);
+    border-radius: var(--radius-lg);
+    padding: 22px 33px;
+}
+
+.stat-bar__label {
+    width: 140px;
+    font-size: var(--fs-small);
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+}
+
+.stat-bar__track {
+    flex-grow: 1;
+    height: 17px;
+    background-color: var(--color-secondary);
+    border-radius: 8px;
+    margin: 0 22px;
+    overflow: hidden;
+}
+
+.stat-bar__fill {
+    height: 100%;
+    border-radius: 8px;
+    background-color: var(--color-orange);
+    transition-property: width;
+    transition-duration: 300ms;
+}
+
+.stat-bar__fill--steps   { background-color: #FF6B35; }
+.stat-bar__fill--range   { background-color: #FF6B35; }
+.stat-bar__fill--cd      { background-color: #4073F3; }
+.stat-bar__fill--armor   { background-color: rgba(152, 152, 176, 0.25); }
+.stat-bar__fill--speed   { background-color: #4ADE80; }
+
+.stat-bar__value {
+    width: 56px;
+    font-size: var(--fs-label);
+    color: var(--color-text);
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+}
+
+/* ============================================
+   Action Buttons (HD Planning)
+   ============================================ */
+
+.action-btn {
+    flex-grow: 1;
+    height: 133px;
+    border-radius: 28px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* gap handled via UXML inline */
+    border-width: 0;
+    transition-property: opacity, scale;
+    transition-duration: 100ms;
+}
+.action-btn:active { scale: 0.93; }
+
+.action-btn--move    { background-color: #22443A; }
+.action-btn--turn    { background-color: #1A2A40; }
+.action-btn--shoot   { background-color: #3A1A1A; }
+.action-btn--wait    { background-color: var(--color-panel); }
+.action-btn--shield  { background-color: #1A2A3A; border-width: 2px; border-color: #38BDF8; }
+.action-btn--special { background-color: #2A2A10; border-width: 2px; border-color: var(--color-gold); }
+
+.action-btn__icon {
+    font-size: 44px;
+    -unity-text-align: middle-center;
+}
+
+.action-btn__label {
+    font-size: var(--fs-small);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ============================================
+   Hero Card (HD Selection Grid)
+   ============================================ */
+
+.hero-card {
+    width: 220px;
+    height: 155px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-panel);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* gap handled via UXML inline */
+    transition-property: border-color, scale;
+    transition-duration: 150ms;
+}
+
+.hero-card--selected {
+    border-width: 3px;
+    border-color: var(--color-orange);
+}
+
+.hero-card__name {
+    font-size: var(--fs-small);
+    color: var(--color-text);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ============================================
+   Action Queue Slot (HD)
+   ============================================ */
+
+.action-slot {
+    width: 200px;
+    height: 111px;
+    border-radius: 28px;
+    background-color: var(--color-panel);
+    border-width: 2px;
+    border-color: var(--color-border);
+    align-items: center;
+    justify-content: center;
+    transition-property: scale, border-color, background-color;
+    transition-duration: 200ms;
+}
+
+.action-slot--filled {
+    background-color: #3A1A1A;
+    border-color: var(--color-red);
+}
+
+.action-slot--active {
+    border-color: var(--color-orange);
+    border-width: 3px;
+}
+
+.action-slot__icon {
+    font-size: var(--fs-body);
+    -unity-text-align: middle-center;
+}
+
+.action-slot__label {
+    font-size: var(--fs-nano);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+}
+
+/* ============================================
+   Result Round Line
+   ============================================ */
+
+.result__round-line {
+    font-size: var(--fs-label);
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+    margin-bottom: 6px;
+}
+
+/* ============================================
+   Reward Chip (HD Victory/Defeat/Draw)
+   ============================================ */
+
+.reward-chip {
+    flex-grow: 1;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-panel);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* gap handled via UXML inline */
+    padding: 33px 22px;
+}
+
+.reward-chip__value {
+    font-size: 55px;
+    -unity-font-style: bold;
+    color: var(--color-gold);
+}
+
+.reward-chip__label {
+    font-size: var(--fs-small);
+    color: var(--color-text-secondary);
+}
+
+/* ============================================
+   Toast Notifications (HD)
+   ============================================ */
+
+.toast {
+    flex-direction: row;
+    align-items: center;
+    padding: 33px 44px;
+    border-radius: var(--radius-lg);
+    border-width: 2px;
+    margin-bottom: var(--sp-sm);
+    width: 100%;
+    /* gap handled via UXML inline */
+}
+
+.toast--success { background-color: rgba(51, 204, 102, 0.13); border-color: rgba(51, 204, 102, 0.25); }
+.toast--error   { background-color: rgba(217, 51, 51, 0.13); border-color: rgba(217, 51, 51, 0.25); }
+.toast--warning { background-color: rgba(255, 217, 51, 0.13); border-color: rgba(255, 217, 51, 0.25); }
+.toast--info    { background-color: rgba(64, 115, 243, 0.13); border-color: rgba(64, 115, 243, 0.25); }
+
+.toast__text { font-size: var(--fs-caption); -unity-font-style: bold; }
+.toast__icon { font-size: 55px; -unity-font-style: bold; }
+.toast__icon--success { color: var(--color-green); }
+.toast__icon--error   { color: var(--color-red); }
+.toast__icon--warning { color: var(--color-gold); }
+.toast__icon--info    { color: var(--color-blue); }
+
+/* ============================================
+   Bottom Nav (HD pill style)
+   ============================================ */
+
+.nav-bar {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 42px 42px 42px;
+}
+
+.nav-pill {
+    flex-direction: row;
+    width: 100%;
+    height: 124px;
+    border-radius: 72px;
+    background-color: var(--color-panel);
+    border-width: 2px;
+    border-color: var(--color-secondary);
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px;
+}
+
+.nav-item {
+    flex-grow: 1;
+    height: 100%;
+    border-radius: 52px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    /* gap handled via UXML inline */
+}
+
+.nav-item--active {
+    background-color: var(--color-orange);
+}
+
+.nav-item__label {
+    font-size: var(--fs-nano);
+    letter-spacing: 1px;
+    -unity-font-style: bold;
+    color: var(--color-text-secondary);
+    -unity-text-align: middle-center;
+}
+
+.nav-item--active .nav-item__label { color: white; }
+
+/* ============================================
+   HUD (HD)
+   ============================================ */
+
+.hud__top-bar {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 100px 44px 22px 44px;
+}
+
+.hud__hp-track {
+    width: 277px;
+    height: 22px;
+    border-radius: 11px;
+    background-color: var(--color-secondary);
+}
+
+.hud__hp-fill {
+    height: 22px;
+    border-radius: 11px;
+}
+
+.hud__hp-fill--p1 { background-color: var(--color-orange); }
+.hud__hp-fill--p2 { background-color: var(--color-blue); }
+
+.hud__timer-circle {
+    width: 144px;
+    height: 144px;
+    border-radius: 72px;
+    background-color: var(--color-panel);
+    border-width: 4px;
+    border-color: var(--color-orange);
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   Result Screen (HD)
+   ============================================ */
+
+.result__title {
+    font-size: var(--fs-hero);
+    letter-spacing: 5px;
+    color: var(--color-text);
+    transition-property: scale;
+    transition-duration: 300ms;
+}
+
+/* ============================================
+   Grid Cell (HD)
+   ============================================ */
+
+.grid-cell {
+    border-radius: var(--radius-md);
+    background-color: var(--color-secondary);
+    border-width: 2px;
+    border-color: var(--color-border);
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-cell--player {
+    background-color: rgba(255, 107, 53, 0.13);
+    border-color: var(--color-orange);
+}
+
+.grid-cell--opponent {
+    background-color: rgba(64, 115, 243, 0.13);
+    border-color: var(--color-blue);
+}
+
+.grid-cell--wall {
+    background-color: rgba(217, 51, 51, 0.13);
+    border-color: var(--color-red);
+}
+
+/* ============================================
+   Status Bar (HD)
+   ============================================ */
+
+.status-bar {
+    flex-direction: row;
+    width: 100%;
+    height: 62px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 56px 0 56px;
+}
+
+/* ============================================
+   Screen Header (HD)
+   ============================================ */
+
+.screen-header {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 56px 33px 56px;
+}
+
+/* ============================================
+   Timer States
+   ============================================ */
+
+.timer--normal  { color: var(--color-text); }
+.timer--warning { color: var(--color-gold); }
+.timer--danger  { color: var(--color-red); }
+
+/* ============================================
+   Frame States
+   ============================================ */
+
+.frame--alive      { border-color: var(--color-green); }
+.frame--eliminated { border-color: var(--color-red); opacity: 0.6; }
+.frame--winner     { border-color: var(--color-gold); border-width: 4px; }
+
+/* Combat Text Animation */
+#combat-text {
+    transition-property: opacity, scale;
+    transition-duration: 300ms;
+    transition-timing-function: ease-out-cubic;
+}
+
+/* ============================================
+   Scrollbar Hidden
+   ============================================ */
+
+.scrollview-hidden #unity-content-and-vertical-scroll-container > .unity-scroller { display: none; }
+.scrollview-hidden .unity-scroller--vertical { display: none; width: 0; }
+.scrollview-hidden .unity-scroller--horizontal { display: none; height: 0; }
+.scrollview-hidden > * > .unity-scroller { display: none; }
+.scrollview-hidden .unity-base-slider { display: none; }
+.scrollview-hidden .unity-repeat-button { display: none; }
+
+/* Force hide all scrollbar elements inside scrollview-hidden */
+.scrollview-hidden Scroller { display: none; width: 0; height: 0; }

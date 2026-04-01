@@ -1,0 +1,76 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="main-menu-root" class="screen" style="justify-content: space-between;">
+
+        <!-- === TOP: Player info bar (floating over hero) === -->
+        <ui:VisualElement class="row w-full" style="position: absolute; top: 0; left: 0; right: 0; justify-content: space-between; align-items: center; padding: 40px 32px 0 32px; z-index: 10;">
+            <!-- User Info -->
+            <ui:VisualElement class="row" style="align-items: center; background-color: rgba(15,15,26,0.6); border-radius: 24px; padding: 8px 16px 8px 8px;">
+                <ui:VisualElement style="width: 64px; height: 64px; border-radius: 32px; background-color: #FF6B35; align-items: center; justify-content: center;">
+                    <ui:Label text="AK" style="font-size: 26px; color: #0F0F1A; -unity-font-style: bold;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="col" style="margin-left: 12px;">
+                    <ui:Label name="player-name" text="Duelist" style="font-size: 28px; color: #EAEAF4; -unity-font-style: bold;" />
+                    <ui:Label name="player-rank" text="Silver" style="font-size: 22px; color: #FFD933; margin-top: 1px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <!-- Currency -->
+            <ui:VisualElement class="row" style="align-items: center;">
+                <ui:VisualElement style="background-color: rgba(15,15,26,0.6); border-radius: 20px; padding: 8px 16px; margin-right: 8px;">
+                    <ui:Label text="1,000" style="font-size: 26px; color: #FFD933; -unity-font-style: bold;" />
+                </ui:VisualElement>
+                <ui:Button name="btn-wallet" style="background-color: rgba(15,15,26,0.6); border-radius: 20px; padding: 8px 16px; border-width: 0;">
+                    <ui:Label name="wallet-label" text="Wallet" style="font-size: 22px; color: #9898B0; -unity-font-style: bold;" />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- === HERO SHOWCASE (fills top ~55%) === -->
+        <ui:VisualElement name="hero-preview" style="flex-grow: 1; background-color: #12121F; align-items: center; justify-content: flex-end; overflow: hidden;">
+            <ui:Label text="HERO" style="font-size: 48px; color: rgba(152,152,176,0.06);" class="font-display" />
+        </ui:VisualElement>
+
+        <!-- === BOTTOM PANEL === -->
+        <ui:VisualElement style="background-color: #0F0F1A; padding: 0 32px;">
+
+            <!-- Hero Name + Role -->
+            <ui:VisualElement class="col center" style="padding: 20px 0 12px 0;">
+                <ui:Label name="hero-name" text="ARCHER" class="font-display" style="font-size: 64px; color: #EAEAF4; letter-spacing: 4px;" />
+                <ui:Label name="hero-role" text="Ranged DPS" style="font-size: 26px; color: #9898B0; margin-top: 2px;" />
+            </ui:VisualElement>
+
+            <!-- PLAY Button -->
+            <ui:Button name="btn-play" style="height: 112px; background-color: #FF6B35; border-radius: 28px; border-width: 0; align-items: center; justify-content: center;">
+                <ui:Label text="PLAY" class="font-display" style="font-size: 48px; color: white; letter-spacing: 5px; -unity-text-align: middle-center;" />
+            </ui:Button>
+
+            <!-- Mode Tabs -->
+            <ui:VisualElement class="row w-full" style="margin-top: 12px;">
+                <ui:Button name="btn-ranked" text="Ranked" class="btn--tab" style="margin-right: 8px;" />
+                <ui:Button name="btn-casual" text="Casual" class="btn--tab btn--tab-active" style="margin-right: 8px;" />
+                <ui:Button name="btn-friend" text="vs Friend" class="btn--tab" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- Bottom Nav Bar -->
+        <ui:VisualElement class="nav-bar" style="padding: 12px 32px 28px 32px;">
+            <ui:VisualElement class="nav-pill">
+                <ui:VisualElement name="nav-home" class="nav-item nav-item--active">
+                    <ui:Label text="HOME" class="nav-item__label" style="color: white; font-size: 24px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nav-heroes" class="nav-item">
+                    <ui:Label text="HEROES" class="nav-item__label" style="font-size: 24px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nav-rank" class="nav-item">
+                    <ui:Label text="RANK" class="nav-item__label" style="font-size: 24px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="nav-settings" class="nav-item">
+                    <ui:Label text="SETTINGS" class="nav-item__label" style="font-size: 24px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -15,9 +15,16 @@ MonoBehaviour:
   heroId: ghost
   heroName: Ghost
   displayName: Ghost
+  loreName: Whisper
+  loreTitle: Voice Between
+  loreDimension: Limbo
+  loreBio: Neither alive nor dead. Exists in the cracks of reality. The Rifts pull
+    him.
   difficulty: 4
-  heroPrefab: {fileID: 0}
-  animatorController: {fileID: 0}
+  isUnlocked: 1
+  unlockPrice: 400
+  heroPrefab: {fileID: 3673427015041557868, guid: 80f1c1f9268dc4e288a16b739090333c, type: 3}
+  animatorController: {fileID: 9100000, guid: d888d74662fef40bf9fb16a9d22790c8, type: 2}
   portrait: {fileID: 0}
   heroColor: {r: 0.2, g: 0.5, b: 0.5, a: 1}
   steps: 5
@@ -25,6 +32,14 @@ MonoBehaviour:
   cooldown: 1
   armor: 0
   speed: 1
+  voiceKill: Back to the void.
+  voiceDeath: Between... worlds...
+  voiceSpecial: You can't touch me.
+  voiceRoundStart: I am everywhere.
+  projectileColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  projectileSpeed: 15
+  projectileSize: 0.12
+  projectilePrefab: {fileID: 0}
   specialAbility: 7
   specialName: Cloak
   specialDescription: Become invisible for 2 steps. Shooting breaks cloak.

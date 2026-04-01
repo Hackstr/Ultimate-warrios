@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95fcc8560e7546a3b36ae26340bf89d5, type: 3}
+  m_Name: Map_Arena02
+  m_EditorClassIdentifier: TacticalDuelist::TacticalDuelist.Core.Config.MapConfig
+  mapId: arena_02
+  mapName: "Arena 02 \u2014 The Labyrinth"
+  width: 8
+  height: 8
+  gridData: 00000000000000000000000001000000000000000000000000000000000000000000000001000000000000000000000000000000010000000000000000000000000000000100000000000000010000000000000001000000000000000000000000000000000000000000000001000000000000000000000000000000010000000100000000000000000000000000000001000000000000000000000000000000000000000000000001000000000000000100000000000000010000000000000000000000000000000100000000000000000000000000000001000000000000000000000000000000000000000000000001000000000000000000000000000000
+  player1Spawn: {x: 0, y: 0}
+  player1Facing: 0
+  player2Spawn: {x: 7, y: 7}
+  player2Facing: 1
+  pickups: []
+  shrinkPerRound: 1
+  mapPrefab: {fileID: 0}
+  floorMaterial: {fileID: 0}
+  wallMaterial: {fileID: 0}
+  dangerZoneMaterial: {fileID: 0}

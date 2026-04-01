@@ -1,0 +1,90 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="prematch-root" class="screen" style="justify-content: space-between;">
+
+        <!-- Header -->
+        <ui:VisualElement class="row w-full" style="justify-content: space-between; align-items: center; padding: 40px 32px 16px 32px;">
+            <ui:Button name="btn-back" text="Back" style="font-size: 30px; color: #9898B0; background-color: #1A1A28; border-width: 2px; border-color: rgba(152,152,176,0.25); -unity-font-style: bold; padding: 16px 32px; border-radius: 16px;" />
+            <ui:Label text="MATCH SETUP" class="font-display" style="font-size: 48px; color: #EAEAF4; letter-spacing: 3px;" />
+            <ui:VisualElement style="width: 64px;" />
+        </ui:VisualElement>
+
+        <!-- Hero Summary -->
+        <ui:VisualElement class="row" style="padding: 0 32px; align-items: center;">
+            <ui:VisualElement style="width: 72px; height: 72px; border-radius: 36px; background-color: rgba(255,107,53,0.15); align-items: center; justify-content: center; margin-right: 16px;">
+                <ui:Label name="hero-initials" text="AR" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="col" style="flex-grow: 1;">
+                <ui:Label name="hero-name" text="Archer" style="font-size: 32px; color: #EAEAF4; -unity-font-style: bold;" />
+                <ui:Label name="hero-lore" text="Elara -- Guardian of the Eternal Forest" style="font-size: 22px; color: #9898B0; margin-top: 2px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Scrollable Settings -->
+        <ui:ScrollView class="flex-1 scrollview-hidden" style="padding: 16px 32px;">
+            <ui:VisualElement style="padding-bottom: 16px;">
+
+                <!-- MAP SELECTION -->
+                <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                    <ui:Label text="ARENA" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                    <ui:VisualElement name="map-list" class="col" style="width: 100%;" />
+                </ui:VisualElement>
+
+                <!-- MATCH OPTIONS -->
+                <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                    <ui:Label text="OPTIONS" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+
+                    <!-- Map Shrink -->
+                    <ui:VisualElement class="row justify-between w-full" style="margin-bottom: 12px;">
+                        <ui:VisualElement class="col" style="flex-grow: 1;">
+                            <ui:Label text="Map Shrink" style="font-size: 30px; color: #EAEAF4;" />
+                            <ui:Label text="Outer ring becomes danger zone each round" style="font-size: 20px; color: #9898B0; margin-top: 2px;" />
+                        </ui:VisualElement>
+                        <ui:Button name="btn-shrink-toggle" style="width: 96px; height: 48px; border-radius: 24px; background-color: #33CC66; border-width: 0; align-items: center; justify-content: center;">
+                            <ui:Label name="shrink-label" text="ON" style="font-size: 22px; color: white; -unity-font-style: bold;" />
+                        </ui:Button>
+                    </ui:VisualElement>
+
+                    <!-- Round Timer -->
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:VisualElement class="col" style="flex-grow: 1;">
+                            <ui:Label text="Planning Time" style="font-size: 30px; color: #EAEAF4;" />
+                            <ui:Label text="Seconds per round to plan actions" style="font-size: 20px; color: #9898B0; margin-top: 2px;" />
+                        </ui:VisualElement>
+                        <ui:Label name="timer-value" text="30s" style="font-size: 30px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- MATCH INFO -->
+                <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px;">
+                    <ui:Label text="INFO" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                    <ui:VisualElement class="row justify-between w-full" style="margin-bottom: 8px;">
+                        <ui:Label text="Mode" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="mode-label" text="Casual (vs Bot)" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:Label text="Opponent" style="font-size: 28px; color: #EAEAF4;" />
+                        <ui:Label name="opponent-label" text="Smart Bot" style="font-size: 28px; color: #4073F3; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Stake Section -->
+                <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px;">
+                    <ui:Label text="STAKE" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 12px;" />
+                    <ui:Label name="wallet-status" text="No wallet connected" style="font-size: 14px; color: #9898B0; margin-bottom: 12px;" />
+                    <ui:VisualElement name="stake-options" class="row" style="width: 100%; justify-content: space-between;" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:ScrollView>
+
+        <!-- START MATCH Button -->
+        <ui:VisualElement style="padding: 8px 32px 36px 32px;">
+            <ui:Button name="btn-start" style="height: 112px; background-color: #FF6B35; border-radius: 28px; border-width: 0; align-items: center; justify-content: center;">
+                <ui:Label text="START MATCH" class="font-display" style="font-size: 44px; color: white; letter-spacing: 4px; -unity-text-align: middle-center;" />
+            </ui:Button>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

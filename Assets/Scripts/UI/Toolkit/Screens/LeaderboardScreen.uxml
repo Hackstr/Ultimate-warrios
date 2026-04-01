@@ -1,0 +1,24 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Styles/tokens.uss" />
+
+    <ui:VisualElement name="leaderboard-root" class="screen">
+
+        <!-- Header -->
+        <ui:VisualElement class="row w-full" style="justify-content: space-between; align-items: center; padding: 40px 32px 16px 32px;">
+            <ui:Button name="btn-back" text="Back" style="font-size: 30px; color: #9898B0; background-color: rgba(26,26,40,0.5); border-width: 0; -unity-font-style: bold; padding: 12px 24px; border-radius: 16px;" />
+            <ui:Label text="LEADERBOARD" class="font-display" style="font-size: 44px; color: #EAEAF4; letter-spacing: 3px;" />
+            <ui:VisualElement style="border-radius: 20px; background-color: rgba(255,217,51,0.13); padding: 6px 16px;">
+                <ui:Label text="S1" style="font-size: 24px; color: #FFD933; -unity-font-style: bold;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Status -->
+        <ui:Label name="leaderboard-status" text="Loading..." style="font-size: 28px; color: #9898B0; -unity-text-align: middle-center; margin-top: 32px;" />
+
+        <!-- Leaderboard List -->
+        <ui:ScrollView class="flex-1 scrollview-hidden" style="padding: 8px 32px;">
+            <ui:VisualElement name="leaderboard-list" style="padding-bottom: 32px;" />
+        </ui:ScrollView>
+
+    </ui:VisualElement>
+</ui:UXML>
