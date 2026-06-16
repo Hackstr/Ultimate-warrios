@@ -1,0 +1,5 @@
+﻿<Solution>
+  <Project Path="TacticalDuelist.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="TacticalDuelist.Tests.EditMode.csproj" />
+</Solution>
