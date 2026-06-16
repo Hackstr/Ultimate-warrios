@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -99,13 +100,13 @@ namespace TacticalDuelist.UI.Toolkit
 
         private static string GetRankName(int elo)
         {
-            if (elo >= 2000) return "GRANDMASTER";
-            if (elo >= 1800) return "MASTER";
-            if (elo >= 1600) return "DIAMOND";
-            if (elo >= 1400) return "PLATINUM";
-            if (elo >= 1200) return "GOLD";
-            if (elo >= 1000) return "SILVER";
-            return "BRONZE";
+            if (elo >= 2000) return L.Get("rank_grandmaster");
+            if (elo >= 1800) return L.Get("rank_master");
+            if (elo >= 1600) return L.Get("rank_diamond");
+            if (elo >= 1400) return L.Get("rank_platinum");
+            if (elo >= 1200) return L.Get("rank_gold");
+            if (elo >= 1000) return L.Get("rank_silver");
+            return L.Get("rank_bronze");
         }
 
         private static string CapitalizeFirst(string s)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using TacticalDuelist.Core.Config;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -42,7 +43,7 @@ namespace TacticalDuelist.UI.Toolkit
         public void SetCoins(int coins)
         {
             _playerCoins = coins;
-            if (_coinsLabel != null) _coinsLabel.text = $"{coins} coins";
+            if (_coinsLabel != null) _coinsLabel.text = L.Get("coins_label", coins);
         }
 
         protected override void OnShow() => BuildGrid();
@@ -142,9 +143,9 @@ namespace TacticalDuelist.UI.Toolkit
                 if (isUnlocked)
                     subText = hero.displayName;
                 else if (hero.unlockPrice > 0)
-                    subText = $"{hero.unlockPrice} coins";
+                    subText = L.Get("n_coins", hero.unlockPrice);
                 else
-                    subText = "Locked";
+                    subText = L.Get("locked");
 
                 var subLabel = new Label(subText);
                 subLabel.style.fontSize = 18;

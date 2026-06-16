@@ -1,14 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlayerService } from '../player/player.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
+import { RedisService } from '../shared/services/redis.service';
 import { ActionResolverService } from './action-resolver.service';
 import { ActionType, Direction, MatchResult, RoundResult, TileType } from '../shared/models/enums';
 import {
   StepResult,
   MapConfig,
   HeroConfig,
+  HeroState,
   Vec2,
   vec2,
 } from '../shared/models/game-types';
@@ -16,6 +18,8 @@ import {
   MatchFoundPayload,
   StepResultPayload,
 } from '../shared/models/dto';
+import { Prisma } from '@prisma/client';
+import { getHeroConfig, VALID_HERO_IDS } from '../shared/config/hero-configs';
 
 // ── In-memory active match state ──
 
@@ -36,6 +40,8 @@ interface ActiveMatch {
   /** Persistent resolver across rounds */
   resolver: ActionResolverService;
   roundResults: RoundResult[];
+  player1Name: string;
+  player2Name: string;
   /** Disconnect grace period tracking */
   disconnectTimers: Map<string, ReturnType<typeof setTimeout>>;
   /** Which phase the match is in for reconnection */
@@ -103,20 +109,47 @@ interface RevealResult {
   player2Id?: string;
 }
 
+/** Serializable snapshot of an active match for Redis checkpointing. */
+interface MatchSnapshot {
+  matchId: string;
+  roomId: string;
+  player1Id: string;
+  player2Id: string;
+  player1Name: string;
+  player2Name: string;
+  player1HeroId: string;
+  player2HeroId: string;
+  map: MapConfig;
+  currentRound: number;
+  roundResults: RoundResult[];
+  phase: 'planning' | 'committed' | 'resolving';
+  stakeLevel: number;
+  heroStates: { p1: HeroState; p2: HeroState };
+}
+
 @Injectable()
-export class MatchService {
+export class MatchService implements OnModuleInit {
   private readonly _logger = new Logger(MatchService.name);
+  private static readonly REDIS_KEY_PREFIX = 'match:active:';
+  private static readonly REDIS_TTL = 3600; // 1 hour
 
   /** playerId → ActiveMatch */
   private readonly _playerMatches = new Map<string, ActiveMatch>();
   /** matchId → ActiveMatch */
   private readonly _matches = new Map<string, ActiveMatch>();
+  /** Tracks matches currently being ended to prevent concurrent _endMatch calls */
+  private readonly _endingMatches = new Set<string>();
 
   constructor(
     private readonly _prisma: PrismaService,
     private readonly _players: PlayerService,
     private readonly _blockchain: BlockchainService,
+    private readonly _redis: RedisService,
   ) {}
+
+  async onModuleInit() {
+    await this._restoreMatchesFromRedis();
+  }
 
   // ── Match Creation ──
 
@@ -130,15 +163,19 @@ export class MatchService {
     const p1Config = this._getHeroConfig(p1HeroId);
     const p2Config = this._getHeroConfig(p2HeroId);
 
-    const dbMatch = await this._prisma.match.create({
-      data: {
-        player1Id: p1Id,
-        player1Hero: p1HeroId,
-        player2Id: p2Id,
-        player2Hero: p2HeroId,
-        mapId: map.mapId,
-      },
-    });
+    const [dbMatch, p1Info, p2Info] = await Promise.all([
+      this._prisma.match.create({
+        data: {
+          player1Id: p1Id,
+          player1Hero: p1HeroId,
+          player2Id: p2Id,
+          player2Hero: p2HeroId,
+          mapId: map.mapId,
+        },
+      }),
+      this._prisma.player.findUnique({ where: { id: p1Id }, select: { displayName: true } }),
+      this._prisma.player.findUnique({ where: { id: p2Id }, select: { displayName: true } }),
+    ]);
 
     const resolver = new ActionResolverService(
       map,
@@ -155,6 +192,8 @@ export class MatchService {
       roomId: `match:${dbMatch.id}`,
       player1Id: p1Id,
       player2Id: p2Id,
+      player1Name: p1Info?.displayName ?? 'Duelist',
+      player2Name: p2Info?.displayName ?? 'Duelist',
       player1HeroId: p1HeroId,
       player2HeroId: p2HeroId,
       map,
@@ -175,6 +214,8 @@ export class MatchService {
     this._matches.set(dbMatch.id, active);
     this._playerMatches.set(p1Id, active);
     this._playerMatches.set(p2Id, active);
+
+    await this._checkpointMatch(active);
 
     return {
       roomId: active.roomId,
@@ -427,6 +468,8 @@ export class MatchService {
     match.currentRound++;
     match.resolver.resetForNewRound();
 
+    await this._checkpointMatch(match);
+
     return {
       success: true,
       roundResolved: true,
@@ -460,13 +503,15 @@ export class MatchService {
 
   private _isMatchOver(match: ActiveMatch): boolean {
     const lastRound = match.roundResults[match.roundResults.length - 1];
-    return lastRound === RoundResult.Player1Kill || lastRound === RoundResult.Player2Kill;
+    if (lastRound === RoundResult.Player1Kill || lastRound === RoundResult.Player2Kill) return true;
+    return match.currentRound >= 3; // Force end after 3 rounds
   }
 
   private _determineMatchOutcome(match: ActiveMatch): MatchResult {
     const lastRound = match.roundResults[match.roundResults.length - 1];
     if (lastRound === RoundResult.Player1Kill) return MatchResult.Player1Win;
-    return MatchResult.Player2Win;
+    if (lastRound === RoundResult.Player2Kill) return MatchResult.Player2Win;
+    return MatchResult.Draw;
   }
 
   // ── DB Persistence ──
@@ -474,65 +519,102 @@ export class MatchService {
   private async _endMatch(match: ActiveMatch, outcome: MatchResult): Promise<{
     p1RatingDelta: number; p2RatingDelta: number; p1Coins: number; p2Coins: number;
   }> {
-    // Guard against double-call (forfeit timer + normal end race)
-    if (match.isEnded) {
-      this._logger.warn(`Match ${match.matchId} already ended — skipping duplicate _endMatch`);
-      return { p1RatingDelta: 0, p2RatingDelta: 0, p1Coins: 0, p2Coins: 0 };
+    const zero = { p1RatingDelta: 0, p2RatingDelta: 0, p1Coins: 0, p2Coins: 0 };
+
+    // Guard against double-call (forfeit timer + normal end + surrender race)
+    if (match.isEnded || this._endingMatches.has(match.matchId)) {
+      this._logger.warn(`Match ${match.matchId} already ended or ending — skipping`);
+      return zero;
     }
+    this._endingMatches.add(match.matchId);
     match.isEnded = true;
 
-    const dbOutcome = outcome === MatchResult.Player1Win
-      ? 'PLAYER1_WIN'
-      : outcome === MatchResult.Player2Win
-        ? 'PLAYER2_WIN'
-        : 'DRAW';
+    // Clear all timers immediately to prevent further race conditions
+    if (match.revealTimer) { clearTimeout(match.revealTimer); match.revealTimer = null; }
+    for (const timer of match.disconnectTimers.values()) clearTimeout(timer);
+    match.disconnectTimers.clear();
 
-    await this._prisma.match.update({
-      where: { id: match.matchId },
-      data: { status: 'COMPLETED', outcome: dbOutcome, endedAt: new Date() },
-    });
+    try {
+      const dbOutcome = outcome === MatchResult.Player1Win
+        ? 'PLAYER1_WIN'
+        : outcome === MatchResult.Player2Win
+          ? 'PLAYER2_WIN'
+          : 'DRAW';
 
-    const { p1RatingDelta, p2RatingDelta } = await this._updatePlayerStats(match, outcome);
+      const p1Outcome: 'win' | 'loss' | 'draw' =
+        outcome === MatchResult.Player1Win ? 'win' : outcome === MatchResult.Player2Win ? 'loss' : 'draw';
+      const p2Outcome: 'win' | 'loss' | 'draw' =
+        outcome === MatchResult.Player2Win ? 'win' : outcome === MatchResult.Player1Win ? 'loss' : 'draw';
 
-    // Award coins
-    const p1Outcome = outcome === MatchResult.Player1Win ? 'win' : outcome === MatchResult.Player2Win ? 'loss' : 'draw';
-    const p2Outcome = outcome === MatchResult.Player2Win ? 'win' : outcome === MatchResult.Player1Win ? 'loss' : 'draw';
-    const p1Coins = await this._players.awardCoins(match.player1Id, p1Outcome as 'win' | 'loss' | 'draw');
-    const p2Coins = await this._players.awardCoins(match.player2Id, p2Outcome as 'win' | 'loss' | 'draw');
-
-    // Award hero mastery XP
-    await this._players.awardHeroXP(match.player1Id, match.player1HeroId, p1Outcome as 'win' | 'loss' | 'draw');
-    await this._players.awardHeroXP(match.player2Id, match.player2HeroId, p2Outcome as 'win' | 'loss' | 'draw');
-
-    // On-chain settlement for staked matches
-    if (match.stakeLevel > 0 && outcome !== MatchResult.Draw) {
-      try {
-        const winnerId = outcome === MatchResult.Player1Win ? match.player1Id : match.player2Id;
-        const winner = await this._prisma.player.findUnique({
-          where: { id: winnerId },
-          select: { walletAddress: true },
+      // Atomic DB transaction: match status + player stats + coins
+      const { p1RatingDelta, p2RatingDelta, p1Coins, p2Coins } = await this._prisma.$transaction(async (tx) => {
+        await tx.match.update({
+          where: { id: match.matchId },
+          data: { status: 'COMPLETED', outcome: dbOutcome, endedAt: new Date() },
         });
-        if (winner?.walletAddress) {
-          const totalStake = BigInt(match.stakeLevel) * 2n;
-          const txSig = await this._blockchain.settleMatch(match.matchId, winner.walletAddress, totalStake);
-          this._logger.log(`On-chain settlement: match=${match.matchId}, winner=${winner.walletAddress}, tx=${txSig}`);
-        }
-      } catch (err) {
-        this._logger.error(`On-chain settlement failed for match ${match.matchId}: ${err}`);
-        // Non-critical — off-chain rewards still work
-      }
-    }
 
-    this._cleanupMatch(match);
-    return { p1RatingDelta, p2RatingDelta, p1Coins, p2Coins };
+        const { p1RatingDelta, p2RatingDelta } = await this._updatePlayerStatsInTx(tx, match, outcome);
+
+        const coinsWin = p1Outcome === 'win' ? 50 : p1Outcome === 'loss' ? 10 : 25;
+        const coinsLose = p2Outcome === 'win' ? 50 : p2Outcome === 'loss' ? 10 : 25;
+        const p1 = await tx.player.update({
+          where: { id: match.player1Id },
+          data: { coins: { increment: coinsWin } },
+          select: { coins: true },
+        });
+        const p2 = await tx.player.update({
+          where: { id: match.player2Id },
+          data: { coins: { increment: coinsLose } },
+          select: { coins: true },
+        });
+
+        return { p1RatingDelta, p2RatingDelta, p1Coins: p1.coins, p2Coins: p2.coins };
+      });
+
+      // Hero mastery XP (non-critical, outside transaction)
+      await this._players.awardHeroXP(match.player1Id, match.player1HeroId, p1Outcome)
+        .catch((err) => this._logger.error(`Hero XP award failed for ${match.player1Id}: ${err}`));
+      await this._players.awardHeroXP(match.player2Id, match.player2HeroId, p2Outcome)
+        .catch((err) => this._logger.error(`Hero XP award failed for ${match.player2Id}: ${err}`));
+
+      // On-chain settlement for staked matches
+      if (match.stakeLevel > 0 && outcome !== MatchResult.Draw) {
+        try {
+          const winnerId = outcome === MatchResult.Player1Win ? match.player1Id : match.player2Id;
+          const winner = await this._prisma.player.findUnique({
+            where: { id: winnerId },
+            select: { walletAddress: true },
+          });
+          if (winner?.walletAddress) {
+            const totalStake = BigInt(match.stakeLevel) * 2n;
+            const txSig = await this._blockchain.settleMatch(match.matchId, winner.walletAddress, totalStake);
+            this._logger.log(`On-chain settlement: match=${match.matchId}, tx=${txSig}`);
+          }
+        } catch (err) {
+          this._logger.error(`On-chain settlement failed for match ${match.matchId}: ${err}`);
+        }
+      }
+
+      await this._removeCheckpoint(match.matchId);
+      this._cleanupMatch(match);
+      return { p1RatingDelta, p2RatingDelta, p1Coins, p2Coins };
+    } catch (err) {
+      this._logger.error(`_endMatch failed for ${match.matchId}: ${err}`);
+      this._cleanupMatch(match);
+      return zero;
+    } finally {
+      this._endingMatches.delete(match.matchId);
+    }
   }
 
-  private async _updatePlayerStats(match: ActiveMatch, outcome: MatchResult): Promise<{
-    p1RatingDelta: number; p2RatingDelta: number;
-  }> {
+  private async _updatePlayerStatsInTx(
+    tx: Prisma.TransactionClient,
+    match: ActiveMatch,
+    outcome: MatchResult,
+  ): Promise<{ p1RatingDelta: number; p2RatingDelta: number }> {
     const K = 32;
-    const p1 = await this._prisma.player.findUnique({ where: { id: match.player1Id } });
-    const p2 = await this._prisma.player.findUnique({ where: { id: match.player2Id } });
+    const p1 = await tx.player.findUnique({ where: { id: match.player1Id } });
+    const p2 = await tx.player.findUnique({ where: { id: match.player2Id } });
     if (!p1 || !p2) return { p1RatingDelta: 0, p2RatingDelta: 0 };
 
     const expected1 = 1 / (1 + Math.pow(10, (p2.rating - p1.rating) / 400));
@@ -546,10 +628,8 @@ export class MatchService {
 
     const newRating1 = Math.round(p1.rating + K * (score1 - expected1));
     const newRating2 = Math.round(p2.rating + K * (score2 - expected2));
-    const p1RatingDelta = newRating1 - p1.rating;
-    const p2RatingDelta = newRating2 - p2.rating;
 
-    await this._prisma.player.update({
+    await tx.player.update({
       where: { id: p1.id },
       data: {
         rating: newRating1,
@@ -558,7 +638,7 @@ export class MatchService {
         draws: { increment: score1 === 0.5 ? 1 : 0 },
       },
     });
-    await this._prisma.player.update({
+    await tx.player.update({
       where: { id: p2.id },
       data: {
         rating: newRating2,
@@ -568,7 +648,7 @@ export class MatchService {
       },
     });
 
-    return { p1RatingDelta, p2RatingDelta };
+    return { p1RatingDelta: newRating1 - p1.rating, p2RatingDelta: newRating2 - p2.rating };
   }
 
   // ── State Management ──
@@ -622,7 +702,7 @@ export class MatchService {
   private _buildMatchPayload(match: ActiveMatch, isPlayer1: boolean): MatchFoundPayload {
     return {
       matchId: match.matchId,
-      opponentName: isPlayer1 ? match.player2Id : match.player1Id,
+      opponentName: isPlayer1 ? match.player2Name : match.player1Name,
       opponentHeroId: isPlayer1 ? match.player2HeroId : match.player1HeroId,
       mapId: match.map.mapId,
       mapWidth: match.map.width,
@@ -659,10 +739,12 @@ export class MatchService {
       p2Eliminated: step.p2Eliminated,
       p1PickedUp: step.p1PickedUp,
       p2PickedUp: step.p2PickedUp,
+      p1Shielded: step.p1Shielded,
+      p2Shielded: step.p2Shielded,
     };
   }
 
-  // ── Game Data (hardcoded for MVP, should move to config) ──
+  // ── Game Data ──
 
   private _roundOutcomeToDb(r: RoundResult): 'PLAYER1_KILL' | 'PLAYER2_KILL' | 'MUTUAL_CANCEL' | 'NO_KILL' {
     switch (r) {
@@ -697,20 +779,107 @@ export class MatchService {
   }
 
   private _getHeroConfig(heroId: string): HeroConfig {
-    const heroes: Record<string, HeroConfig> = {
-      archer:    { heroId: 'archer',    heroName: 'Archer',    steps: 4, range: 8,  cooldown: 2, armor: 0, speed: 1, specialName: 'Ricochet' },
-      tank:      { heroId: 'tank',      heroName: 'Tank',      steps: 4, range: 4,  cooldown: 1, armor: 1, speed: 1, specialName: 'Push' },
-      shadow:    { heroId: 'shadow',    heroName: 'Shadow',    steps: 6, range: 3,  cooldown: 1, armor: 0, speed: 2, specialName: 'Blink' },
-      scout:     { heroId: 'scout',     heroName: 'Scout',     steps: 5, range: 5,  cooldown: 1, armor: 0, speed: 2, specialName: 'Scan' },
-      mage:      { heroId: 'mage',      heroName: 'Mage',      steps: 4, range: 6,  cooldown: 2, armor: 0, speed: 1, specialName: 'PhaseShot' },
-      demo:      { heroId: 'demo',      heroName: 'Demo',      steps: 4, range: 5,  cooldown: 2, armor: 0, speed: 1, specialName: 'Bomb' },
-      guardian:  { heroId: 'guardian',   heroName: 'Guardian',  steps: 4, range: 5,  cooldown: 2, armor: 1, speed: 1, specialName: 'Barrier' },
-      ghost:     { heroId: 'ghost',     heroName: 'Ghost',     steps: 5, range: 4,  cooldown: 1, armor: 0, speed: 1, specialName: 'Cloak' },
-      engineer:  { heroId: 'engineer',  heroName: 'Engineer',  steps: 4, range: 5,  cooldown: 2, armor: 0, speed: 1, specialName: 'Turret' },
-      berserker: { heroId: 'berserker', heroName: 'Berserker', steps: 6, range: 2,  cooldown: 0, armor: 0, speed: 1, specialName: 'Charge' },
-      hawk:      { heroId: 'hawk',      heroName: 'Hawk',      steps: 3, range: 10, cooldown: 3, armor: 0, speed: 1, specialName: 'Pierce' },
-      mirage:    { heroId: 'mirage',    heroName: 'Mirage',    steps: 5, range: 4,  cooldown: 1, armor: 0, speed: 1, specialName: 'Decoy' },
+    return getHeroConfig(heroId);
+  }
+
+  // ── Redis Checkpointing ──
+
+  // TODO: MatchSnapshot does not capture GridSystem mutations (destroyed walls,
+  // placed barriers/turrets, danger zones from shrink). After server restart,
+  // the grid resets to original state. To fix properly, GridSystem needs a
+  // serialize/restore interface. Low risk for now: crashes during active rounds
+  // are rare, and players reconnect to fresh planning phase.
+  private async _checkpointMatch(match: ActiveMatch): Promise<void> {
+    const snapshot: MatchSnapshot = {
+      matchId: match.matchId,
+      roomId: match.roomId,
+      player1Id: match.player1Id,
+      player2Id: match.player2Id,
+      player1Name: match.player1Name,
+      player2Name: match.player2Name,
+      player1HeroId: match.player1HeroId,
+      player2HeroId: match.player2HeroId,
+      map: match.map,
+      currentRound: match.currentRound,
+      roundResults: match.roundResults,
+      phase: match.phase,
+      stakeLevel: match.stakeLevel,
+      heroStates: match.resolver.getHeroStates(),
     };
-    return heroes[heroId] ?? heroes['archer'];
+    const key = MatchService.REDIS_KEY_PREFIX + match.matchId;
+    await this._redis.set(key, JSON.stringify(snapshot), MatchService.REDIS_TTL);
+  }
+
+  private async _removeCheckpoint(matchId: string): Promise<void> {
+    await this._redis.del(MatchService.REDIS_KEY_PREFIX + matchId);
+  }
+
+  private async _restoreMatchesFromRedis(): Promise<void> {
+    const keys = await this._redis.scanKeys(MatchService.REDIS_KEY_PREFIX + '*');
+    if (keys.length === 0) return;
+
+    this._logger.log(`Found ${keys.length} active match checkpoint(s) in Redis — restoring...`);
+    let restored = 0;
+
+    for (const key of keys) {
+      try {
+        const json = await this._redis.get(key);
+        if (!json) continue;
+
+        const snap: MatchSnapshot = JSON.parse(json);
+
+        // Verify match is still IN_PROGRESS in DB
+        const dbMatch = await this._prisma.match.findUnique({ where: { id: snap.matchId } });
+        if (!dbMatch || dbMatch.status !== 'IN_PROGRESS') {
+          await this._redis.del(key);
+          continue;
+        }
+
+        const p1Config = this._getHeroConfig(snap.player1HeroId);
+        const p2Config = this._getHeroConfig(snap.player2HeroId);
+        const resolver = new ActionResolverService(
+          snap.map, p1Config, p2Config,
+          snap.map.spawnPoints[0], snap.map.spawnFacings[0],
+          snap.map.spawnPoints[1], snap.map.spawnFacings[1],
+        );
+        resolver.restoreHeroStates(snap.heroStates.p1, snap.heroStates.p2);
+
+        const active: ActiveMatch = {
+          matchId: snap.matchId,
+          roomId: snap.roomId,
+          player1Id: snap.player1Id,
+          player2Id: snap.player2Id,
+          player1Name: snap.player1Name ?? 'Duelist',
+          player2Name: snap.player2Name ?? 'Duelist',
+          player1HeroId: snap.player1HeroId,
+          player2HeroId: snap.player2HeroId,
+          map: snap.map,
+          currentRound: snap.currentRound,
+          p1Commit: null,
+          p2Commit: null,
+          p1Reveal: null,
+          p2Reveal: null,
+          resolver,
+          roundResults: snap.roundResults,
+          disconnectTimers: new Map(),
+          phase: 'planning', // Reset to planning — players need to reconnect
+          isEnded: false,
+          revealTimer: null,
+          stakeLevel: snap.stakeLevel,
+        };
+
+        this._matches.set(snap.matchId, active);
+        this._playerMatches.set(snap.player1Id, active);
+        this._playerMatches.set(snap.player2Id, active);
+        restored++;
+      } catch (err) {
+        this._logger.error(`Failed to restore match from ${key}: ${err}`);
+        await this._redis.del(key);
+      }
+    }
+
+    if (restored > 0) {
+      this._logger.log(`Restored ${restored} active match(es) from Redis`);
+    }
   }
 }

@@ -49,6 +49,11 @@ namespace TacticalDuelist.Gameplay
         private Vector3 _currentLookAt;
         private float _currentDistance;
 
+        // Screen shake
+        private float _shakeTrauma;
+        private const float ShakeDecay = 3f;
+        private const float ShakeMaxOffset = 0.25f;
+
         #endregion
 
         #region Unity Lifecycle
@@ -76,7 +81,18 @@ namespace TacticalDuelist.Gameplay
             _currentLookAt = Vector3.Lerp(_currentLookAt, _targetLookAt, Time.deltaTime * _followSpeed);
             _currentDistance = Mathf.Lerp(_currentDistance, _targetDistance, Time.deltaTime * _zoomSpeed);
 
-            UpdateCameraTransform();
+            // Apply screen shake offset
+            var shakeOffset = Vector3.zero;
+            if (_shakeTrauma > 0f)
+            {
+                float shake = _shakeTrauma * _shakeTrauma; // quadratic falloff
+                float time = Time.unscaledTime * 25f;
+                shakeOffset.x = (Mathf.PerlinNoise(time, 0f) * 2f - 1f) * ShakeMaxOffset * shake;
+                shakeOffset.y = (Mathf.PerlinNoise(0f, time) * 2f - 1f) * ShakeMaxOffset * shake;
+                _shakeTrauma = Mathf.Max(0f, _shakeTrauma - ShakeDecay * Time.unscaledDeltaTime);
+            }
+
+            UpdateCameraTransform(shakeOffset);
         }
 
         #endregion
@@ -142,15 +158,25 @@ namespace TacticalDuelist.Gameplay
             _targetDistance = Mathf.Clamp(_targetDistance, _minDistance, _maxDistance);
         }
 
+        /// <summary>
+        /// Adds screen shake trauma (0-1). Decays over time with quadratic falloff.
+        /// Use ~0.3 for hits, ~0.5 for armor break, ~0.7 for eliminations.
+        /// </summary>
+        public void Shake(float trauma = 0.5f)
+        {
+            _shakeTrauma = Mathf.Clamp01(_shakeTrauma + trauma);
+        }
+
         #endregion
 
         #region Private Methods
 
-        private void UpdateCameraTransform()
+        private void UpdateCameraTransform(Vector3 shakeOffset = default)
         {
             var rotation = Quaternion.Euler(_pitchAngle, _yawAngle, 0f);
+            var lookAt = _currentLookAt + shakeOffset;
             var offset = rotation * (Vector3.back * _currentDistance);
-            transform.position = _currentLookAt + offset;
+            transform.position = lookAt + offset;
             transform.rotation = rotation;
         }
 

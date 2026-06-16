@@ -38,4 +38,16 @@ export class PlayerController {
   async getMatchHistory(@Request() req: { user: { playerId: string } }) {
     return this._players.getMatchHistory(req.user.playerId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('daily-reward-status')
+  async getDailyRewardStatus(@Request() req: { user: { playerId: string } }) {
+    return this._players.getDailyRewardStatus(req.user.playerId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('daily-reward')
+  async claimDailyReward(@Request() req: { user: { playerId: string } }) {
+    return this._players.claimDailyReward(req.user.playerId);
+  }
 }

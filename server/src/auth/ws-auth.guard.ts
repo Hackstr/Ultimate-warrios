@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 
 /**
  * Guard for WebSocket connections.
- * Validates JWT from handshake auth or query params.
+ * Validates JWT from handshake auth only (query params disabled for security).
  * Attaches playerId to socket.data for downstream handlers.
  */
 @Injectable()
@@ -16,9 +16,7 @@ export class WsAuthGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const client = context.switchToWs().getClient<Socket>();
-    const token =
-      client.handshake.auth?.token ??
-      client.handshake.query?.token;
+    const token = client.handshake.auth?.token;
 
     if (!token || typeof token !== 'string') {
       this._logger.warn(`WS auth failed: no token (${client.id})`);

@@ -21,8 +21,10 @@ model Player {
   draws         Int      @default(0)
   coins         Int      @default(0)
   unlockedHeroes String[] @default(["archer", "tank", "scout"])
-  battlePassXp  Int      @default(0)
-  walletAddress String?
+  battlePassXp    Int       @default(0)
+  lastDailyReward DateTime?
+  loginStreak     Int       @default(0)
+  walletAddress   String?
   walletChain   String?  // "solana" | "ton"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -36,6 +36,9 @@ namespace TacticalDuelist.UI.Toolkit
         [Header("Pre-Match")]
         [SerializeField] private VisualTreeAsset _preMatchTemplate;
 
+        [Header("Daily Reward")]
+        [SerializeField] private VisualTreeAsset _dailyRewardTemplate;
+
         [Header("Overlay Templates")]
         [SerializeField] private VisualTreeAsset _roundTransitionTemplate;
         [SerializeField] private VisualTreeAsset _revealTemplate;
@@ -64,6 +67,9 @@ namespace TacticalDuelist.UI.Toolkit
 
         // Pre-Match
         public PreMatchController PreMatch { get; private set; }
+
+        // Daily Reward
+        public DailyRewardController DailyReward { get; private set; }
 
         // Overlay controllers
         public RoundTransitionController RoundTransition { get; private set; }
@@ -100,6 +106,10 @@ namespace TacticalDuelist.UI.Toolkit
 
             // Pre-Match
             PreMatch = CreateScreen<PreMatchController>(_preMatchTemplate, "prematch");
+
+            // Daily Reward
+            if (_dailyRewardTemplate != null)
+                DailyReward = CreateScreen<DailyRewardController>(_dailyRewardTemplate, "daily-reward");
 
             // Meta screens
             Settings = CreateScreen<SettingsController>(_settingsTemplate, "settings");

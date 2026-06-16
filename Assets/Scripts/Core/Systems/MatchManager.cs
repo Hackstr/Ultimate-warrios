@@ -230,6 +230,12 @@ namespace TacticalDuelist.Core.Systems
                     EndMatch(MatchResult.Player2Win);
                     break;
                 case RoundResult.MutualCancel:
+                    if (CurrentRound >= MaxRounds)
+                    {
+                        // Both eliminated after max rounds — end match as draw
+                        EndMatch(MatchResult.Draw);
+                        return;
+                    }
                     // Both eliminated simultaneously — sudden death rematch
                     CurrentRound++;
                     CleanupBarriers();
@@ -240,6 +246,12 @@ namespace TacticalDuelist.Core.Systems
                     StartPlanningPhase();
                     break;
                 case RoundResult.NoKill:
+                    if (CurrentRound >= MaxRounds)
+                    {
+                        // No kill after max rounds — end match as draw
+                        EndMatch(MatchResult.Draw);
+                        return;
+                    }
                     CurrentRound++;
                     // Force shrink after MaxRounds even if EnableShrink is off
                     if (EnableShrink || CurrentRound > MaxRounds)

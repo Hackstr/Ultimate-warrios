@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -40,6 +41,11 @@ namespace TacticalDuelist.UI.Toolkit
         private int _maxSteps;
         private float _timeRemaining;
         private bool _timerActive;
+        private bool _tutorialMode;
+
+        // Tutorial overlay
+        private VisualElement _tutorialOverlay;
+        private Label _tutorialHintLabel;
 
         protected override void QueryElements()
         {
@@ -60,6 +66,9 @@ namespace TacticalDuelist.UI.Toolkit
             _btnWait = Root.Q<Button>("btn-wait");
             _btnSpecial = Root.Q<Button>("btn-special");
             _btnShield = Root.Q<Button>("btn-shield");
+
+            _tutorialOverlay = Root.Q("tutorial-overlay");
+            _tutorialHintLabel = Root.Q<Label>("tutorial-hint");
         }
 
         protected override void BindEvents()
@@ -95,7 +104,7 @@ namespace TacticalDuelist.UI.Toolkit
             _timerActive = true;
 
             if (_roundLabel != null)
-                _roundLabel.text = label ?? $"ROUND {round} — PLANNING";
+                _roundLabel.text = label ?? L.Get("round_label", round);
 
             base.Show();
             UpdateQueueDisplay();
@@ -260,7 +269,7 @@ namespace TacticalDuelist.UI.Toolkit
             SetButtonEnabled(_btnUndo, _queue.Count > 0);
 
             if (_btnConfirm != null)
-                _btnConfirm.text = _queue.Count >= _maxSteps ? "CONFIRM" : $"{_queue.Count}/{_maxSteps}";
+                _btnConfirm.text = _queue.Count >= _maxSteps ? L.Get("confirm") : $"{_queue.Count}/{_maxSteps}";
         }
 
         private static void SetButtonEnabled(Button btn, bool enabled)
@@ -325,15 +334,120 @@ namespace TacticalDuelist.UI.Toolkit
 
         private static string GetActionLabel(ActionType action) => action switch
         {
-            ActionType.Move => "MOVE",
-            ActionType.TurnLeft => "LEFT",
-            ActionType.TurnRight => "RIGHT",
-            ActionType.TurnAround => "180",
-            ActionType.Shoot => "SHOOT",
-            ActionType.Wait => "WAIT",
-            ActionType.Special => "SPEC",
-            ActionType.Shield => "SHLD",
+            ActionType.Move => L.Get("action_move"),
+            ActionType.TurnLeft => L.Get("action_left"),
+            ActionType.TurnRight => L.Get("action_right"),
+            ActionType.TurnAround => L.Get("action_180"),
+            ActionType.Shoot => L.Get("action_shoot"),
+            ActionType.Wait => L.Get("action_wait"),
+            ActionType.Special => L.Get("action_special"),
+            ActionType.Shield => L.Get("action_shield"),
             _ => "?"
         };
+
+        // ── Tutorial Mode ──
+
+        public void SetTutorialMode(bool enabled)
+        {
+            _tutorialMode = enabled;
+        }
+
+        /// <summary>
+        /// Highlights a single button and dims all other action buttons.
+        /// Pass null to clear highlights.
+        /// </summary>
+        public void SetTutorialHighlight(string buttonId, string hintText = null)
+        {
+            ClearTutorialHighlights();
+
+            if (string.IsNullOrEmpty(buttonId)) return;
+
+            var allButtons = new[] { _btnMove, _btnTurnLeft, _btnTurnRight, _btnTurnAround,
+                                     _btnShoot, _btnWait, _btnSpecial, _btnShield };
+
+            foreach (var btn in allButtons)
+            {
+                if (btn == null) continue;
+                if (btn.name == buttonId)
+                {
+                    btn.AddToClassList("tutorial-highlight");
+                    btn.SetEnabled(true);
+                    btn.RemoveFromClassList("btn--disabled");
+                }
+                else
+                {
+                    btn.AddToClassList("tutorial-dimmed");
+                    btn.SetEnabled(false);
+                }
+            }
+
+            // Show hint overlay
+            if (_tutorialOverlay != null && !string.IsNullOrEmpty(hintText))
+            {
+                _tutorialOverlay.style.display = DisplayStyle.Flex;
+                if (_tutorialHintLabel != null)
+                    _tutorialHintLabel.text = hintText;
+            }
+        }
+
+        /// <summary>
+        /// Highlights the confirm button for tutorial.
+        /// </summary>
+        public void SetTutorialConfirmHighlight(string hintText)
+        {
+            ClearTutorialHighlights();
+
+            var allButtons = new[] { _btnMove, _btnTurnLeft, _btnTurnRight, _btnTurnAround,
+                                     _btnShoot, _btnWait, _btnSpecial, _btnShield };
+
+            foreach (var btn in allButtons)
+            {
+                if (btn == null) continue;
+                btn.AddToClassList("tutorial-dimmed");
+                btn.SetEnabled(false);
+            }
+
+            if (_btnConfirm != null)
+            {
+                _btnConfirm.AddToClassList("tutorial-highlight");
+                _btnConfirm.SetEnabled(true);
+                _btnConfirm.RemoveFromClassList("btn--disabled");
+            }
+
+            if (_tutorialOverlay != null && !string.IsNullOrEmpty(hintText))
+            {
+                _tutorialOverlay.style.display = DisplayStyle.Flex;
+                if (_tutorialHintLabel != null)
+                    _tutorialHintLabel.text = hintText;
+            }
+        }
+
+        public void ClearTutorialHighlights()
+        {
+            var allButtons = new[] { _btnMove, _btnTurnLeft, _btnTurnRight, _btnTurnAround,
+                                     _btnShoot, _btnWait, _btnSpecial, _btnShield,
+                                     _btnConfirm, _btnUndo };
+            foreach (var btn in allButtons)
+            {
+                if (btn == null) continue;
+                btn.RemoveFromClassList("tutorial-highlight");
+                btn.RemoveFromClassList("tutorial-dimmed");
+            }
+
+            if (_tutorialOverlay != null)
+                _tutorialOverlay.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>
+        /// Auto-fills remaining action slots with Wait and updates display.
+        /// Used by tutorial to fill slots after the guided steps are done.
+        /// </summary>
+        public void AutoFillRemainingSlots()
+        {
+            while (_queue.Count < _maxSteps)
+                _queue.Add(ActionType.Wait);
+            UpdateQueueDisplay();
+            UpdateButtonStates();
+        }
     }
 }

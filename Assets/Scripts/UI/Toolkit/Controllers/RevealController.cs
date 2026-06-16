@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using TacticalDuelist.Core.Models;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -84,7 +85,7 @@ namespace TacticalDuelist.UI.Toolkit
             {
                 if (_executeLabel != null)
                 {
-                    _executeLabel.text = "EXECUTE!";
+                    _executeLabel.text = L.Get("execute");
                     _executeLabel.style.opacity = 1f;
                 }
                 _executeSent = true;
@@ -145,14 +146,14 @@ namespace TacticalDuelist.UI.Toolkit
 
         private static string ActionName(ActionType a) => a switch
         {
-            ActionType.Move => "MOVE",
-            ActionType.TurnLeft => "TURN L",
-            ActionType.TurnRight => "TURN R",
-            ActionType.TurnAround => "U-TURN",
-            ActionType.Shoot => "SHOOT",
-            ActionType.Wait => "WAIT",
-            ActionType.Special => "SPECIAL",
-            ActionType.Shield => "SHIELD",
+            ActionType.Move => L.Get("action_move"),
+            ActionType.TurnLeft => L.Get("action_turn_left"),
+            ActionType.TurnRight => L.Get("action_turn_right"),
+            ActionType.TurnAround => L.Get("action_uturn"),
+            ActionType.Shoot => L.Get("action_shoot"),
+            ActionType.Wait => L.Get("action_wait"),
+            ActionType.Special => L.Get("action_special_full"),
+            ActionType.Shield => L.Get("action_shield_full"),
             _ => "?"
         };
     }

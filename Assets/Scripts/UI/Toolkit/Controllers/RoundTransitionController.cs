@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using TacticalDuelist.Core.Models;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -43,10 +44,10 @@ namespace TacticalDuelist.UI.Toolkit
                 int nextRound = completedRound + 1;
                 string intensity = nextRound switch
                 {
-                    2 => "ROUND 2",
-                    3 => "ROUND 3 — HEATING UP",
-                    4 => "ROUND 4 — FINAL PUSH",
-                    _ => nextRound >= 5 ? $"ROUND {nextRound} — SUDDEN DEATH" : $"ROUND {nextRound}"
+                    2 => L.Get("round2"),
+                    3 => L.Get("round3"),
+                    4 => L.Get("round4"),
+                    _ => nextRound >= 5 ? L.Get("round_sudden", nextRound) : L.Get("round_n", nextRound)
                 };
                 _title.text = intensity;
             }
@@ -59,10 +60,10 @@ namespace TacticalDuelist.UI.Toolkit
 
                 _result.text = roundResult switch
                 {
-                    RoundResult.Player1Kill => "Player 1 eliminated!",
-                    RoundResult.Player2Kill => "Player 2 eliminated!",
-                    RoundResult.MutualCancel => "Mutual cancel!",
-                    _ => "No elimination"
+                    RoundResult.Player1Kill => L.Get("p1_eliminated"),
+                    RoundResult.Player2Kill => L.Get("p2_eliminated"),
+                    RoundResult.MutualCancel => L.Get("mutual_cancel"),
+                    _ => L.Get("no_elimination")
                 };
 
                 _result.AddToClassList(roundResult switch
@@ -159,14 +160,14 @@ namespace TacticalDuelist.UI.Toolkit
 
         private static string ActionShortName(ActionType a) => a switch
         {
-            ActionType.Move => "MOV",
-            ActionType.TurnLeft => "TL",
-            ActionType.TurnRight => "TR",
-            ActionType.TurnAround => "UT",
-            ActionType.Shoot => "SHT",
-            ActionType.Wait => "WAT",
-            ActionType.Special => "SPL",
-            ActionType.Shield => "SHL",
+            ActionType.Move => L.Get("action_short_move"),
+            ActionType.TurnLeft => L.Get("action_short_tl"),
+            ActionType.TurnRight => L.Get("action_short_tr"),
+            ActionType.TurnAround => L.Get("action_short_ut"),
+            ActionType.Shoot => L.Get("action_short_shoot"),
+            ActionType.Wait => L.Get("action_short_wait"),
+            ActionType.Special => L.Get("action_short_special"),
+            ActionType.Shield => L.Get("action_short_shield"),
             _ => "?"
         };
 
@@ -192,8 +193,8 @@ namespace TacticalDuelist.UI.Toolkit
                 int remaining = Mathf.CeilToInt(DURATION - _elapsed);
                 remaining = Mathf.Max(remaining, 0);
                 _countdown.text = remaining > 0
-                    ? $"Next round in {remaining}..."
-                    : "GO!";
+                    ? L.Get("next_round_in", remaining)
+                    : L.Get("go");
             }
 
             if (_elapsed >= DURATION)

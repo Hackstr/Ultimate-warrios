@@ -70,28 +70,20 @@ export class PlayerService {
   async awardHeroXP(playerId: string, heroId: string, outcome: 'win' | 'loss' | 'draw'): Promise<void> {
     const xpAmount = outcome === 'win' ? 30 : outcome === 'loss' ? 10 : 15;
     try {
-      await this._prisma.heroMastery.upsert({
+      // Single upsert that returns updated XP, then conditionally update level
+      const mastery = await this._prisma.heroMastery.upsert({
         where: { playerId_heroId: { playerId, heroId } },
         create: { playerId, heroId, xp: xpAmount, level: 1 },
-        update: {
-          xp: { increment: xpAmount },
-          level: { set: undefined }, // Will calculate below
-        },
+        update: { xp: { increment: xpAmount } },
       });
-      // Update level based on XP thresholds: 0-99 = L1, 100-249 = L2, 250-499 = L3, 500+ = L4
-      const mastery = await this._prisma.heroMastery.findUnique({
-        where: { playerId_heroId: { playerId, heroId } },
-      });
-      if (mastery) {
-        const newLevel = mastery.xp >= 500 ? 5 : mastery.xp >= 250 ? 4 : mastery.xp >= 100 ? 3 : mastery.xp >= 50 ? 2 : 1;
-        if (newLevel !== mastery.level) {
-          await this._prisma.heroMastery.update({
-            where: { id: mastery.id },
-            data: { level: newLevel },
-          });
-        }
+      const newLevel = mastery.xp >= 500 ? 5 : mastery.xp >= 250 ? 4 : mastery.xp >= 100 ? 3 : mastery.xp >= 50 ? 2 : 1;
+      if (newLevel !== mastery.level) {
+        await this._prisma.heroMastery.update({
+          where: { id: mastery.id },
+          data: { level: newLevel },
+        });
       }
-    } catch (err) {
+    } catch {
       // Non-critical — log and continue
     }
   }
@@ -147,6 +139,104 @@ export class PlayerService {
     return HERO_PRICES;
   }
 
+  // ── Daily Rewards ──
+
+  private static readonly DAILY_REWARDS = [25, 50, 75, 100, 150, 200, 300];
+
+  async getDailyRewardStatus(playerId: string): Promise<{
+    streak: number; canClaim: boolean; nextReward: number;
+  }> {
+    const player = await this._prisma.player.findUnique({
+      where: { id: playerId },
+      select: { lastDailyReward: true, loginStreak: true },
+    });
+    if (!player) throw new BadRequestException('Player not found');
+
+    const today = this._todayUtc();
+    const lastClaim = player.lastDailyReward ? this._dateToUtcDay(player.lastDailyReward) : null;
+    const claimedToday = lastClaim !== null && lastClaim.getTime() === today.getTime();
+    const isConsecutive = lastClaim !== null && lastClaim.getTime() === this._yesterdayUtc().getTime();
+    const nextStreak = claimedToday
+      ? player.loginStreak
+      : isConsecutive
+        ? (player.loginStreak % 7) + 1
+        : 1;
+
+    return {
+      streak: player.loginStreak,
+      canClaim: !claimedToday,
+      nextReward: PlayerService.DAILY_REWARDS[nextStreak - 1],
+    };
+  }
+
+  async claimDailyReward(playerId: string): Promise<{
+    coins: number; streak: number; reward: number; unlockedHero: string | null;
+  }> {
+    const player = await this._prisma.player.findUnique({
+      where: { id: playerId },
+      select: { lastDailyReward: true, loginStreak: true, coins: true, unlockedHeroes: true },
+    });
+    if (!player) throw new BadRequestException('Player not found');
+
+    const today = this._todayUtc();
+    const lastClaim = player.lastDailyReward ? this._dateToUtcDay(player.lastDailyReward) : null;
+
+    if (lastClaim !== null && lastClaim.getTime() === today.getTime()) {
+      return { coins: player.coins, streak: player.loginStreak, reward: 0, unlockedHero: null };
+    }
+
+    const isConsecutive = lastClaim !== null && lastClaim.getTime() === this._yesterdayUtc().getTime();
+    const newStreak = isConsecutive ? (player.loginStreak % 7) + 1 : 1;
+    const rewardAmount = PlayerService.DAILY_REWARDS[newStreak - 1];
+
+    // Day 7 bonus: unlock a random locked hero
+    let unlockedHero: string | null = null;
+    if (newStreak === 7) {
+      const allPaid = Object.keys(HERO_PRICES).filter((h) => HERO_PRICES[h] > 0);
+      const locked = allPaid.filter((h) => !player.unlockedHeroes.includes(h));
+      if (locked.length > 0) {
+        unlockedHero = locked[Math.floor(Math.random() * locked.length)];
+      }
+    }
+
+    const updateData: Record<string, unknown> = {
+      coins: { increment: rewardAmount },
+      lastDailyReward: new Date(),
+      loginStreak: newStreak,
+    };
+    if (unlockedHero) {
+      updateData.unlockedHeroes = { push: unlockedHero };
+    }
+
+    const updated = await this._prisma.player.update({
+      where: { id: playerId },
+      data: updateData,
+      select: { coins: true, loginStreak: true },
+    });
+
+    return {
+      coins: updated.coins,
+      streak: updated.loginStreak,
+      reward: rewardAmount,
+      unlockedHero,
+    };
+  }
+
+  private _todayUtc(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  }
+
+  private _yesterdayUtc(): Date {
+    const d = this._todayUtc();
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d;
+  }
+
+  private _dateToUtcDay(date: Date): Date {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  }
+
   /** Get recent match history for a player. */
   async getMatchHistory(playerId: string, limit = 20) {
     const matches = await this._prisma.match.findMany({
@@ -186,31 +276,18 @@ export class PlayerService {
   }
 
   private async _getFavoriteHero(playerId: string): Promise<string | null> {
-    // Find the hero this player used most across matches
-    const asP1 = await this._prisma.match.groupBy({
-      by: ['player1Hero'],
-      where: { player1Id: playerId, status: 'COMPLETED' },
-      _count: true,
-      orderBy: { _count: { player1Hero: 'desc' } },
-      take: 1,
-    });
-    const asP2 = await this._prisma.match.groupBy({
-      by: ['player2Hero'],
-      where: { player2Id: playerId, status: 'COMPLETED' },
-      _count: true,
-      orderBy: { _count: { player2Hero: 'desc' } },
-      take: 1,
-    });
-
-    const counts: Record<string, number> = {};
-    if (asP1.length > 0) counts[asP1[0].player1Hero] = (counts[asP1[0].player1Hero] ?? 0) + asP1[0]._count;
-    if (asP2.length > 0) counts[asP2[0].player2Hero] = (counts[asP2[0].player2Hero] ?? 0) + asP2[0]._count;
-
-    let best: string | null = null;
-    let bestCount = 0;
-    for (const [hero, count] of Object.entries(counts)) {
-      if (count > bestCount) { best = hero; bestCount = count; }
-    }
-    return best;
+    const result = await this._prisma.$queryRaw<{ hero: string; cnt: bigint }[]>`
+      SELECT hero, COUNT(*) as cnt FROM (
+        SELECT "player1Hero" AS hero FROM "Match"
+          WHERE "player1Id" = ${playerId} AND status = 'COMPLETED'
+        UNION ALL
+        SELECT "player2Hero" AS hero FROM "Match"
+          WHERE "player2Id" = ${playerId} AND status = 'COMPLETED'
+      ) AS heroes
+      GROUP BY hero
+      ORDER BY cnt DESC
+      LIMIT 1
+    `;
+    return result.length > 0 ? result[0].hero : null;
   }
 }

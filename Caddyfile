@@ -1,0 +1,24 @@
+# Tactical Duelist — Caddy reverse proxy
+# For domain with auto-SSL, replace :80 with your domain:
+#   tacticalduelist.example.com {
+
+:80 {
+	# WebGL static files (main site)
+	handle {
+		reverse_proxy webgl:80
+	}
+
+	# API + WebSocket
+	handle /socket.io/* {
+		reverse_proxy server:3000
+	}
+	handle /auth/* {
+		reverse_proxy server:3000
+	}
+	handle /player/* {
+		reverse_proxy server:3000
+	}
+	handle /blockchain/* {
+		reverse_proxy server:3000
+	}
+}

@@ -76,33 +76,59 @@ namespace TacticalDuelist.Gameplay
 
         public void SpawnShootVFX(Vector2Int from, Vector2Int to, float tileSize = 1f)
         {
-            if (_shootVFXPrefab == null) return;
             var pos = GridHelper.GridToWorld(from, tileSize) + Vector3.up * 0.5f;
             var lookAt = GridHelper.GridToWorld(to, tileSize) + Vector3.up * 0.5f;
-            var vfx = GetFromPool(_shootVFXPrefab);
-            vfx.transform.position = pos;
-            vfx.transform.LookAt(lookAt);
-            AutoReturn(vfx, _shootVFXPrefab, 1f);
+
+            // Muzzle flash (particle)
+            var flash = ParticleVFXFactory.CreateMuzzleFlash(new Color(1f, 0.8f, 0.3f));
+            flash.transform.position = pos;
+            flash.transform.LookAt(lookAt);
+            StartCoroutine(DestroyAfter(flash, 0.3f));
+
+            // Projectile trail (particle) moving toward target
+            var projectile = ParticleVFXFactory.CreateProjectileTrail(new Color(1f, 0.85f, 0.2f));
+            projectile.transform.position = pos;
+            projectile.transform.LookAt(lookAt);
+            float distance = Vector3.Distance(pos, lookAt);
+            float speed = 15f;
+            StartCoroutine(DestroyAfter(projectile, distance / speed + 0.3f));
         }
 
         public void SpawnHitVFX(Vector2Int pos, float tileSize = 1f)
         {
-            SpawnAt(_hitVFXPrefab, pos, tileSize, 1.5f);
+            var worldPos = GridHelper.GridToWorld(pos, tileSize) + Vector3.up * 0.5f;
+            var burst = ParticleVFXFactory.CreateBurst(new Color(1f, 0.6f, 0.2f), 0.3f, 15, 0.5f);
+            burst.transform.position = worldPos;
+            StartCoroutine(DestroyAfter(burst, 1f));
         }
 
         public void SpawnArmorBreakVFX(Vector2Int pos, float tileSize = 1f)
         {
-            SpawnAt(_armorBreakVFXPrefab, pos, tileSize, 1.5f);
+            var worldPos = GridHelper.GridToWorld(pos, tileSize) + Vector3.up * 0.5f;
+            // Blue sparks for armor + white flash
+            var sparks = ParticleVFXFactory.CreateBurst(new Color(0.3f, 0.6f, 1f), 0.5f, 25, 0.7f);
+            sparks.transform.position = worldPos;
+            StartCoroutine(DestroyAfter(sparks, 1.2f));
         }
 
         public void SpawnEliminationVFX(Vector2Int pos, float tileSize = 1f)
         {
-            SpawnAt(_eliminationVFXPrefab, pos, tileSize, 2f);
+            var worldPos = GridHelper.GridToWorld(pos, tileSize) + Vector3.up * 0.5f;
+            var burst = ParticleVFXFactory.CreateEliminationBurst(new Color(1f, 0.3f, 0.1f));
+            burst.transform.position = worldPos;
+            StartCoroutine(DestroyAfter(burst, 2f));
         }
 
         public void SpawnMutualCancelVFX(Vector2Int midpoint, float tileSize = 1f)
         {
-            SpawnAt(_mutualCancelVFXPrefab, midpoint, tileSize, 1.5f);
+            var worldPos = GridHelper.GridToWorld(midpoint, tileSize) + Vector3.up * 0.5f;
+            var burst = ParticleVFXFactory.CreateBurst(new Color(1f, 1f, 0.5f), 0.6f, 30, 0.8f);
+            burst.transform.position = worldPos;
+            // Add expanding ring for clash effect
+            var ring = ParticleVFXFactory.CreateExpandingRing(new Color(1f, 0.9f, 0.3f, 0.6f), 2f, 0.6f);
+            ring.transform.position = worldPos;
+            StartCoroutine(DestroyAfter(burst, 1.2f));
+            StartCoroutine(DestroyAfter(ring, 1f));
         }
 
         public void SpawnPickupVFX(Vector2Int pos, float tileSize = 1f)

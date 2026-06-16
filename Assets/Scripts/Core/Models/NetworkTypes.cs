@@ -67,6 +67,7 @@ namespace TacticalDuelist.Core.Models
         public SerializableVector2Int opponentSpawn;
         public int yourFacing;
         public int opponentFacing;
+        public int[][] gridData;
     }
 
     /// <summary>
@@ -77,6 +78,7 @@ namespace TacticalDuelist.Core.Models
     {
         public int roundNumber;
         public float timeLimit;
+        public SerializableVector2Int[] shrinkZone;
     }
 
     /// <summary>
@@ -143,6 +145,7 @@ namespace TacticalDuelist.Core.Models
         public bool opponentArmor;
         public bool hasCommitted;
         public float timeLimit;
+        public int[][] gridData;
     }
 
     /// <summary>
@@ -230,6 +233,27 @@ namespace TacticalDuelist.Core.Models
 
         public string p1PickedUp;
         public string p2PickedUp;
+    }
+
+    #endregion
+
+    #region Daily Rewards
+
+    [System.Serializable]
+    public class DailyRewardStatusResponse
+    {
+        public int streak;
+        public bool canClaim;
+        public int nextReward;
+    }
+
+    [System.Serializable]
+    public class DailyRewardClaimResponse
+    {
+        public int coins;
+        public int streak;
+        public int reward;
+        public string unlockedHero;
     }
 
     #endregion

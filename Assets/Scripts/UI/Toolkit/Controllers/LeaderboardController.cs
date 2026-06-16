@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -25,7 +26,7 @@ namespace TacticalDuelist.UI.Toolkit
 
             if (entries == null || entries.Count == 0)
             {
-                if (_statusLabel != null) _statusLabel.text = "No players yet";
+                if (_statusLabel != null) _statusLabel.text = L.Get("no_players");
                 return;
             }
 
@@ -97,7 +98,7 @@ namespace TacticalDuelist.UI.Toolkit
             if (_statusLabel != null)
             {
                 _statusLabel.style.display = DisplayStyle.Flex;
-                _statusLabel.text = "Loading...";
+                _statusLabel.text = L.Get("loading");
             }
         }
     }

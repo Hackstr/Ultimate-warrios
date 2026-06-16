@@ -643,3 +643,17 @@ Button:active {
 
 /* Force hide all scrollbar elements inside scrollview-hidden */
 .scrollview-hidden Scroller { display: none; width: 0; height: 0; }
+
+/* ── Tutorial highlights ── */
+.tutorial-dimmed {
+    opacity: 0.15;
+}
+
+.tutorial-highlight {
+    border-width: 4px;
+    border-color: #FFD933;
+    border-radius: 20px;
+    opacity: 1;
+    transition-property: border-color;
+    transition-duration: 0.3s;
+}

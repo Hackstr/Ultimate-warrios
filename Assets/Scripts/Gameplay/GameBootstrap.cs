@@ -2,6 +2,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UIElements;
 using TacticalDuelist.Core.Config;
+using TacticalDuelist.Core.Localization;
 using TacticalDuelist.UI.Toolkit;
 
 namespace TacticalDuelist.Gameplay
@@ -56,6 +57,7 @@ namespace TacticalDuelist.Gameplay
 
         private void Awake()
         {
+            L.Init();
             Debug.Log("[GameBootstrap] Starting runtime construction...");
 
             // Ensure PlatformBootstrap runs first

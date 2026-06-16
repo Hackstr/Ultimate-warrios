@@ -109,6 +109,7 @@ namespace TacticalDuelist.Gameplay
             if (_playbackCoroutine != null)
                 StopCoroutine(_playbackCoroutine);
 
+            if (_pendingResults.Count == 0) { _isPlaying = false; OnPlaybackComplete?.Invoke(); return; }
             var lastResult = _pendingResults[_pendingResults.Count - 1];
             ApplyFinalState(lastResult);
 
@@ -278,6 +279,7 @@ namespace TacticalDuelist.Gameplay
                     (step.P1EndPos.y + step.P2EndPos.y) / 2
                 );
                 VFXManager.Instance?.SpawnMutualCancelVFX(midpoint);
+                _cameraController?.Shake(0.4f);
                 yield return new WaitForSeconds(AdjustedTime(_hitDuration));
                 yield break;
             }
@@ -289,36 +291,38 @@ namespace TacticalDuelist.Gameplay
             if (step.P1ArmorBroken && _hero1View != null)
             {
                 VFXManager.Instance?.SpawnArmorBreakVFX(step.P1EndPos);
+                _cameraController?.Shake(0.35f);
                 c1 = StartCoroutine(_hero1View.AnimateArmorBreak(AdjustedTime(_hitDuration)));
             }
             else if (step.P1Eliminated && _hero1View != null)
             {
                 VFXManager.Instance?.SpawnEliminationVFX(step.P1EndPos);
-                if (_cameraController != null)
-                    _cameraController.PunchZoom(GridHelper.GridToWorld(step.P1EndPos));
+                _cameraController?.PunchZoom(GridHelper.GridToWorld(step.P1EndPos));
+                _cameraController?.Shake(0.7f);
                 c1 = StartCoroutine(_hero1View.AnimateElimination(AdjustedTime(_eliminationDuration)));
-            }
-            else if (step.P2Hit && _hero1View != null && !step.P1Eliminated && !step.P1ArmorBroken)
-            {
-                // P2's shot hit P1 but was handled above via armor/elim
             }
 
             // Player 2 takes damage
             if (step.P2ArmorBroken && _hero2View != null)
             {
                 VFXManager.Instance?.SpawnArmorBreakVFX(step.P2EndPos);
+                _cameraController?.Shake(0.35f);
                 c2 = StartCoroutine(_hero2View.AnimateArmorBreak(AdjustedTime(_hitDuration)));
             }
             else if (step.P2Eliminated && _hero2View != null)
             {
                 VFXManager.Instance?.SpawnEliminationVFX(step.P2EndPos);
-                if (_cameraController != null)
-                    _cameraController.PunchZoom(GridHelper.GridToWorld(step.P2EndPos));
+                _cameraController?.PunchZoom(GridHelper.GridToWorld(step.P2EndPos));
+                _cameraController?.Shake(0.7f);
                 c2 = StartCoroutine(_hero2View.AnimateElimination(AdjustedTime(_eliminationDuration)));
             }
 
             if (c1 != null) yield return c1;
             if (c2 != null) yield return c2;
+
+            // Hit pause on elimination — brief time freeze for dramatic effect
+            if (step.P1Eliminated || step.P2Eliminated)
+                yield return StartCoroutine(HitPause(0.1f));
         }
 
         private IEnumerator PlayPickups(StepResult step)
@@ -340,6 +344,17 @@ namespace TacticalDuelist.Gameplay
         private float AdjustedTime(float baseTime)
         {
             return baseTime / _playbackSpeed;
+        }
+
+        /// <summary>
+        /// Brief time freeze for dramatic impact moments.
+        /// Uses unscaled time so it works during the pause itself.
+        /// </summary>
+        private IEnumerator HitPause(float duration)
+        {
+            Time.timeScale = 0.05f;
+            yield return new WaitForSecondsRealtime(duration);
+            Time.timeScale = 1f;
         }
 
         private void UpdateCameraForStep(StepResult step)

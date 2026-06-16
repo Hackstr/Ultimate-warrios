@@ -78,6 +78,27 @@ export class ActionResolverService {
     return { p1: this._p1, p2: this._p2 };
   }
 
+  /** Restore hero states from a Redis checkpoint snapshot. */
+  restoreHeroStates(p1: HeroState, p2: HeroState): void {
+    this._restoreHero(this._p1, p1);
+    this._restoreHero(this._p2, p2);
+  }
+
+  private _restoreHero(target: HeroState, source: HeroState): void {
+    // Restore mutable fields only — keep target.config reference intact
+    target.position = { x: source.position.x, y: source.position.y };
+    target.facing = source.facing;
+    target.isAlive = source.isAlive;
+    target.hasArmor = source.hasArmor;
+    target.cooldownRemaining = source.cooldownRemaining;
+    target.specialUsedThisRound = source.specialUsedThisRound;
+    target.bonusSpeed = source.bonusSpeed;
+    target.bonusRange = source.bonusRange;
+    target.hasIntel = source.hasIntel;
+    target.isCloaked = source.isCloaked;
+    target.cloakStepsRemaining = source.cloakStepsRemaining;
+  }
+
   // ── Step Resolution ──
 
   private _resolveStep(stepIndex: number, p1Action: ActionType, p2Action: ActionType): StepResult {

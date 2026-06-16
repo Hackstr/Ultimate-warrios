@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using TacticalDuelist.Core.Config;
+using TacticalDuelist.Core.Localization;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
 using TacticalDuelist.Core.Utils;
@@ -74,6 +75,7 @@ namespace TacticalDuelist.Gameplay
         private SocketIOClient _socket;
         private bool _vsBot;
         private bool _isTutorial;
+        private TutorialMatchController _tutorialMatch;
 
         private HeroConfig _p1Hero;
         private HeroConfig _p2Hero;
@@ -104,14 +106,14 @@ namespace TacticalDuelist.Gameplay
 
         // Waiting timeout
         private float _waitingTimer;
-        private const float WaitingTimeoutSec = 90f;
 
         // Rejoin retry
         private int _rejoinAttempts;
         private float _rejoinTimer;
-        private const int MaxRejoinAttempts = 3;
-        private const float RejoinTimeoutSec = 5f;
         private bool _awaitingRejoinAck;
+
+        // Meta screens (Profile, Leaderboard, Settings, Wallet)
+        private MetaScreenController _metaScreens;
 
         #endregion
 
@@ -144,10 +146,10 @@ namespace TacticalDuelist.Gameplay
             if (_currentState == FlowState.WaitingForOpponent && !_offlineMode)
             {
                 _waitingTimer += Time.deltaTime;
-                if (_waitingTimer >= WaitingTimeoutSec)
+                if (_waitingTimer >= GameConstants.WaitingTimeoutSec)
                 {
                     Debug.LogWarning("[GameManager] WaitingForOpponent timed out");
-                    _ui.Toasts?.ShowToast("Opponent timed out", ToastType.Warning);
+                    _ui.Toasts?.ShowToast(L.Get("opponent_timed_out"), ToastType.Warning);
                     CleanupMatch();
                     TransitionTo(FlowState.MainMenu);
                 }
@@ -157,11 +159,11 @@ namespace TacticalDuelist.Gameplay
             if (_currentState == FlowState.Reconnecting && _awaitingRejoinAck)
             {
                 _rejoinTimer += Time.deltaTime;
-                if (_rejoinTimer >= RejoinTimeoutSec)
+                if (_rejoinTimer >= GameConstants.RejoinTimeoutSec)
                 {
-                    if (_rejoinAttempts < MaxRejoinAttempts)
+                    if (_rejoinAttempts < GameConstants.MaxRejoinAttempts)
                     {
-                        Debug.LogWarning($"[GameManager] Rejoin ack timeout — retry {_rejoinAttempts + 1}/{MaxRejoinAttempts}");
+                        Debug.LogWarning($"[GameManager] Rejoin ack timeout — retry {_rejoinAttempts + 1}/{GameConstants.MaxRejoinAttempts}");
                         SendRejoin();
                     }
                     else
@@ -343,6 +345,7 @@ namespace TacticalDuelist.Gameplay
             _isTutorial = true;
             _offlineMode = true;
             _vsBot = true;
+            _tutorialMatch = new TutorialMatchController();
 
             // Pick Archer for player, Tank for tutorial bot
             var heroes = _ui.HeroSelect?.GetHeroes();
@@ -355,6 +358,9 @@ namespace TacticalDuelist.Gameplay
 
         private void EnterMainMenu()
         {
+            // Lazily create MetaScreenController with current preview refs
+            _metaScreens = new MetaScreenController(_ui, GetServerUrl, ReturnToMainMenu, _heroPreview, _heroSelectPreview);
+
             _ui.HideAll();
             _ui.HideHUD();
             _heroPreview?.SetVisible(true); // Show MainMenu 3D preview
@@ -376,192 +382,107 @@ namespace TacticalDuelist.Gameplay
                 _ui.MainMenu.OnPlayBot -= StartBotGame;
                 _ui.MainMenu.OnPlayBot += StartBotGame;
 
-                // Nav bar
-                _ui.MainMenu.OnNavHeroes -= ShowHeroesCollection;
-                _ui.MainMenu.OnNavHeroes += ShowHeroesCollection;
-                _ui.MainMenu.OnNavRank -= ShowLeaderboard;
-                _ui.MainMenu.OnNavRank += ShowLeaderboard;
-                _ui.MainMenu.OnNavSettings -= ShowSettings;
-                _ui.MainMenu.OnNavSettings += ShowSettings;
+                // Nav bar — delegate to MetaScreenController
+                _ui.MainMenu.OnNavHeroes -= _metaScreens.ShowHeroesCollection;
+                _ui.MainMenu.OnNavHeroes += _metaScreens.ShowHeroesCollection;
+                _ui.MainMenu.OnNavRank -= _metaScreens.ShowLeaderboard;
+                _ui.MainMenu.OnNavRank += _metaScreens.ShowLeaderboard;
+                _ui.MainMenu.OnNavSettings -= _metaScreens.ShowSettings;
+                _ui.MainMenu.OnNavSettings += _metaScreens.ShowSettings;
 
                 // Player name tap → Profile
-                _ui.MainMenu.OnNavProfile -= ShowProfile;
-                _ui.MainMenu.OnNavProfile += ShowProfile;
+                _ui.MainMenu.OnNavProfile -= _metaScreens.ShowProfile;
+                _ui.MainMenu.OnNavProfile += _metaScreens.ShowProfile;
 
                 // Wallet
-                _ui.MainMenu.OnConnectWallet -= HandleConnectWallet;
-                _ui.MainMenu.OnConnectWallet += HandleConnectWallet;
-                UpdateWalletUI();
+                _ui.MainMenu.OnConnectWallet -= _metaScreens.HandleConnectWallet;
+                _ui.MainMenu.OnConnectWallet += _metaScreens.HandleConnectWallet;
+                _metaScreens.UpdateWalletUI();
             }
 
             // Wire back buttons for meta screens
-            WireMetaScreenBack(_ui.Settings);
-            WireMetaScreenBack(_ui.Leaderboard);
-            WireMetaScreenBack(_ui.Profile);
-            if (_ui.HeroesCollection != null)
-            {
-                _ui.HeroesCollection.OnBack -= ReturnToMainMenu;
-                _ui.HeroesCollection.OnBack += ReturnToMainMenu;
-            }
+            _metaScreens.WireMetaScreenBack(_ui.Settings);
+            _metaScreens.WireMetaScreenBack(_ui.Leaderboard);
+            _metaScreens.WireMetaScreenBack(_ui.Profile);
+            _metaScreens.WireHeroesCollectionBack();
+
+            // Check daily reward (online only)
+            CheckDailyReward(); // CheckDailyReward already has try-catch internally
         }
 
-        private void WireMetaScreenBack(UI.Toolkit.BackableScreenController screen)
+        private async void CheckDailyReward()
         {
-            if (screen == null) return;
-            screen.OnBack -= ReturnToMainMenu;
-            screen.OnBack += ReturnToMainMenu;
-        }
-
-        private void ShowHeroesCollection()
-        {
-            _heroPreview?.SetVisible(false);
-            _heroSelectPreview?.SetVisible(false);
-            if (_ui.HeroesCollection != null)
-                _ui.ShowScreen(_ui.HeroesCollection);
-        }
-
-        private void ShowSettings()
-        {
-            _heroPreview?.SetVisible(false);
-            if (_ui.Settings != null)
-                _ui.ShowScreen(_ui.Settings);
-        }
-
-        private async void ShowLeaderboard()
-        {
-            _heroPreview?.SetVisible(false);
-            if (_ui.Leaderboard == null) return;
-
-            _ui.Leaderboard.SetLoading();
-            _ui.ShowScreen(_ui.Leaderboard);
-
             try
             {
+                var auth = ServiceLocator.Get<IPlatformAuth>();
+                if (auth == null) return;
+                var token = await auth.Authenticate();
+                if (string.IsNullOrEmpty(token)) return;
+
                 var url = GetServerUrl();
-                using var req = UnityEngine.Networking.UnityWebRequest.Get($"{url}/player/leaderboard");
+                using var req = UnityEngine.Networking.UnityWebRequest.Get($"{url}/player/daily-reward-status");
+                req.SetRequestHeader("Authorization", $"Bearer {token}");
                 await req.SendWebRequest().ToUniTask();
 
-                if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-                {
-                    // Server returns array directly
-                    var json = $"{{\"items\":{req.downloadHandler.text}}}";
-                    var response = JsonUtility.FromJson<LeaderboardResponse>(json);
-                    var list = new System.Collections.Generic.List<LeaderboardEntry>();
-                    if (response?.items != null)
-                        list.AddRange(response.items);
-                    _ui.Leaderboard.SetData(list);
-                }
-                else
-                {
-                    _ui.Leaderboard.SetData(null);
-                }
+                if (req.result != UnityEngine.Networking.UnityWebRequest.Result.Success) return;
+
+                var status = JsonUtility.FromJson<DailyRewardStatusResponse>(req.downloadHandler.text);
+                if (status == null || !status.canClaim) return;
+                if (_ui.DailyReward == null) return;
+
+                _ui.DailyReward.SetData(status.streak, status.canClaim, status.nextReward);
+                _ui.DailyReward.OnClaimed -= HandleClaimDailyReward;
+                _ui.DailyReward.OnClaimed += HandleClaimDailyReward;
+                _ui.DailyReward.OnDismissed -= HandleDismissDailyReward;
+                _ui.DailyReward.OnDismissed += HandleDismissDailyReward;
+                _ui.ShowScreen(_ui.DailyReward);
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning($"[GameManager] Leaderboard fetch error: {ex.Message}");
-                _ui.Leaderboard.SetData(null);
+                Debug.LogWarning($"[GameManager] Daily reward check failed: {ex.Message}");
             }
         }
 
-        private async void HandleConnectWallet()
+        private async void HandleClaimDailyReward()
         {
-            var blockchain = ServiceLocator.Get<IBlockchainService>();
-            if (blockchain == null)
-            {
-                _ui.Toasts?.ShowToast("Blockchain not available", ToastType.Warning);
-                return;
-            }
-
-            if (blockchain.IsConnected)
-            {
-                blockchain.DisconnectWallet();
-                UpdateWalletUI();
-                _ui.Toasts?.ShowToast("Wallet disconnected", ToastType.Info);
-                return;
-            }
-
-            try
-            {
-                _ui.Toasts?.ShowToast("Connecting wallet...", ToastType.Info);
-                var address = await blockchain.ConnectWallet();
-                if (!string.IsNullOrEmpty(address))
-                {
-                    UpdateWalletUI();
-                    _ui.Toasts?.ShowToast($"Connected: {address[..6]}...", ToastType.Success);
-
-                    // Save to server
-                    try
-                    {
-                        var auth = ServiceLocator.Get<IPlatformAuth>();
-                        var token = await auth.Authenticate();
-                        if (!string.IsNullOrEmpty(token))
-                        {
-                            var url = GetServerUrl();
-                            var body = $"{{\"walletAddress\":\"{address}\"}}";
-                            using var req = new UnityEngine.Networking.UnityWebRequest($"{url}/blockchain/connect-wallet", "POST");
-                            req.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(body));
-                            req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
-                            req.SetRequestHeader("Content-Type", "application/json");
-                            req.SetRequestHeader("Authorization", $"Bearer {token}");
-                            await req.SendWebRequest().ToUniTask();
-                        }
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Debug.LogWarning($"[GameManager] Failed to save wallet to server: {ex.Message}");
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                _ui.Toasts?.ShowToast($"Wallet error: {ex.Message}", ToastType.Error);
-            }
-        }
-
-        private void UpdateWalletUI()
-        {
-            var blockchain = ServiceLocator.Get<IBlockchainService>();
-            if (_ui.MainMenu != null && blockchain != null)
-                _ui.MainMenu.SetWalletStatus(blockchain.IsConnected, blockchain.WalletAddress);
-        }
-
-        private async void ShowProfile()
-        {
-            if (_ui.Profile == null) return;
-
-            // Show screen immediately with placeholder
-            _ui.Profile.SetOfflineProfile("Loading...", 0, 0);
-            _ui.ShowScreen(_ui.Profile);
-
-            // Try to fetch from server
             try
             {
                 var auth = ServiceLocator.Get<IPlatformAuth>();
                 var token = await auth.Authenticate();
-                if (!string.IsNullOrEmpty(token))
-                {
-                    var url = GetServerUrl();
-                    using var req = UnityEngine.Networking.UnityWebRequest.Get($"{url}/player/me");
-                    req.SetRequestHeader("Authorization", $"Bearer {token}");
-                    await req.SendWebRequest().ToUniTask();
+                if (string.IsNullOrEmpty(token)) return;
 
-                    if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-                    {
-                        var response = JsonUtility.FromJson<ServerProfileResponse>(req.downloadHandler.text);
-                        _ui.Profile.SetProfile(response.ToProfileData());
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[GameManager] Profile fetch failed: {req.error}");
-                    }
+                var url = GetServerUrl();
+                using var req = new UnityEngine.Networking.UnityWebRequest($"{url}/player/daily-reward", "POST");
+                req.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
+                req.SetRequestHeader("Content-Type", "application/json");
+                req.SetRequestHeader("Authorization", $"Bearer {token}");
+                await req.SendWebRequest().ToUniTask();
+
+                if (req.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                {
+                    var result = JsonUtility.FromJson<DailyRewardClaimResponse>(req.downloadHandler.text);
+                    _ui.DailyReward?.ShowClaimResult(result.reward, result.unlockedHero);
+                    _ui.Toasts?.ShowToast(L.Get("plus_coins", result.reward), ToastType.Success);
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.LogWarning($"[GameManager] Profile fetch error: {ex.Message}");
-                // Keep offline placeholder
+                Debug.LogWarning($"[GameManager] Daily reward claim failed: {ex.Message}");
             }
         }
+
+        private void HandleDismissDailyReward()
+        {
+            if (_ui.DailyReward != null)
+            {
+                _ui.DailyReward.OnClaimed -= HandleClaimDailyReward;
+                _ui.DailyReward.OnDismissed -= HandleDismissDailyReward;
+            }
+            TransitionTo(FlowState.MainMenu);
+        }
+
+        // Meta screen methods (Profile, Leaderboard, Settings, Wallet, HeroesCollection)
+        // are handled by MetaScreenController — see _metaScreens field.
 
         private async void HandlePlayOnline()
         {
@@ -569,7 +490,7 @@ namespace TacticalDuelist.Gameplay
             if (_ui.Matchmaking != null)
             {
                 _ui.ShowScreen(_ui.Matchmaking);
-                _ui.Matchmaking.SetStatus("CONNECTING TO SERVER...");
+                _ui.Matchmaking.SetStatus(L.Get("connecting"));
             }
 
             try
@@ -580,7 +501,7 @@ namespace TacticalDuelist.Gameplay
                 if (string.IsNullOrEmpty(token))
                 {
                     Debug.LogError("[GameManager] Authentication failed — empty token");
-                    _ui.Matchmaking?.SetStatus("AUTH FAILED. Open via Telegram.");
+                    _ui.Matchmaking?.SetStatus(L.Get("auth_failed"));
                     await UniTask.Delay(2000);
                     TransitionTo(FlowState.MainMenu);
                     return;
@@ -597,7 +518,7 @@ namespace TacticalDuelist.Gameplay
             catch (System.Exception ex)
             {
                 Debug.LogError($"[GameManager] Online connection failed: {ex.Message}");
-                _ui.Matchmaking?.SetStatus("CONNECTION FAILED");
+                _ui.Matchmaking?.SetStatus(L.Get("connection_failed"));
                 await UniTask.Delay(2000);
                 TransitionTo(FlowState.MainMenu);
             }
@@ -714,7 +635,7 @@ namespace TacticalDuelist.Gameplay
             if (_ui.Planning != null)
             {
                 string label = _isTutorial
-                    ? "TUTORIAL — Plan your moves!"
+                    ? L.Get("tut_planning")
                     : $"Player 1 --- {_p1Hero.displayName}";
 
                 _ui.Planning.Show(_p1Hero, _matchManager.CurrentRound, label);
@@ -722,7 +643,9 @@ namespace TacticalDuelist.Gameplay
                 if (_isTutorial)
                 {
                     _ui.Planning.DisableTimer();
-                    _ui.Toasts?.ShowToast("Tap MOVE, SHOOT, or other actions below!", ToastType.Info);
+                    _ui.Planning.SetTutorialMode(true);
+                    _tutorialMatch?.SetRound(_matchManager.CurrentRound);
+                    ApplyTutorialStep();
                 }
 
                 _ui.ShowScreen(_ui.Planning);
@@ -731,6 +654,13 @@ namespace TacticalDuelist.Gameplay
             _gridView?.ClearPathPreview();
             SubscribePlanning();
             SubscribePathPreview();
+
+            // Subscribe to ActionQueued for tutorial step advancement
+            if (_isTutorial)
+            {
+                GameEvents.OnActionQueued -= HandleTutorialActionQueued;
+                GameEvents.OnActionQueued += HandleTutorialActionQueued;
+            }
         }
 
         private void EnterPlanningP2()
@@ -815,6 +745,9 @@ namespace TacticalDuelist.Gameplay
             var result = GetMatchResult();
             int p1Wins = CountWins(true);
             int p2Wins = CountWins(false);
+
+            // Play correct end music based on local player perspective
+            AudioManager.Instance?.PlayMatchEndMusic(result == MatchResult.Player1Win);
 
             SubscribeResult();
 
@@ -905,8 +838,9 @@ namespace TacticalDuelist.Gameplay
         {
             if (_isTutorial)
             {
-                var tutorialActions = TutorialBotAI.GetActions(_p2Hero.steps);
-                Debug.Log($"[TutorialBot] Generated: {string.Join(", ", tutorialActions)}");
+                int round = _matchManager?.CurrentRound ?? 1;
+                var tutorialActions = TutorialBotAI.GetActions(_p2Hero.steps, round);
+                Debug.Log($"[TutorialBot] Round {round}: {string.Join(", ", tutorialActions)}");
                 return tutorialActions;
             }
 
@@ -973,6 +907,10 @@ namespace TacticalDuelist.Gameplay
         private void HandleOfflinePlaybackComplete()
         {
             var phase = _matchManager.CurrentPhase;
+
+            // Show tutorial feedback after each round
+            if (_isTutorial && _roundResults.Count > 0)
+                ShowTutorialFeedback(_roundResults[_roundResults.Count - 1]);
 
             if (phase == GamePhase.PostMatch)
                 TransitionTo(FlowState.MatchResult);
@@ -1185,7 +1123,7 @@ namespace TacticalDuelist.Gameplay
             _rejoinTimer = 0f;
             _awaitingRejoinAck = true;
             _networkController?.Rejoin();
-            _ui.Reconnecting?.SetAttempt(_rejoinAttempts, MaxRejoinAttempts);
+            _ui.Reconnecting?.SetAttempt(_rejoinAttempts, GameConstants.MaxRejoinAttempts);
         }
 
         private void HandleSocketReconnectFailed(string error)
@@ -1212,7 +1150,7 @@ namespace TacticalDuelist.Gameplay
             if (!msg.success)
             {
                 Debug.LogWarning($"[GameManager] Rejoin failed: {msg.error}");
-                _ui.Toasts?.ShowToast("Match expired", ToastType.Error);
+                _ui.Toasts?.ShowToast(L.Get("match_expired"), ToastType.Error);
                 CleanupMatch();
                 TransitionTo(FlowState.MainMenu);
                 return;
@@ -1265,13 +1203,13 @@ namespace TacticalDuelist.Gameplay
         private void HandleOpponentDisconnected(OpponentDisconnectedMessage msg)
         {
             Debug.Log($"[GameManager] Opponent disconnected (grace: {msg.gracePeriod}s)");
-            _ui.Toasts?.ShowToast("Opponent disconnected...", ToastType.Warning);
+            _ui.Toasts?.ShowToast(L.Get("opponent_disconnected"), ToastType.Warning);
         }
 
         private void HandleOpponentReconnectedNet()
         {
             Debug.Log("[GameManager] Opponent reconnected");
-            _ui.Toasts?.ShowToast("Opponent reconnected!", ToastType.Info);
+            _ui.Toasts?.ShowToast(L.Get("opponent_reconnected"), ToastType.Info);
         }
 
         private void EnterReconnecting()
@@ -1281,7 +1219,7 @@ namespace TacticalDuelist.Gameplay
 
             if (_ui.Reconnecting != null)
             {
-                _ui.Reconnecting.SetAttempt(1, 5);
+                _ui.Reconnecting.SetAttempt(1, GameConstants.ReconnectMaxAttempts);
                 _ui.Reconnecting.OnCancelReconnect -= HandleCancelReconnect;
                 _ui.Reconnecting.OnCancelReconnect += HandleCancelReconnect;
                 _ui.ShowScreen(_ui.Reconnecting);
@@ -1329,6 +1267,9 @@ namespace TacticalDuelist.Gameplay
             if (_ui.Planning == null) return;
             _ui.Planning.OnActionsConfirmed -= HandleActionsConfirmed;
             _ui.Planning.OnPassDeviceContinue -= HandlePassDeviceContinue;
+            _ui.Planning.ClearTutorialHighlights();
+            _ui.Planning.SetTutorialMode(false);
+            GameEvents.OnActionQueued -= HandleTutorialActionQueued;
             UnsubscribePathPreview();
             _gridView?.ClearPathPreview();
         }
@@ -1594,6 +1535,44 @@ namespace TacticalDuelist.Gameplay
 
         #endregion
 
+        #region Tutorial Helpers
+
+        private void HandleTutorialActionQueued(int slot, ActionType action)
+        {
+            if (_tutorialMatch == null) return;
+
+            _tutorialMatch.OnActionAdded(action);
+
+            if (_tutorialMatch.IsRoundScriptComplete)
+            {
+                // Auto-fill remaining slots with Wait, then highlight Confirm
+                _ui.Planning?.AutoFillRemainingSlots();
+                _ui.Planning?.SetTutorialConfirmHighlight(L.Get("tut_confirm"));
+                GameEvents.OnActionQueued -= HandleTutorialActionQueued;
+            }
+            else
+            {
+                ApplyTutorialStep();
+            }
+        }
+
+        private void ApplyTutorialStep()
+        {
+            var step = _tutorialMatch?.CurrentStep;
+            if (step == null) return;
+
+            _ui.Planning?.SetTutorialHighlight(step.ButtonId, step.HintText);
+        }
+
+        private void ShowTutorialFeedback(RoundResult result)
+        {
+            if (_tutorialMatch == null) return;
+            var feedback = _tutorialMatch.GetPostRoundFeedback(result);
+            _ui.Toasts?.ShowToast(feedback, ToastType.Info);
+        }
+
+        #endregion
+
         #region Helpers
 
         private string GetServerUrl()
@@ -1608,6 +1587,7 @@ namespace TacticalDuelist.Gameplay
         private void CleanupMatch()
         {
             _matchManager = null;
+            _tutorialMatch = null;
             _p1Hero = null;
             _p2Hero = null;
             _p1Actions = null;

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -43,7 +44,7 @@ namespace TacticalDuelist.UI.Toolkit
         {
             _dotFrame = 0;
             _dotTimer = 0f;
-            SetTitle("CONNECTION LOST");
+            SetTitle(L.Get("connection_lost"));
         }
 
         public void SetTitle(string title)
@@ -56,16 +57,16 @@ namespace TacticalDuelist.UI.Toolkit
             _currentAttempt = current;
             _maxAttempts = max;
             if (_attemptText != null)
-                _attemptText.text = $"Reconnecting... Attempt {current} of {max}";
+                _attemptText.text = L.Get("reconnecting", current, max);
         }
 
         public void SetFailed()
         {
-            SetTitle("RECONNECTION FAILED");
+            SetTitle(L.Get("reconnect_failed"));
             if (_attemptText != null)
-                _attemptText.text = "Could not reach server";
+                _attemptText.text = L.Get("cannot_reach");
             if (_infoText != null)
-                _infoText.text = "Your match may have been forfeited";
+                _infoText.text = L.Get("match_forfeited");
         }
 
         public override void Tick(float dt)

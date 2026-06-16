@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -43,7 +44,7 @@ namespace TacticalDuelist.UI.Toolkit
             if (_loadingLabel != null)
             {
                 int dots = ((int)(_elapsed * 3f)) % 4;
-                _loadingLabel.text = "LOADING" + new string('.', dots);
+                _loadingLabel.text = L.Get("loading") + new string('.', dots);
             }
 
             if (_elapsed >= SPLASH_DURATION)

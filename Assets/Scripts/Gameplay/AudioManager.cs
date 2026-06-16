@@ -338,6 +338,17 @@ namespace TacticalDuelist.Gameplay
         public void PlayVictoryMusic() => PlayMusic(victoryMusic);
         public void PlayDefeatMusic() => PlayMusic(defeatMusic);
 
+        /// <summary>
+        /// Called by GameManager after determining the local player's result.
+        /// </summary>
+        public void PlayMatchEndMusic(bool isVictory)
+        {
+            if (isVictory)
+                PlayVictoryMusic();
+            else
+                PlayDefeatMusic();
+        }
+
         #endregion
 
         #region Event Handlers
@@ -410,9 +421,8 @@ namespace TacticalDuelist.Gameplay
 
         private void HandleMatchEnded(MatchResult result)
         {
-            // TODO: determine which player is local to decide victory vs defeat.
-            // For now, play victory music. Override from GameManager if needed.
-            PlayVictoryMusic();
+            // Music is now handled by GameManager via PlayMatchEndMusic(),
+            // which knows whether the local player won or lost.
         }
 
         private void HandlePhaseChanged(GamePhase phase)

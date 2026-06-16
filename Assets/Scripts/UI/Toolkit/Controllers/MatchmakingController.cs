@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -40,7 +41,7 @@ namespace TacticalDuelist.UI.Toolkit
             _elapsed = 0f;
             _dotFrame = 0;
             _dotTimer = 0f;
-            SetStatus("FINDING OPPONENT");
+            SetStatus(L.Get("finding_opponent"));
         }
 
         public void SetStatus(string status)

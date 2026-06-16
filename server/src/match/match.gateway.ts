@@ -9,6 +9,7 @@ import {
   WsException,
 } from '@nestjs/websockets';
 import { UseGuards, UsePipes, ValidationPipe, Logger } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { Server, Socket } from 'socket.io';
 import { WsAuthGuard } from '../auth/ws-auth.guard';
 import { MatchService } from './match.service';
@@ -19,9 +20,16 @@ import {
   RoundCommitDto,
   RoundRevealDto,
 } from '../shared/models/dto';
+import { VALID_HERO_IDS } from '../shared/config/hero-configs';
 
+@SkipThrottle()
 @WebSocketGateway({
-  cors: { origin: '*' },
+  cors: {
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+      : '*',
+    credentials: true,
+  },
   transports: ['websocket', 'polling'],
 })
 export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -98,6 +106,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const playerId = client.data.playerId as string;
     this._registerSocket(client, playerId);
+
+    if (!VALID_HERO_IDS.includes(data.heroId)) {
+      throw new WsException(`Invalid heroId: "${data.heroId}"`);
+    }
 
     const rating = await this._getPlayerRating(playerId);
     const paired = await this._matchmaking.addToQueue(playerId, data.heroId, rating);
@@ -254,17 +266,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleSurrender(@ConnectedSocket() client: Socket) {
     const playerId = client.data.playerId as string;
     try {
+      // Get roomId BEFORE surrender (surrender cleans up match state)
+      const roomId = this._matchService.getRoomId(playerId);
       const result = await this._matchService.surrender(playerId);
-      if (result) {
-        const roomId = this._matchService.getRoomId(playerId);
-        if (roomId) {
-          this.server.to(roomId).emit('match:end', {
-            winner: result.winner,
-          });
-        }
+      if (result && roomId) {
+        this.server.to(roomId).emit('match:end', { winner: result.winner });
       }
+      client.emit('match:surrender:ack', { success: !!result });
     } catch (err) {
       this._logger.error(`Surrender failed for ${playerId}`, err);
+      client.emit('match:surrender:ack', { success: false, error: 'Surrender failed' });
     }
   }
 

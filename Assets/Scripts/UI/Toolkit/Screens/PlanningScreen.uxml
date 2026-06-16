@@ -98,5 +98,13 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!-- Tutorial Hint Overlay -->
+        <ui:VisualElement name="tutorial-overlay" style="display: none; position: absolute; bottom: 440px; left: 0; right: 0; align-items: center;">
+            <ui:VisualElement style="background-color: rgba(255, 107, 53, 0.95); border-radius: 24px; padding: 20px 40px; max-width: 600px;">
+                <ui:Label name="tutorial-hint" text="" style="font-size: 34px; color: white; -unity-text-align: middle-center; -unity-font-style: bold;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="width: 0; height: 0; border-left-width: 16px; border-right-width: 16px; border-top-width: 16px; border-left-color: transparent; border-right-color: transparent; border-top-color: rgba(255, 107, 53, 0.95);" />
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>

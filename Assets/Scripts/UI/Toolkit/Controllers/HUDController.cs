@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
 using TacticalDuelist.Core.Systems;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -129,7 +130,7 @@ namespace TacticalDuelist.UI.Toolkit
 
         private void HandleRoundStarted(int round)
         {
-            if (_roundText != null) _roundText.text = $"Round {round}";
+            if (_roundText != null) _roundText.text = L.Get("round_n", round);
             _currentStep = 0;
             _totalSteps = 4; // default, updated per hero
             if (_stepText != null) _stepText.text = "";
@@ -142,10 +143,10 @@ namespace TacticalDuelist.UI.Toolkit
             if (_phaseText != null)
                 _phaseText.text = phase switch
                 {
-                    GamePhase.Planning => "PLANNING",
-                    GamePhase.Execution => "EXECUTING",
-                    GamePhase.PostRound => "ROUND END",
-                    GamePhase.PostMatch => "MATCH END",
+                    GamePhase.Planning => L.Get("planning"),
+                    GamePhase.Execution => L.Get("executing"),
+                    GamePhase.PostRound => L.Get("round_end"),
+                    GamePhase.PostMatch => L.Get("match_end"),
                     _ => ""
                 };
 
@@ -161,21 +162,21 @@ namespace TacticalDuelist.UI.Toolkit
         {
             _currentStep++;
             if (_stepText != null)
-                _stepText.text = $"Step {_currentStep}/{_totalSteps}";
+                _stepText.text = L.Get("step_of", _currentStep, _totalSteps);
 
             // Combat feedback text
             if (result.MutualCancel)
-                ShowCombatText("BLOCKED!", new Color(1f, 0.85f, 0.2f));
+                ShowCombatText(L.Get("blocked"), new Color(1f, 0.85f, 0.2f));
             else if (result.P1Eliminated)
-                ShowCombatText("ELIMINATED!", new Color(0.85f, 0.2f, 0.2f));
+                ShowCombatText(L.Get("eliminated"), new Color(0.85f, 0.2f, 0.2f));
             else if (result.P2Eliminated)
-                ShowCombatText("ELIMINATED!", new Color(0.2f, 0.85f, 0.4f));
+                ShowCombatText(L.Get("eliminated"), new Color(0.2f, 0.85f, 0.4f));
             else if (result.P1Hit || result.P2Hit)
-                ShowCombatText("HIT!", new Color(1f, 0.42f, 0.21f));
+                ShowCombatText(L.Get("hit"), new Color(1f, 0.42f, 0.21f));
             else if (result.P1ArmorBroken || result.P2ArmorBroken)
-                ShowCombatText("ARMOR BREAK!", new Color(0.25f, 0.45f, 0.95f));
+                ShowCombatText(L.Get("armor_break"), new Color(0.25f, 0.45f, 0.95f));
             else if (result.P1Fired || result.P2Fired)
-                ShowCombatText("MISS", new Color(0.6f, 0.6f, 0.69f));
+                ShowCombatText(L.Get("miss"), new Color(0.6f, 0.6f, 0.69f));
         }
 
         public void ShowCombatText(string text, Color color)

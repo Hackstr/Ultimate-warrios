@@ -2,6 +2,7 @@ using System;
 using UnityEngine.UIElements;
 using TacticalDuelist.Core.Config;
 using TacticalDuelist.Core.Models;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -92,22 +93,22 @@ namespace TacticalDuelist.UI.Toolkit
             switch (result)
             {
                 case MatchResult.Player1Win:
-                    _resultTitle.text = "VICTORY";
+                    _resultTitle.text = L.Get("victory");
                     _resultTitle.AddToClassList("text-green");
                     if (_resultSubtitle != null)
-                        _resultSubtitle.text = p1Hero != null ? p1Hero.displayName + " wins!" : "";
+                        _resultSubtitle.text = p1Hero != null ? L.Get("hero_wins", p1Hero.displayName) : "";
                     break;
                 case MatchResult.Player2Win:
-                    _resultTitle.text = "DEFEAT";
+                    _resultTitle.text = L.Get("defeat");
                     _resultTitle.AddToClassList("text-red");
                     if (_resultSubtitle != null)
-                        _resultSubtitle.text = p2Hero != null ? p2Hero.displayName + " wins!" : "";
+                        _resultSubtitle.text = p2Hero != null ? L.Get("hero_wins", p2Hero.displayName) : "";
                     break;
                 case MatchResult.Draw:
-                    _resultTitle.text = "DRAW";
+                    _resultTitle.text = L.Get("draw");
                     _resultTitle.AddToClassList("text-gold");
                     if (_resultSubtitle != null)
-                        _resultSubtitle.text = "Neither duelist prevailed";
+                        _resultSubtitle.text = L.Get("draw_subtitle");
                     break;
             }
         }
@@ -162,10 +163,10 @@ namespace TacticalDuelist.UI.Toolkit
 
         private static string FormatRoundResult(int round, RoundResult result) => result switch
         {
-            RoundResult.Player1Kill => $"Round {round}: P1 Kill",
-            RoundResult.Player2Kill => $"Round {round}: P2 Kill",
-            RoundResult.MutualCancel => $"Round {round}: Mutual Cancel",
-            RoundResult.NoKill => $"Round {round}: No Kill",
+            RoundResult.Player1Kill => L.Get("round_p1_kill", round),
+            RoundResult.Player2Kill => L.Get("round_p2_kill", round),
+            RoundResult.MutualCancel => L.Get("round_mutual_cancel", round),
+            RoundResult.NoKill => L.Get("round_no_kill", round),
             _ => $"Round {round}: ---"
         };
 
@@ -193,7 +194,7 @@ namespace TacticalDuelist.UI.Toolkit
             _rewardsContainer.style.display = DisplayStyle.Flex;
 
             // ELO delta
-            var eloLabel = new Label(ratingDelta >= 0 ? $"+{ratingDelta} ELO" : $"{ratingDelta} ELO");
+            var eloLabel = new Label(ratingDelta >= 0 ? L.Get("elo_plus", ratingDelta) : L.Get("elo_minus", ratingDelta));
             eloLabel.style.fontSize = 39;
             eloLabel.style.unityFontStyleAndWeight = UnityEngine.FontStyle.Bold;
             eloLabel.style.color = ratingDelta >= 0
@@ -204,7 +205,7 @@ namespace TacticalDuelist.UI.Toolkit
             // Coins
             if (coinsEarned > 0)
             {
-                var coinsLabel = new Label($"+{coinsEarned} coins");
+                var coinsLabel = new Label(L.Get("coins_earned", coinsEarned));
                 coinsLabel.style.marginLeft = 44;
                 coinsLabel.style.fontSize = 39;
                 coinsLabel.style.unityFontStyleAndWeight = UnityEngine.FontStyle.Bold;

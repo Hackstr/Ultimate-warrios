@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using TacticalDuelist.Core.Localization;
 
 namespace TacticalDuelist.UI.Toolkit
 {
@@ -10,9 +11,11 @@ namespace TacticalDuelist.UI.Toolkit
         private Button _btnMusic;
         private Button _btnSfx;
         private Button _btnVibration;
+        private Button _btnLanguage;
         private Label _musicValue;
         private Label _sfxValue;
         private Label _vibrationValue;
+        private Label _languageValue;
 
         private bool _musicOn;
         private bool _sfxOn;
@@ -24,9 +27,11 @@ namespace TacticalDuelist.UI.Toolkit
             _btnMusic = Root.Q<Button>("btn-music");
             _btnSfx = Root.Q<Button>("btn-sfx");
             _btnVibration = Root.Q<Button>("btn-vibration");
+            _btnLanguage = Root.Q<Button>("btn-language");
             _musicValue = Root.Q<Label>("music-value");
             _sfxValue = Root.Q<Label>("sfx-value");
             _vibrationValue = Root.Q<Label>("vibration-value");
+            _languageValue = Root.Q<Label>("language-value");
         }
 
         protected override void BindEvents()
@@ -35,6 +40,7 @@ namespace TacticalDuelist.UI.Toolkit
             _btnMusic?.RegisterCallback<ClickEvent>(HandleToggleMusic);
             _btnSfx?.RegisterCallback<ClickEvent>(HandleToggleSfx);
             _btnVibration?.RegisterCallback<ClickEvent>(HandleToggleVibration);
+            _btnLanguage?.RegisterCallback<ClickEvent>(HandleCycleLanguage);
         }
 
         protected override void UnbindEvents()
@@ -43,6 +49,7 @@ namespace TacticalDuelist.UI.Toolkit
             _btnMusic?.UnregisterCallback<ClickEvent>(HandleToggleMusic);
             _btnSfx?.UnregisterCallback<ClickEvent>(HandleToggleSfx);
             _btnVibration?.UnregisterCallback<ClickEvent>(HandleToggleVibration);
+            _btnLanguage?.UnregisterCallback<ClickEvent>(HandleCycleLanguage);
         }
 
         protected override void OnShow()
@@ -86,17 +93,34 @@ namespace TacticalDuelist.UI.Toolkit
             UpdateToggles();
         }
 
+        private void HandleCycleLanguage(ClickEvent _)
+        {
+            var langs = L.GetAvailableLanguages();
+            int idx = System.Array.IndexOf(langs, L.CurrentLanguage);
+            int next = (idx + 1) % langs.Length;
+            L.SetLanguage(langs[next]);
+            UpdateToggles();
+        }
+
         private void UpdateToggles()
         {
             SetToggleLabel(_musicValue, _musicOn);
             SetToggleLabel(_sfxValue, _sfxOn);
             SetToggleLabel(_vibrationValue, _vibrationOn);
+            UpdateLanguageLabel();
+        }
+
+        private void UpdateLanguageLabel()
+        {
+            if (_languageValue == null) return;
+            _languageValue.text = L.GetLanguageName(L.CurrentLanguage);
+            _languageValue.style.color = new StyleColor(new Color(1f, 0.42f, 0.21f));
         }
 
         private static void SetToggleLabel(Label label, bool on)
         {
             if (label == null) return;
-            label.text = on ? "ON" : "OFF";
+            label.text = on ? L.Get("on") : L.Get("off");
             label.style.color = on
                 ? new StyleColor(new Color(1f, 0.42f, 0.21f))
                 : new StyleColor(new Color(0.6f, 0.6f, 0.69f));

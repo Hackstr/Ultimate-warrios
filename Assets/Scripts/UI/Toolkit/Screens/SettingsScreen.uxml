@@ -41,6 +41,17 @@
                 </ui:Button>
             </ui:VisualElement>
 
+            <!-- Language -->
+            <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
+                <ui:Label text="LANGUAGE" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
+                <ui:Button name="btn-language" style="background-color: rgba(0,0,0,0); border-width: 0; padding: 8px 0;">
+                    <ui:VisualElement class="row justify-between w-full">
+                        <ui:Label text="Language" style="font-size: 30px; color: #EAEAF4;" />
+                        <ui:Label name="language-value" text="English" style="font-size: 28px; color: #FF6B35; -unity-font-style: bold;" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
             <!-- Account -->
             <ui:VisualElement style="border-radius: 24px; background-color: #1A1A28; padding: 20px 24px; margin-bottom: 12px;">
                 <ui:Label text="ACCOUNT" style="font-size: 20px; color: #9898B0; -unity-font-style: bold; letter-spacing: 4px; margin-bottom: 16px;" />
@@ -52,7 +63,7 @@
 
             <!-- Version -->
             <ui:VisualElement class="row" style="justify-content: center; margin-top: 16px;">
-                <ui:Label text="v0.5.0" style="font-size: 24px; color: rgba(152,152,176,0.4);" />
+                <ui:Label text="v0.6.0" style="font-size: 24px; color: rgba(152,152,176,0.4);" />
             </ui:VisualElement>
 
         </ui:VisualElement>
