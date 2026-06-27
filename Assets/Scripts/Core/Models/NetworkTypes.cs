@@ -257,4 +257,27 @@ namespace TacticalDuelist.Core.Models
     }
 
     #endregion
+
+    #region Match History
+
+    [System.Serializable]
+    public class MatchHistoryEntry
+    {
+        public string matchId;
+        public bool isPlayer1;
+        public string yourHero;
+        public string opponentHero;
+        public string opponentName;
+        public string result;
+        public string mapId;
+        public string date;
+    }
+
+    [System.Serializable]
+    public class MatchHistoryResponse
+    {
+        public MatchHistoryEntry[] items;
+    }
+
+    #endregion
 }

@@ -208,5 +208,10 @@
 {"key":"wallet_disconnected","value":"Кошелёк отключён"},
 {"key":"connecting_wallet","value":"Подключение кошелька..."},
 {"key":"wallet_connected","value":"Подключён: {0}..."},
-{"key":"wallet_error","value":"Ошибка кошелька: {0}"}
+{"key":"wallet_error","value":"Ошибка кошелька: {0}"},
+{"key":"match_history","value":"ИСТОРИЯ МАТЧЕЙ"},
+{"key":"result_win","value":"ПОБЕДА"},
+{"key":"result_loss","value":"ПОРАЖЕНИЕ"},
+{"key":"result_draw","value":"НИЧЬЯ"},
+{"key":"no_matches","value":"Матчей пока нет"}
 ]}

@@ -66,6 +66,19 @@ namespace TacticalDuelist.UI.Toolkit
                             : new StyleColor(new Color(0.6f, 0.6f, 0.69f));
                 row.Add(rankLabel);
 
+                // Rank tier dot
+                var rankColor = ProfileController.GetRankColor(entry.rating);
+                var rankDot = new VisualElement();
+                rankDot.style.width = 16;
+                rankDot.style.height = 16;
+                rankDot.style.borderTopLeftRadius = 8;
+                rankDot.style.borderTopRightRadius = 8;
+                rankDot.style.borderBottomLeftRadius = 8;
+                rankDot.style.borderBottomRightRadius = 8;
+                rankDot.style.backgroundColor = rankColor;
+                rankDot.style.marginRight = 8;
+                row.Add(rankDot);
+
                 // Name
                 var nameLabel = new Label(entry.displayName ?? "Duelist");
                 nameLabel.style.fontSize = 28;

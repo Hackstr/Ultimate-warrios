@@ -1,248 +1,144 @@
-# LOBBY.GG — Design System
+# Tactical Duelist — Design System
 
-Единая дизайн-система для всех продуктов LOBBY.GG (основная платформа, админка компьютерных клубов и т.д.).
-
----
-
-## Бренд
-
-- Акцентный цвет: **Acid Lime** `#CDFE00`
-- Эстетика: тёмный, киберспортивный, чистый, минималистичный
-- Дефолтная тема: **Dark**
-- Поддержка тем: Dark + Light через CSS-переменные и атрибут `data-theme` на `<html>`
+> Источник: `Assets/Scripts/UI/Toolkit/Styles/tokens.uss`
+> Референс: 1080×1920 HD (PanelSettings)
 
 ---
 
-## Цвета
+## Цветовая палитра
 
-### Dark Theme (дефолт)
+### Фоны
+| Token | Hex | Использование |
+|-------|-----|---------------|
+| --color-bg | `#0F0F1A` | Основной фон |
+| --color-bg-panel | `#1A1A28` | Панели, карточки, секции |
+| --color-bg-secondary | `#14142A` | Вторичный фон |
+| --color-bg-card | `#1E1E3A` | Карточки, модалки |
 
-| Токен | Переменная | Значение | Назначение |
-|-------|-----------|----------|------------|
-| Accent | `--lime` | `#CDFE00` | Акцент, кнопки, подсветка |
-| Accent Dim | `--lime-dim` | `#9BBF00` | Приглушённый акцент |
-| Accent Glow | `--lime-glow` | `rgba(205,254,0,0.15)` | Свечение вокруг элементов |
-| Accent Glow Strong | `--lime-glow-strong` | `rgba(205,254,0,0.3)` | Сильное свечение (CTA) |
-| BG Primary | `--bg-primary` | `#0A0A0A` | Фон страницы |
-| BG Secondary | `--bg-secondary` | `#111111` | Фон секций |
-| BG Card | `--bg-card` | `#161616` | Фон карточек |
-| BG Card Hover | `--bg-card-hover` | `#1C1C1C` | Ховер карточек |
-| BG Nav | `--bg-nav` | `rgba(10,10,10,0.8)` | Навбар (с blur) |
-| Border | `--border-color` | `#222222` | Границы, разделители |
-| Border Hover | `--border-hover` | `#333333` | Границы при ховере |
-| Text Primary | `--text-primary` | `#FFFFFF` | Заголовки, основной текст |
-| Text Secondary | `--text-secondary` | `#888888` | Описания |
-| Text Muted | `--text-muted` | `#555555` | Подписи, лейблы |
+### Акценты
+| Token | Hex | Использование |
+|-------|-----|---------------|
+| --color-primary | `#FF6B35` | Кнопки, ссылки, активные элементы |
+| --color-secondary | `#4073F3` | Player 2, информационные |
+| --color-accent-gold | `#FFD933` | Награды, золото, premium |
 
-### Light Theme
+### Текст
+| Token | Hex | Использование |
+|-------|-----|---------------|
+| --color-text-primary | `#EAEAF4` | Основной текст |
+| --color-text-secondary | `#9898B0` | Вторичный, описания |
+| --color-text-muted | `rgba(152,152,176,0.4)` | Disabled, версия |
 
-| Токен | Переменная | Значение |
-|-------|-----------|----------|
-| Accent | `--lime` | `#A8D600` |
-| BG Primary | `--bg-primary` | `#FAFAFA` |
-| BG Secondary | `--bg-secondary` | `#F0F0F0` |
-| BG Card | `--bg-card` | `#FFFFFF` |
-| BG Card Hover | `--bg-card-hover` | `#F5F5F5` |
-| BG Nav | `--bg-nav` | `rgba(250,250,250,0.85)` |
-| Border | `--border-color` | `#E0E0E0` |
-| Border Hover | `--border-hover` | `#CCCCCC` |
-| Text Primary | `--text-primary` | `#0A0A0A` |
-| Text Secondary | `--text-secondary` | `#666666` |
-| Text Muted | `--text-muted` | `#999999` |
+### Ранги
+| Ранг | Цвет | ELO |
+|------|------|-----|
+| Bronze | `#CD7F32` | < 1000 |
+| Silver | `#C0C0C0` | 1000-1199 |
+| Gold | `#FFD700` | 1200-1399 |
+| Platinum | `#00CED1` | 1400-1599 |
+| Diamond | `#B9F2FF` | 1600-1799 |
+| Master | `#9B59B6` | 1800-1999 |
+| Grandmaster | `#FF4444` | 2000+ |
 
-**Правила Light-темы:**
-- Кнопки: **чёрный фон `#0A0A0A` + белый текст** — НЕ lime
-- Бейджи/лейблы: **чёрный фон + белый текст** — НЕ lime
-- Hover-состояния: чёрные бордеры — НЕ lime
-- Акцентный текст: lime-градиент `linear-gradient(135deg, #CDFE00, #A8D600)` с `background-clip: text`
-- Никакого оливкового/мутного зелёного (#6B8C00) — выглядит грязно на светлом
-
-### Семантические цвета (обе темы)
-
-| Цвет | Значение | Назначение |
-|------|----------|------------|
-| Destructive / Error | `#EF4444` | Ошибки, удаление |
-| Success | `#10B981` | Успех, позитивные состояния |
-| Info | `#3B82F6` | Информация |
-| Warning | `#F59E0B` | Предупреждения |
-
-### Цветовая кодировка данных
-
-- Хорошо (win rate > 55%, K/D > 1.2): `#10B981` (зелёный)
-- Средне: `#F59E0B` (жёлтый)
-- Плохо (win rate < 45%, K/D < 0.8): `#EF4444` (красный)
+### Результаты
+| Статус | Цвет |
+|--------|------|
+| Win / Success | `#33CC66` |
+| Loss / Error | `#FF4444` |
+| Draw / Warning | `#FFD933` |
 
 ---
 
 ## Типографика
 
-### Шрифты
-
-| Шрифт | CSS-класс | Назначение | Веса |
-|-------|-----------|------------|------|
-| **Space Grotesk** | `font-heading` | Заголовки, кнопки, жирный UI-текст | 400, 500, 600, 700 |
-| **JetBrains Mono** | `font-mono` / `font-sans` (дефолт body) | Основной текст, данные, моноширинные элементы | 300–800 |
-
-Подключение:
-```
-https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap
-```
-
-### Масштаб
-
-| Элемент | Размер | Вес | Доп. |
-|---------|--------|-----|------|
-| H1 | `3rem` (48px) | 700 | `letter-spacing: -0.02em` |
-| H2 | `2.25rem` (36px) | 600 | |
-| H3 | `1.75rem` (28px) | 600 | |
-| H4–H6 | по убыванию | 600 | `letter-spacing: -0.01em` |
-| Body | `1rem` (16px) | 400 | `line-height: 1.7` |
-| Small / Labels | `0.75rem` (12px) | 500 | `text-transform: uppercase; letter-spacing: 0.08em` |
+| Класс | Шрифт | Размер | Использование |
+|-------|-------|--------|---------------|
+| `.font-display` | Lilita One | 48-96px | Заголовки экранов, VICTORY/DEFEAT |
+| body | Inter | 26-32px | Основной текст |
+| small | Inter | 20-24px | Подписи, секции |
+| nano | Inter | 16-18px | Версия, мелкие данные |
 
 ---
 
-## Пространство и радиусы
+## Spacing Scale
 
-### Border Radius
-
-| Элемент | Значение | Tailwind |
-|---------|----------|----------|
-| Карточки | 16px | `rounded-2xl` |
-| Кнопки | pill / 9999px | `rounded-full` |
-| Инпуты | 12px | `rounded-xl` |
-| Бейджи | pill | `rounded-full` |
-| Иконки-контейнеры | 12px | `rounded-xl` |
-| Базовый `--radius` | 12px (0.75rem) | — |
-
-### Отступы
-
-| Элемент | Padding |
-|---------|---------|
-| Карточки | `p-7` (28px) |
-| Кнопки (default) | `px-6 py-2.5`, высота `h-11` |
-| Кнопки (lg) | `px-8`, высота `h-12` |
-| Кнопки (sm) | `px-4`, высота `h-9` |
-| Инпуты | `px-4 py-2.5`, высота `h-11` |
-| Страница | `px-10` (40px горизонтально) |
+| Token | Значение |
+|-------|----------|
+| --sp-xs | 8px |
+| --sp-sm | 16px |
+| --sp-md | 24px |
+| --sp-lg | 32px |
+| --sp-xl | 48px |
 
 ---
 
-## Тени и эффекты
+## Компоненты (USS классы)
 
-- **Dark theme**: минимум теней, акцент на бордерах + glow-эффекты
-  - CTA glow: `box-shadow: 0 0 40px rgba(205, 254, 0, 0.3)`
-  - Иконки: обёртка с `background: var(--lime-glow)` (rgba 15%)
-- **Light theme**: `shadow-sm` дефолт, `shadow-lg` на ховере
-- **Навбар**: `backdrop-filter: blur(12px)` + полупрозрачный фон
+### Кнопки
+- `.btn` — базовый стиль (height: 80px, border-radius: 16px)
+- `.btn--primary` — оранжевый фон (#FF6B35), белый текст
+- `.btn--secondary` — прозрачный, оранжевая рамка
+- `.btn--tab` — таб в navigation (rounded pill)
+- `.btn--ghost` — прозрачный, только текст
+- `.btn--disabled` — opacity 0.4, no pointer events
 
----
+### Карточки
+- `.panel` — фон #1A1A28, border-radius 24px, padding 20px 24px
+- `.card` — фон #1E1E3A, border-radius 32px
+- `.hero-card` — 220×155px, панель героя в коллекции
 
-## Компоненты
+### Layout
+- `.row` — flex-direction: row
+- `.col` — flex-direction: column
+- `.center` — align-items + justify-content: center
+- `.flex-1` — flex-grow: 1
+- `.w-full` — width: 100%
 
-### Button
+### Action Buttons (Planning)
+- `.action-btn` — 120×100px, border-radius 16px
+- `.action-btn--move` — зелёный акцент
+- `.action-btn--turn` — синий акцент
+- `.action-btn--shoot` — красный акцент
+- `.action-btn--wait` — серый
+- `.action-btn--shield` — голубой
+- `.action-btn--special` — золотой
 
-Варианты:
-| Вариант | Стиль |
-|---------|-------|
-| `default` | Lime фон `var(--lime)`, чёрный текст `#0A0A0A`. Hover: `#b8e500` |
-| `destructive` | Красный фон `#EF4444`, белый текст |
-| `outline` | Прозрачный, бордер `var(--border-color)`, текст `var(--text-primary)` |
-| `secondary` | Фон `var(--bg-secondary)`, текст `var(--text-primary)` |
-| `ghost` | Прозрачный, текст `var(--text-primary)`. Hover: фон `var(--bg-secondary)` |
-| `link` | Текст `var(--lime)`, подчёркивание при ховере |
+### Overlays
+- `.overlay` — absolute, полный экран, чёрный 85% opacity
+- `.overlay--visible` — display: flex
 
-Размеры: `default` (h-11), `sm` (h-9), `lg` (h-12), `icon` (h-11 w-11)
+### Tutorial
+- `.tutorial-dimmed` — opacity: 0.15
+- `.tutorial-highlight` — золотая рамка 4px, border-color: #FFD933
 
-Форма: `rounded-full` (pill). Шрифт: `font-heading` (Space Grotesk).
-
-### Card
-
-- Фон: `var(--bg-card)`, бордер: `var(--border-color)`, радиус: `rounded-2xl`
-- Hover: `shadow-lg`, transition 300ms
-- Паддинг: `p-7`
-- Заголовок секции внутри карточки: uppercase, 11px, `letter-spacing: 0.08em`, с иконкой
-
-### Badge
-
-- Форма: `rounded-full`, padding `px-3 py-1`, размер текста `text-xs`
-- `default`: lime фон, чёрный текст
-- `secondary`: `var(--bg-secondary)` фон
-- `outline`: бордер `var(--border-color)`
-- `destructive`: красный фон, белый текст
-
-### Input
-
-- Высота: `h-11`, радиус: `rounded-xl`, бордер: `2px solid var(--border-color)`
-- Фокус: бордер `#CDFE00` + ring `rgba(205,254,0,0.2)`
-- Плейсхолдер: `var(--text-muted)`
-
-### Skeleton (Loading)
-
-- `animate-pulse`, `rounded-md`, фон `primary/10`
+### Toast
+- `.toast` — плавающее уведомление
+- `.toast--success` — зелёная полоса
+- `.toast--error` — красная полоса
+- `.toast--warning` — жёлтая полоса
+- `.toast--info` — синяя полоса
 
 ---
 
-## Иконки
+## Экраны (18)
 
-- Библиотека: **lucide-react** — единственная разрешённая
-- Размеры: `w-4 h-4` (в кнопках), `w-5 h-5` (обычные), `w-6 h-6` (feature cards)
-- Цвет: через `style={{ color: 'var(--lime)' }}` или `var(--text-secondary)`
-- Контейнер: `w-12 h-12 rounded-xl bg-[var(--lime-glow)] flex items-center justify-center`
-- **Нельзя**: emoji в UI, другие icon-библиотеки
-
----
-
-## Тема — реализация
-
-```html
-<!-- В index.html ДО React — предотвращает flash -->
-<script>
-  (function(){
-    var t = localStorage.getItem('lobby-theme');
-    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
-  })();
-</script>
-```
-
-- Хранение: `localStorage` ключ `lobby-theme` (`'dark'` | `'light'`)
-- Переключение: `document.documentElement.setAttribute('data-theme', theme)`
-- Все элементы: `transition: background 0.3s, color 0.3s, border-color 0.3s`
-- CSS-переменные меняются автоматически через `[data-theme="light"]` / `:root`
-
----
-
-## Стилизация — правила
-
-1. **Цвета только через CSS-переменные** — никогда не хардкодить hex (кроме семантических: `#EF4444`, `#10B981` и т.д.)
-2. **Ховер с CSS-переменными** — Tailwind не поддерживает `hover:bg-[var(...)]`, поэтому используем `onMouseEnter`/`onMouseLeave` + inline styles
-3. **Tailwind** — для layout, spacing, типографики, flex/grid
-4. **CSS-переменные через `style={{}}`** — для цветов, фонов, бордеров
-5. **Утилита `cn()`** — `clsx` + `tailwind-merge` для мержа классов
-6. **Варианты через CVA** (class-variance-authority) — для компонентов с множественными стилями
-7. **framer-motion** — для анимаций и переходов
-
----
-
-## Layout-принципы
-
-1. **Full-width контент** — никаких произвольных `max-width`, контент заполняет всю ширину с паддингом `px-10`
-2. **Data density** — показывать значимые данные, скрывать нулевые/очевидные
-3. **Визуальная иерархия**: Hero → Stats Grid → Tab Navigation → Content Cards
-4. **Карточки**: все секции в `.card` паттерне — `bg-card`, `border`, `rounded-2xl`, `p-5`
-5. **Списки внутри карточек**: `bg-secondary` строки, `rounded-xl`, gap 6px
-
----
-
-## Стек
-
-| Слой | Технология |
-|------|-----------|
-| Framework | React 18 + TypeScript |
-| Build | Vite |
-| Styling | Tailwind CSS + CSS Variables |
-| UI Primitives | Radix UI + shadcn/ui паттерн |
-| Variants | class-variance-authority (CVA) |
-| Class Merge | clsx + tailwind-merge (`cn()`) |
-| Animations | framer-motion |
-| Icons | lucide-react |
-| Fonts | Google Fonts (Space Grotesk + JetBrains Mono) |
+| # | Экран | Файл | Назначение |
+|---|-------|------|------------|
+| 1 | Splash | SplashScreen.uxml | Загрузка |
+| 2 | Tutorial | TutorialScreen.uxml | 3-slide онбординг |
+| 3 | MainMenu | MainMenuScreen.uxml | Главное меню + навигация |
+| 4 | HeroSelect | HeroSelectScreen.uxml | Выбор героя |
+| 5 | PreMatch | PreMatchScreen.uxml | Настройки матча |
+| 6 | Matchmaking | MatchmakingScreen.uxml | Поиск противника |
+| 7 | Planning | PlanningScreen.uxml | Программирование ходов |
+| 8 | Reveal | RevealScreen.uxml | Показ планов |
+| 9 | HUD | HUDScreen.uxml | Overlay во время execution |
+| 10 | RoundTransition | RoundTransitionOverlay.uxml | Между раундами |
+| 11 | Result | ResultScreen.uxml | Победа/поражение |
+| 12 | Profile | ProfileScreen.uxml | Профиль + match history |
+| 13 | Leaderboard | LeaderboardScreen.uxml | Таблица лидеров |
+| 14 | HeroesCollection | HeroesCollectionScreen.uxml | Коллекция героев |
+| 15 | Settings | SettingsScreen.uxml | Настройки + язык |
+| 16 | DailyReward | DailyRewardScreen.uxml | Ежедневная награда |
+| 17 | Reconnecting | ReconnectingScreen.uxml | Переподключение |
+| 18 | Toast | ToastContainer.uxml | Уведомления |

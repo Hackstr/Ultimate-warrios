@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using TacticalDuelist.Core.Localization;
+using TacticalDuelist.Core.Models;
 using TacticalDuelist.Platform;
 using TacticalDuelist.UI.Toolkit;
 
@@ -110,6 +111,26 @@ namespace TacticalDuelist.Gameplay
                     else
                     {
                         Debug.LogWarning($"[MetaScreens] Profile fetch failed: {req.error}");
+                    }
+
+                    // Fetch match history
+                    try
+                    {
+                        using var histReq = UnityEngine.Networking.UnityWebRequest.Get($"{url}/player/match-history");
+                        histReq.SetRequestHeader("Authorization", $"Bearer {token}");
+                        await histReq.SendWebRequest().ToUniTask();
+
+                        if (histReq.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+                        {
+                            var histJson = $"{{\"items\":{histReq.downloadHandler.text}}}";
+                            var histResponse = JsonUtility.FromJson<MatchHistoryResponse>(histJson);
+                            if (histResponse?.items != null)
+                                _ui.Profile.SetMatchHistory(histResponse.items);
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+                        Debug.LogWarning($"[MetaScreens] Match history fetch error: {ex2.Message}");
                     }
                 }
             }

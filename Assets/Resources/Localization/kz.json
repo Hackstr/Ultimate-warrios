@@ -208,5 +208,10 @@
 {"key":"wallet_disconnected","value":"Әмиян ажыратылды"},
 {"key":"connecting_wallet","value":"Әмиянды қосу..."},
 {"key":"wallet_connected","value":"Қосылды: {0}..."},
-{"key":"wallet_error","value":"Әмиян қатесі: {0}"}
+{"key":"wallet_error","value":"Әмиян қатесі: {0}"},
+{"key":"match_history","value":"МАТЧ ТАРИХЫ"},
+{"key":"result_win","value":"ЖЕҢІС"},
+{"key":"result_loss","value":"ЖЕҢІЛІС"},
+{"key":"result_draw","value":"ТЕҢ"},
+{"key":"no_matches","value":"Матчтар жоқ"}
 ]}

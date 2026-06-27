@@ -208,5 +208,10 @@
 {"key":"wallet_disconnected","value":"Wallet disconnected"},
 {"key":"connecting_wallet","value":"Connecting wallet..."},
 {"key":"wallet_connected","value":"Connected: {0}..."},
-{"key":"wallet_error","value":"Wallet error: {0}"}
+{"key":"wallet_error","value":"Wallet error: {0}"},
+{"key":"match_history","value":"MATCH HISTORY"},
+{"key":"result_win","value":"WIN"},
+{"key":"result_loss","value":"LOSS"},
+{"key":"result_draw","value":"DRAW"},
+{"key":"no_matches","value":"No matches yet"}
 ]}

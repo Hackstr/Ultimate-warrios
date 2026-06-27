@@ -633,6 +633,7 @@ export class MatchService implements OnModuleInit {
       where: { id: p1.id },
       data: {
         rating: newRating1,
+        rankTier: MatchService._calculateRankTier(newRating1),
         wins: { increment: score1 === 1 ? 1 : 0 },
         losses: { increment: score1 === 0 ? 1 : 0 },
         draws: { increment: score1 === 0.5 ? 1 : 0 },
@@ -642,6 +643,7 @@ export class MatchService implements OnModuleInit {
       where: { id: p2.id },
       data: {
         rating: newRating2,
+        rankTier: MatchService._calculateRankTier(newRating2),
         wins: { increment: score2 === 1 ? 1 : 0 },
         losses: { increment: score2 === 0 ? 1 : 0 },
         draws: { increment: score2 === 0.5 ? 1 : 0 },
@@ -649,6 +651,18 @@ export class MatchService implements OnModuleInit {
     });
 
     return { p1RatingDelta: newRating1 - p1.rating, p2RatingDelta: newRating2 - p2.rating };
+  }
+
+  // ── Rank Tier ──
+
+  private static _calculateRankTier(rating: number): number {
+    if (rating >= 2000) return 6; // Grandmaster
+    if (rating >= 1800) return 5; // Master
+    if (rating >= 1600) return 4; // Diamond
+    if (rating >= 1400) return 3; // Platinum
+    if (rating >= 1200) return 2; // Gold
+    if (rating >= 1000) return 1; // Silver
+    return 0; // Bronze
   }
 
   // ── State Management ──

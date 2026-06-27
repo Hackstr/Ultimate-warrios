@@ -34,6 +34,16 @@ export class PlayerService {
     return this._prisma.player.findUnique({ where: { telegramId } });
   }
 
+  static calculateRankTier(rating: number): number {
+    if (rating >= 2000) return 6; // Grandmaster
+    if (rating >= 1800) return 5; // Master
+    if (rating >= 1600) return 4; // Diamond
+    if (rating >= 1400) return 3; // Platinum
+    if (rating >= 1200) return 2; // Gold
+    if (rating >= 1000) return 1; // Silver
+    return 0; // Bronze
+  }
+
   async getProfile(id: string) {
     const player = await this._prisma.player.findUnique({
       where: { id },
@@ -46,6 +56,7 @@ export class PlayerService {
 
     return {
       ...player,
+      rankTier: PlayerService.calculateRankTier(player.rating),
       favoriteHero,
       heroPrices: HERO_PRICES,
     };
